@@ -1,0 +1,6 @@
+include: package:flutter_lints/flutter.yaml
+
+linter:
+  rules:
+    # Reglas base de flutter_lints. No se agregan reglas adicionales
+    # sin autorización, según Blueprint (doc 02, sección 19).
