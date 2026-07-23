@@ -4,7 +4,7 @@
 > de IA) pueda retomar el proyecto exactamente desde este punto sin perder
 > contexto. Actualizar este archivo al cerrar cada Sprint.
 
-Última actualización: cierre de Sprint 2 (Tasks 1–6), con `main` ya
+Última actualización: cierre de Sprint 3 (Tasks 1–6), con `main` ya
 integrando todo lo aprobado.
 
 ---
@@ -13,16 +13,16 @@ integrando todo lo aprobado.
 
 | Campo | Estado |
 |---|---|
-| Sprint actual | Sprint 2 completado (Tasks 1–6) |
+| Sprint actual | Sprint 3 completado (Tasks 1–6) |
 | Arquitectura | Clean Architecture por feature + capa `core/` transversal |
 | Backend | NestJS + Prisma + Supabase (Postgres), staging en Render — integrado |
-| Autenticación | Supabase Auth (JWT), con guards de sesión en GoRouter |
-| Tests | 25/25 pasando (`flutter test`) |
+| Autenticación | Login real (`features/auth`) contra Supabase Auth, con guards de sesión en GoRouter y perfil (`GET /perfil`) vía Riverpod |
+| Tests | 40/40 pasando (`flutter test`) |
 | flutter analyze | Sin issues |
 | Entorno | Flutter `>=3.35.6` / Dart `>=3.9.0`; solo staging (sin producción separada) |
 | Plataforma objetivo | Android |
-| Rama principal | `main` (fast-forward de las 8 ramas de Sprint 1+2; push pendiente) |
-| Próximo Sprint | Sprint 3 — Feature Auth |
+| Rama principal | `main` (fast-forward de las 14 ramas de Sprint 1+2+3; push pendiente) |
+| Próximo Sprint | Por definir — candidato natural: Dashboard/Home real |
 
 ---
 
@@ -38,11 +38,12 @@ integrando todo lo aprobado.
   misma identidad de producto que el panel web (misma paleta, tipografía y
   jerarquía de componentes).
 - **Estado actual:** infraestructura base completa — Sprint 0, 0.5, Sprint 1
-  (Theme + Router) y Sprint 2 (Network, Session, Constants/Utils, Router
-  Guards, App Bootstrap) implementados y aprobados. El backend oficial
-  (staging) ya está desplegado e integrado. Aún no existe ningún módulo de
-  negocio real (`features/*` siguen vacíos). Ver "Próximo Sprint
-  recomendado".
+  (Theme + Router), Sprint 2 (Network, Session, Constants/Utils, Router
+  Guards, App Bootstrap) y Sprint 3 (feature `auth`: login real, perfil,
+  providers de Riverpod) implementados y aprobados. El backend oficial
+  (staging) ya está desplegado e integrado. `features/auth` es el primer
+  módulo de negocio con código real; el resto de `features/*` sigue vacío.
+  Ver "Próximo Sprint recomendado".
 - **Plataforma objetivo:** Android. El proyecto también contiene el
   scaffolding de `ios/` generado por `flutter create`, pero el foco de
   desarrollo declarado es Android.
@@ -63,9 +64,11 @@ integrando todo lo aprobado.
 - **Tecnologías aprobadas** (declaradas en `pubspec.yaml`):
   - **Flutter / Dart:** SDK Dart `>=3.3.0 <4.0.0`; toolchain resuelto con
     Flutter `>=3.35.6` / Dart `>=3.9.0` (`pubspec.lock`).
-  - **Gestión de estado:** `flutter_riverpod ^2.5.1` (declarado; usado hoy
-    solo para envolver la app con `ProviderScope` — aún sin providers
-    propios).
+  - **Gestión de estado:** `flutter_riverpod ^2.5.1` — **primeros providers
+    reales en Sprint 3** (`authSessionServiceProvider`/`apiClientProvider`
+    en `core/`, y `authRepositoryProvider`/`perfilProvider`/
+    `loginControllerProvider` en `features/auth`), API clásica sin
+    `riverpod_generator`.
   - **Cliente HTTP:** `dio ^5.4.3` — **implementado** en Sprint 2
     (`ApiClient`, `core/api/`).
   - **Navegación:** `go_router ^14.2.0` — implementado en Sprint 1,
@@ -77,8 +80,11 @@ integrando todo lo aprobado.
     reservado para otros secretos si hicieran falta a futuro).
   - **Modelos/serialización:** `freezed_annotation ^2.4.4` +
     `json_annotation ^4.9.0`, con `build_runner`, `freezed` y
-    `json_serializable` como dev dependencies (declarados; aún no usados —
-    para cuando existan DTOs/models de una feature).
+    `json_serializable` como dev dependencies — **primer uso real en Sprint
+    3** (`PerfilDto`/`Perfil`, `features/auth`). `analysis_options.yaml`
+    ignora `invalid_annotation_target` (falso positivo documentado de
+    `freezed` + `json_serializable` con `@JsonKey` en parámetros de
+    constructor).
   - **Utilidades:** `intl ^0.19.0` (usado por `ApiDate` desde Sprint 2),
     `cupertino_icons ^1.0.8`.
   - **Lint:** `flutter_lints ^4.0.0`, vía `analysis_options.yaml`, sin reglas
@@ -279,6 +285,89 @@ en verde (25/25) al cierre de cada una.
 
 ---
 
+### Sprint 3 — Feature: Auth
+
+Primer módulo de negocio real del proyecto: login funcional, perfil del
+usuario autenticado (`GET /perfil`) y el estado de sesión/perfil expuesto
+vía Riverpod para el resto de la app. Nota de arquitectura seguida en las 6
+tasks: la feature `auth` nunca depende del Router ni navega directamente —
+el único mecanismo que activa los redirects de `AppRouter` sigue siendo el
+cambio de estado de sesión (`AuthSessionService.onAuthStateChange` →
+`GoRouterRefreshStream`), tal como se estableció desde Sprint 2.
+
+#### Task 1 — Core Riverpod Providers (`lib/core/services/auth_providers.dart`, `lib/core/api/api_providers.dart`)
+
+**Qué se implementó:** `authSessionServiceProvider` y `apiClientProvider`,
+primeros providers reales del proyecto. `main.dart` pasó a construir un
+`ProviderContainer` explícito antes de `runApp`, leer
+`authSessionServiceProvider` de ahí para `AppRouter.build(...)`, y montar
+la app con `UncontrolledProviderScope` — una única instancia de
+`AuthSessionService`/`ApiClient` en toda la app, no una "de main.dart" y
+otra "de Riverpod" corriendo por separado.
+
+#### Task 2 — Perfil: DTO y modelo de dominio (`lib/features/auth/data/dtos/perfil_dto.dart`, `lib/features/auth/data/models/perfil.dart`)
+
+**Qué se implementó:** `PerfilDto` (+ `PerfilRolDto`/`PerfilTenantDto`
+anidados, fieles al JSON snake_case de `GET /perfil`) y el modelo de
+dominio `Perfil` (freezed, camelCase), con `PerfilDto.toDomain()` como
+mapeo. Primer uso real de `freezed`/`json_serializable`/`build_runner` en
+el proyecto.
+
+**Decisiones:** se agregó `analyzer.errors.invalid_annotation_target:
+ignore` a `analysis_options.yaml` — falso positivo conocido y documentado
+por `freezed` cuando se usa `@JsonKey` en un parámetro de constructor.
+
+#### Task 3 — Auth y Perfil: Repositories (`lib/features/auth/data/repositories/`, `lib/features/auth/data/datasources/`)
+
+**Qué se implementó:** `AuthRepository` (delega `signIn`/`signOut`/
+`isAuthenticated`/`onAuthStateChange` en `AuthSessionService`, sin
+reimplementar nada), `PerfilRemoteDataSource` (`GET /perfil` →
+`PerfilDto`) y `PerfilRepository` (mapea a `Perfil`, deja pasar
+`ApiException`/`NetworkException` tal cual).
+
+**Decisiones:** los tests de estas clases se hicieron subclasificando
+directamente `AuthRepository`/`PerfilRepository` (no son interfaces) para
+crear fakes por herencia, sin sumar un mocking framework nuevo.
+
+#### Task 4 — Providers de Riverpod de la feature (`lib/features/auth/presentation/providers/`)
+
+**Qué se implementó:** `authRepositoryProvider`/`perfilRepositoryProvider`
+(sobre los providers de Task 1), `authStateProvider`/
+`isAuthenticatedProvider` (estado de sesión reactivo), `perfilProvider`
+(`FutureProvider` que se reevalúa en cada cambio de sesión, para no dejar
+en caché el perfil de un usuario anterior tras un logout), y
+`loginControllerProvider` (`AsyncNotifier<void>` que expone loading/error/
+success del login).
+
+**Decisiones:** al asignar `state = AsyncLoading()` en un `AsyncNotifier`,
+Riverpod adjunta automáticamente el valor previo (`copyWithPrevious`) —
+comportamiento documentado del framework, no un bug; los tests verifican
+`isLoading`/`hasError` en vez de igualdad estricta de instancia.
+
+#### Task 5 — Pantalla de Login real (`lib/features/auth/presentation/screens/login_screen.dart`)
+
+**Qué se implementó:** `LoginScreen` (`ConsumerStatefulWidget`) con
+`Form`/`TextFormField` estándar (sin widgets nuevos en `shared/`),
+estilado 100% vía `ThemeData` (Sprint 1) y `AppSpacing`, validación básica
+de correo/contraseña, y mensaje de error desde `ApiException.message`/
+`NetworkException.message`.
+
+**Decisiones:** la pantalla nunca navega ni importa `core/router/` — solo
+invoca `loginControllerProvider.notifier.signIn(...)` y muestra loading/
+error, respetando la nota de arquitectura del sprint.
+
+#### Task 6 — Integración con el Router (`lib/core/router/app_routes.dart`)
+
+**Qué se implementó:** la ruta `login` ahora sirve `LoginScreen` en vez de
+`LoginPlaceholderScreen`, que se eliminó por quedar sin uso.
+`test/core/router/app_router_test.dart` se envolvió en `ProviderScope`
+(requerido porque la ruta ahora renderiza un widget de Riverpod real).
+
+**Validación de las 6 tasks:** `flutter analyze` sin issues y `flutter
+test` en verde (40/40) al cierre de cada una y al cierre del Sprint.
+
+---
+
 ## Estado del repositorio
 
 - **Rama principal:** `main`, sincronizada con `origin/main` hasta el cierre
@@ -288,7 +377,10 @@ en verde (25/25) al cierre de cada una.
   eliminada): `feature/theme-system`, `feature/router-infrastructure`,
   `feature/core-config`, `feature/core-session-service`,
   `feature/core-network-client`, `feature/core-constants-utils`,
-  `feature/router-auth-guards`, `feature/app-bootstrap`.
+  `feature/router-auth-guards`, `feature/app-bootstrap`,
+  `feature/auth-core-providers`, `feature/auth-perfil-model`,
+  `feature/auth-repositories`, `feature/auth-riverpod-providers`,
+  `feature/auth-login-screen`, `feature/auth-router-integration`.
 - **Remoto:** `origin` → `https://github.com/JosueJafet/ZUNGOFFEE-MOVIL-APP.git`.
 - **Commits de Sprint 2 (historial de `main`, en orden, después de los 11 de
   Sprint 0.5/Sprint 1):**
@@ -315,6 +407,24 @@ en verde (25/25) al cierre de cada una.
   21. `feat(router): guard routes based on AuthSessionService session state`
   22. `feat(app): wire Supabase bootstrap, AppTheme and AppRouter into main.dart`
   23. `test(router): dispose SupabaseClient to avoid leaking its auto-refresh timer`
+- **Commits de Sprint 3 (historial de `main`, en orden, después de los 23 de
+  Sprint 2):**
+  1. `feat(services): add authSessionServiceProvider`
+  2. `feat(api): add apiClientProvider built on authSessionServiceProvider`
+  3. `feat(app): build router from a shared ProviderContainer instead of a separate AuthSessionService`
+  4. `chore(analysis): ignore invalid_annotation_target false positive from freezed + json_serializable`
+  5. `feat(auth): add Perfil domain model`
+  6. `feat(auth): add PerfilDto for GET /perfil and mapping to Perfil`
+  7. `test(auth): verify PerfilDto parsing and mapping to Perfil`
+  8. `feat(auth): add AuthRepository wrapping AuthSessionService`
+  9. `feat(auth): add PerfilRemoteDataSource for GET /perfil`
+  10. `feat(auth): add PerfilRepository mapping PerfilDto to Perfil`
+  11. `feat(auth): add authRepositoryProvider, authStateProvider, isAuthenticatedProvider`
+  12. `feat(auth): add perfilRepositoryProvider and perfilProvider`
+  13. `feat(auth): add LoginController for the login form submission state`
+  14. `feat(auth): add real LoginScreen with form validation and error display`
+  15. `test(router): assert LoginScreen renders instead of the removed placeholder`
+  16. `feat(router): serve the real LoginScreen on the login route`
 
 ---
 
@@ -325,6 +435,7 @@ lib/
   core/                     Infraestructura transversal (sin lógica de negocio)
     api/                    Cliente Dio + errores tipados — implementado (Sprint 2)
       api_client.dart
+      api_providers.dart    apiClientProvider (Sprint 3)
       session_token_provider.dart
     config/                 Configuración de entorno — implementado (Sprint 2)
       app_environment.dart
@@ -337,14 +448,15 @@ lib/
       network_exception.dart
     router/                 Navegación (GoRouter) — implementado (Sprint 1 + 2)
       app_router.dart       AppRouter.build(AuthSessionService)
-      app_routes.dart
+      app_routes.dart       Ruta login -> LoginScreen (features/auth), desde Sprint 3
       auth_redirect.dart
       go_router_refresh_stream.dart
       route_names.dart
       route_paths.dart
-      screens/              Pantallas placeholder (splash, home, login)
+      screens/              Pantallas placeholder restantes (splash, home)
     services/               Sesión/Supabase — implementado (Sprint 2)
       auth_session_service.dart
+      auth_providers.dart   authSessionServiceProvider (Sprint 3)
       supabase_bootstrap.dart
     theme/                  Sistema de theming — implementado (Sprint 1)
     utils/                  Parseo de datos de la API — implementado (Sprint 2)
@@ -355,17 +467,30 @@ lib/
                              patrón en los 9 módulos: auth, clientes,
                              compras, dashboard, inventario, notificaciones,
                              perfil, procesamiento, proveedores, reportes,
-                             ventas. Todos vacíos (solo `.gitkeep`).
-    <feature>/
+                             ventas.
+    auth/                   Implementado (Sprint 3) — login real + perfil
       data/
         datasources/
+          perfil_remote_datasource.dart
         dtos/
+          perfil_dto.dart
         models/
+          perfil.dart
         repositories/
+          auth_repository.dart
+          perfil_repository.dart
       presentation/
         providers/
+          auth_providers.dart      authRepositoryProvider, authStateProvider
+          perfil_providers.dart    perfilRepositoryProvider, perfilProvider
+          login_controller.dart   loginControllerProvider
         screens/
-        widgets/
+          login_screen.dart
+        widgets/                  (vacío)
+    <resto de features>/     Todos vacíos (solo `.gitkeep`), mismo patrón
+                              data/{datasources,dtos,models,repositories}
+                              y presentation/{providers,screens,widgets}
+                              que `auth/`.
   shared/                   Elementos reutilizables entre features (vacío)
     extensions/
     mixins/
@@ -376,11 +501,18 @@ lib/
                              MaterialApp.router con AppTheme.
 test/
   core/
-    api/api_client_test.dart
+    api/api_client_test.dart, api_providers_test.dart
+    services/auth_providers_test.dart
     constants/estado_cafe_test.dart
     router/app_router_test.dart
     router/auth_redirect_test.dart
     utils/api_date_test.dart, api_decimal_test.dart, bigint_id_test.dart
+  features/auth/
+    data/dtos/perfil_dto_test.dart
+    data/datasources/perfil_remote_datasource_test.dart
+    data/repositories/auth_repository_test.dart, perfil_repository_test.dart
+    presentation/providers/perfil_providers_test.dart, login_controller_test.dart
+    presentation/screens/login_screen_test.dart
   widget_test.dart
 docs/
   PROJECT_STATUS.md         Este documento
@@ -393,9 +525,9 @@ android/, ios/              Scaffolding estándar de `flutter create`
 
 1. **Clean Architecture por feature**, con capas `data/` y `presentation/`
    dentro de cada módulo — sin cambios desde el scaffold inicial.
-2. **Riverpod** como gestor de estado oficial — declarado, usado hoy solo
-   para `ProviderScope`; sin providers propios todavía (a propósito, ninguna
-   tarea de Sprint 1/2 los necesitaba).
+2. **Riverpod** como gestor de estado oficial, API clásica (sin
+   `riverpod_generator`) — primeros providers reales desde Sprint 3
+   (`core/` y `features/auth`).
 3. **GoRouter** como único sistema de navegación, ahora con guards de sesión
    (`AuthRedirect` + `GoRouterRefreshStream`), sin roles/permisos por ruta
    todavía (eso depende del perfil/rol del usuario, que es trabajo de
@@ -430,6 +562,16 @@ android/, ios/              Scaffolding estándar de `flutter create`
     reglas adicionales.
 13. **Rama principal `main`**, con flujo `feature/*` → merge (fast-forward)
     → `main`, sin eliminar las ramas ya integradas.
+14. **La feature `auth` nunca depende del Router ni navega directamente**
+    (Sprint 3): el único mecanismo que activa los redirects de `AppRouter`
+    sigue siendo el cambio de estado de sesión
+    (`AuthSessionService.onAuthStateChange` → `GoRouterRefreshStream`), no
+    una llamada explícita desde `LoginScreen`/providers/repositories de la
+    feature.
+15. **Fakes por herencia en tests, sin mocking framework**: `AuthRepository`/
+    `PerfilRepository` no son interfaces, así que los tests que necesitan un
+    doble de prueba los subclasifican directamente y sobreescriben solo el
+    método necesario (patrón usado en Sprint 3, Tasks 3–5).
 
 ---
 
@@ -437,8 +579,9 @@ android/, ios/              Scaffolding estándar de `flutter create`
 
 Lo que falta por implementar, en el orden en que fue quedando pendiente:
 
-- **Push de los commits de Sprint 2 a `origin/main`**: aprobado localmente,
-  pendiente de que el usuario confirme el push (no se ha hecho todavía).
+- **Push de los commits de Sprint 2 y Sprint 3 a `origin/main`**: aprobados
+  localmente, pendiente de que el usuario confirme el push (no se ha hecho
+  todavía).
 - **Application ID / Bundle ID siguen siendo placeholders**:
   `com.example.zungofee_mobile` (Android) y `com.example.zungofeeMobile`
   (iOS). Detectado en Sprint 0, no resuelto en ningún sprint posterior.
@@ -453,48 +596,45 @@ Lo que falta por implementar, en el orden en que fue quedando pendiente:
   assets no agregados.
 - **Botón "soft destructivo"** del mock de la Guía de Marca sigue sin
   equivalente en el theme; pendiente para `shared/widgets/buttons`.
-- **Ningún módulo de `features/` tiene código** — todas las carpetas siguen
-  vacías, incluyendo `auth`.
+- **`features/auth` es el único módulo con código** — el resto de
+  `features/*` (clientes, compras, dashboard, inventario, notificaciones,
+  perfil, procesamiento, proveedores, reportes, ventas) sigue vacío.
 - **`shared/` completo** (extensions, mixins, widgets) sigue vacío.
-- **Sin repositories/DTOs/models de ningún módulo de negocio** — `core/api`,
-  `core/errors`, `core/constants` y `core/utils` ya están listos para que
-  cada feature los reutilice, pero ninguna feature los usa todavía.
-- **Sin providers de Riverpod propios** — `ProviderScope` está en `main.dart`
-  desde Sprint 0, pero no hay ningún provider real (de auth, de datos, etc.).
+- **Edición de perfil** (`PATCH /perfil`): fuera de alcance de Sprint 3;
+  `Perfil`/`PerfilRepository` solo cubren lectura (`GET /perfil`).
+- **Pantalla de Home/Dashboard real** (consumir `Perfil`, botón de cerrar
+  sesión): `HomePlaceholderScreen` no se tocó en Sprint 3;
+  `AuthRepository.signOut()` ya existe y está testeado, pero sin ninguna UI
+  que lo dispare todavía.
+- **Guards por rol en el router**: sigue distinguiendo solo autenticado/no
+  autenticado, no por rol — depende de leer `perfilProvider` desde el
+  router o un guard equivalente, no diseñado todavía.
 - **Cola de operaciones offline / reintentos de red en campo**: mencionado
   en el contexto técnico como decisión futura, no abordado todavía.
 - **Registro de dispositivo push** (`firebase_messaging`,
   `POST /notificaciones/dispositivos`): el propio backend aclara que el
   envío real de push no está conectado del lado servidor todavía; no es
   prioritario.
-- **Roles/permisos por ruta** (ej. "solo `admin_bodega` puede entrar aquí"):
-  el router hoy solo distingue autenticado/no autenticado, no por rol —
-  depende de tener cargado el perfil del usuario (trabajo de feature).
 
 ---
 
 ## Próximo Sprint recomendado
 
-**Sprint 3 — Feature: Auth (login real).**
-
-Es el candidato natural: toda la infraestructura que necesita (Supabase,
-`ApiClient`, guards del router, tema) ya está lista, y el resto de módulos de
-negocio probablemente dependan de sesión/perfil de usuario.
-
-Alcance sugerido:
-1. Reemplazar `LoginPlaceholderScreen` por la pantalla real de login
-   (formulario de correo/contraseña contra `AuthSessionService.
-   signInWithPassword`).
-2. Repository/provider de Riverpod para `GET /perfil` (rol, nombre, tenant)
-   usando `ApiClient` — primer uso real de `core/api` por una feature.
-3. Exponer el estado de sesión/perfil vía Riverpod para que el resto de la
-   app (y, más adelante, guards por rol en el router) puedan leerlo.
-4. Manejar en la UI los casos ya documentados: credenciales inválidas,
-   `ApiException`/`NetworkException` del login o de `/perfil`.
+**Aún no diseñado.** Candidato natural: **Dashboard/Home real**, ya que
+`features/auth` (login, perfil, estado de sesión vía Riverpod) está
+completo y es la dependencia natural de cualquier pantalla que muestre
+datos del usuario o de su bodega — reemplazar `HomePlaceholderScreen`
+consumiendo `perfilProvider` (ej. "Bienvenido, {nombre}") y agregar el
+botón de cerrar sesión (`AuthRepository.signOut()` ya existe y está
+testeado, solo falta la UI que lo dispare). Alternativamente, podría ser el
+segundo módulo de negocio (`proveedores`, `inventario`, etc.) si esa es la
+prioridad de negocio. Este alcance no ha sido diseñado ni aprobado — cuando
+se decida, corresponde repetir el mismo proceso de diseño de Sprint
+(desglose en Tasks, revisión antes de implementar).
 
 No perder de vista los pendientes de configuración nativa (Application
-ID, firma de release) — no bloquean Sprint 3, pero deben resolverse antes de
-cualquier build de distribución real.
+ID, firma de release) — no bloquean el próximo Sprint, pero deben
+resolverse antes de cualquier build de distribución real.
 
 ---
 
@@ -519,9 +659,6 @@ Render) — no hay todavía un ambiente de producción separado.
 
 ## Próximo Hito
 
-**Sprint 3 corresponde al módulo de autenticación (`features/auth`)**, el
-primer módulo de negocio real del proyecto. Alcance, en breve:
-- Pantalla de login real (reemplaza `LoginPlaceholderScreen`).
-- Repository/provider de Riverpod para `GET /perfil`.
-- Exposición del estado de sesión/perfil al resto de la app.
-- Manejo en la UI de errores de login/perfil (`ApiException`/`NetworkException`).
+**Sprint 3 (módulo de autenticación, `features/auth`) ya se completó** —
+ver detalle en "Sprints completados" y en "Próximo Sprint recomendado" para
+lo que sigue (aún sin diseñar formalmente).
