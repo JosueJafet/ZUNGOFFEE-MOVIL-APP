@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'route_names.dart';
 import 'route_paths.dart';
 import 'screens/home_placeholder_screen.dart';
+import 'screens/login_placeholder_screen.dart';
 import 'screens/splash_placeholder_screen.dart';
 
 /// Lista centralizada de rutas de la aplicacion.
@@ -24,6 +25,11 @@ abstract final class AppRoutes {
       name: RouteNames.home,
       path: RoutePaths.home,
       builder: (context, state) => const HomePlaceholderScreen(),
+    ),
+    GoRoute(
+      name: RouteNames.login,
+      path: RoutePaths.login,
+      builder: (context, state) => const LoginPlaceholderScreen(),
     ),
   ];
 }
