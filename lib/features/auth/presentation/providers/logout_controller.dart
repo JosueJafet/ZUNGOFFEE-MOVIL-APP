@@ -15,6 +15,13 @@ class LogoutController extends AsyncNotifier<void> {
   FutureOr<void> build() {}
 
   Future<void> signOut() async {
+    // Guarda contra invocaciones repetidas: un segundo tap puede llegar
+    // antes de que el widget se reconstruya con el botón deshabilitado
+    // (el estado se actualiza de forma sincrónica, pero el rebuild ocurre
+    // recién en el siguiente frame), lo que dispararía un signOut()
+    // concurrente sobre el mismo `state.isLoading`.
+    if (state.isLoading) return;
+
     state = const AsyncLoading();
     state = await AsyncValue.guard(() {
       return ref.read(authRepositoryProvider).signOut();
