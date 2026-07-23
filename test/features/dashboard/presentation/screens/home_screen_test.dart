@@ -22,6 +22,19 @@ class _FakeSessionTokenProvider implements SessionTokenProvider {
   String? get accessToken => null;
 }
 
+class _FakeAuthRepository extends AuthRepository {
+  _FakeAuthRepository(super.authSessionService, {this.signOutError});
+
+  final Object? signOutError;
+  int signOutCallCount = 0;
+
+  @override
+  Future<void> signOut() async {
+    signOutCallCount++;
+    if (signOutError != null) throw signOutError!;
+  }
+}
+
 /// Responde con la próxima función de [_responses] en cada llamada
 /// (se queda en la última una vez agotadas) — permite simular
 /// error -> reintentar -> data, además de los casos simples de éxito.
@@ -149,6 +162,46 @@ void main() {
 
       expect(find.text('Bienvenido, Juan Pérez'), findsOneWidget);
       expect(repository.callCount, 2);
+    });
+
+    testWidgets(
+      'logout: tap en el ícono llama signOut() exactamente una vez, sin navegar',
+      (tester) async {
+        final fakeAuthRepository = _FakeAuthRepository(
+          AuthSessionService(supabaseClient),
+        );
+        final repository = _FakePerfilRepository([() async => _perfilDeEjemplo]);
+
+        await tester.pumpWidget(_wrap(repository, fakeAuthRepository));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byTooltip('Cerrar sesión'));
+        await tester.pumpAndSettle();
+
+        expect(fakeAuthRepository.signOutCallCount, 1);
+      },
+    );
+
+    testWidgets('logout con error: muestra el mensaje en pantalla', (
+      tester,
+    ) async {
+      const error = ApiException(
+        statusCode: 500,
+        message: 'Error al cerrar sesión',
+      );
+      final fakeAuthRepository = _FakeAuthRepository(
+        AuthSessionService(supabaseClient),
+        signOutError: error,
+      );
+      final repository = _FakePerfilRepository([() async => _perfilDeEjemplo]);
+
+      await tester.pumpWidget(_wrap(repository, fakeAuthRepository));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byTooltip('Cerrar sesión'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Error al cerrar sesión'), findsOneWidget);
     });
   });
 }
