@@ -14,13 +14,15 @@ void main() {
     // test. El caso "con sesión" se verifica a nivel de lógica pura en
     // `auth_redirect_test.dart`, ya que simular un login real de Supabase
     // requeriría responder sus llamadas HTTP internas.
+    late SupabaseClient supabaseClient;
     late AuthSessionService authSessionService;
 
     setUp(() {
-      authSessionService = AuthSessionService(
-        SupabaseClient('https://example.test', 'test-anon-key'),
-      );
+      supabaseClient = SupabaseClient('https://example.test', 'test-anon-key');
+      authSessionService = AuthSessionService(supabaseClient);
     });
+
+    tearDown(() => supabaseClient.dispose());
 
     testWidgets('redirige de splash a login al arrancar', (tester) async {
       final router = AppRouter.build(authSessionService);
