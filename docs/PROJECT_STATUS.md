@@ -4,7 +4,7 @@
 > de IA) pueda retomar el proyecto exactamente desde este punto sin perder
 > contexto. Actualizar este archivo al cerrar cada Sprint.
 
-Última actualización: cierre de Sprint 3 (Tasks 1–6), con `main` ya
+Última actualización: cierre de Sprint 4 (Tasks 1–3), con `main` ya
 integrando todo lo aprobado.
 
 ---
@@ -13,16 +13,17 @@ integrando todo lo aprobado.
 
 | Campo | Estado |
 |---|---|
-| Sprint actual | Sprint 3 completado (Tasks 1–6) |
+| Sprint actual | Sprint 4 completado (Tasks 1–3) |
 | Arquitectura | Clean Architecture por feature + capa `core/` transversal |
 | Backend | NestJS + Prisma + Supabase (Postgres), staging en Render — integrado |
 | Autenticación | Login real (`features/auth`) contra Supabase Auth, con guards de sesión en GoRouter y perfil (`GET /perfil`) vía Riverpod |
-| Tests | 40/40 pasando (`flutter test`) |
+| Dashboard | Home real (`features/dashboard`) con bienvenida desde `Perfil` y logout funcional |
+| Tests | 50/50 pasando (`flutter test`) |
 | flutter analyze | Sin issues |
 | Entorno | Flutter `>=3.35.6` / Dart `>=3.9.0`; solo staging (sin producción separada) |
 | Plataforma objetivo | Android |
-| Rama principal | `main` (fast-forward de las 14 ramas de Sprint 1+2+3; push pendiente) |
-| Próximo Sprint | Por definir — candidato natural: Dashboard/Home real |
+| Rama principal | `main` (fast-forward de las 17 ramas de Sprint 1+2+3+4; push pendiente) |
+| Próximo Sprint | Por definir — candidatos: guards por rol en el router, o el siguiente módulo de negocio |
 
 ---
 
@@ -39,11 +40,12 @@ integrando todo lo aprobado.
   jerarquía de componentes).
 - **Estado actual:** infraestructura base completa — Sprint 0, 0.5, Sprint 1
   (Theme + Router), Sprint 2 (Network, Session, Constants/Utils, Router
-  Guards, App Bootstrap) y Sprint 3 (feature `auth`: login real, perfil,
-  providers de Riverpod) implementados y aprobados. El backend oficial
-  (staging) ya está desplegado e integrado. `features/auth` es el primer
-  módulo de negocio con código real; el resto de `features/*` sigue vacío.
-  Ver "Próximo Sprint recomendado".
+  Guards, App Bootstrap), Sprint 3 (feature `auth`: login real, perfil,
+  providers de Riverpod) y Sprint 4 (feature `dashboard`: Home real con
+  bienvenida y logout) implementados y aprobados. El backend oficial
+  (staging) ya está desplegado e integrado. `features/auth` y
+  `features/dashboard` son los únicos módulos de negocio con código real;
+  el resto de `features/*` sigue vacío. Ver "Próximo Sprint recomendado".
 - **Plataforma objetivo:** Android. El proyecto también contiene el
   scaffolding de `ios/` generado por `flutter create`, pero el foco de
   desarrollo declarado es Android.
@@ -64,10 +66,11 @@ integrando todo lo aprobado.
 - **Tecnologías aprobadas** (declaradas en `pubspec.yaml`):
   - **Flutter / Dart:** SDK Dart `>=3.3.0 <4.0.0`; toolchain resuelto con
     Flutter `>=3.35.6` / Dart `>=3.9.0` (`pubspec.lock`).
-  - **Gestión de estado:** `flutter_riverpod ^2.5.1` — **primeros providers
-    reales en Sprint 3** (`authSessionServiceProvider`/`apiClientProvider`
-    en `core/`, y `authRepositoryProvider`/`perfilProvider`/
-    `loginControllerProvider` en `features/auth`), API clásica sin
+  - **Gestión de estado:** `flutter_riverpod ^2.5.1` — providers reales
+    desde Sprint 3 (`authSessionServiceProvider`/`apiClientProvider` en
+    `core/`, y `authRepositoryProvider`/`perfilProvider`/
+    `loginControllerProvider`/`logoutControllerProvider` en
+    `features/auth`, este último agregado en Sprint 4), API clásica sin
     `riverpod_generator`.
   - **Cliente HTTP:** `dio ^5.4.3` — **implementado** en Sprint 2
     (`ApiClient`, `core/api/`).
@@ -368,6 +371,61 @@ test` en verde (40/40) al cierre de cada una y al cierre del Sprint.
 
 ---
 
+### Sprint 4 — Feature: Dashboard (Home real)
+
+Primer y único consumidor real de `features/auth`: reemplaza
+`HomePlaceholderScreen` por una pantalla que muestra el perfil del
+usuario autenticado y permite cerrar sesión. Sin capa de datos nueva —
+todo se construye sobre `perfilProvider`/`authRepositoryProvider` ya
+existentes de Sprint 3. Misma nota de arquitectura que Sprint 3: la
+feature `dashboard` tampoco depende del Router ni navega directamente.
+
+#### Task 1 — Pantalla Home con los 3 estados de `perfilProvider` (`lib/features/dashboard/presentation/screens/home_screen.dart`)
+
+**Qué se implementó:** `HomeScreen` (`ConsumerWidget`) que consume
+`perfilProvider` y resuelve `loading`/`error`/`data` con `.when(...)`:
+indicador de carga, mensaje de `ApiException`/`NetworkException` + botón
+"Reintentar" (`ref.invalidate(perfilProvider)`), y bienvenida con
+`perfil.nombre`/`perfil.tenantNombre` en el caso de éxito.
+
+**Decisiones:** contenido mínimo (solo nombre y bodega, sin `rol`/
+`fechaCreacion`/`activo`/`tenantId` — decisión explícita del usuario para
+esta iteración); el botón "Reintentar" no estaba en el pedido original
+pero se agregó por ser barato y coherente con un estado de solo lectura.
+
+#### Task 2 — Acción de logout en la pantalla Home (`lib/features/auth/presentation/providers/logout_controller.dart`)
+
+**Qué se implementó:** `LogoutController` (`AsyncNotifier<void>`,
+simétrico a `LoginController`) que ejecuta
+`AuthRepository.signOut()`; ícono de logout en el `AppBar` de
+`HomeScreen`, con indicador de carga mientras corre y el error mostrado
+inline (no en un `SnackBar`, para no depender de un `Timer` real en los
+widget tests). Sin diálogo de confirmación (decisión explícita del
+usuario).
+
+**Decisiones:** un test adicional (tap doble sin `pump()` entre ambos)
+reveló una condición de carrera real — el `state` se actualiza de forma
+sincrónica al llamar `signOut()`, pero el rebuild que deshabilita el
+botón ocurre recién en el siguiente frame, así que un segundo tap en esa
+ventana disparaba un `signOut()` concurrente. Corregido con un guard
+(`if (state.isLoading) return;`) al inicio de `LogoutController.signOut()`
+— la corrección se hizo en el controller, no en el widget, porque solo
+ahí se puede consultar el estado real y actual del notifier (el widget
+captura `logoutAsync` en un closure que queda desactualizado hasta el
+próximo frame).
+
+#### Task 3 — Integración con el Router (`lib/core/router/app_routes.dart`)
+
+**Qué se implementó:** la ruta `home` ahora sirve `HomeScreen` en vez de
+`HomePlaceholderScreen`, que se eliminó por quedar sin uso.
+`test/core/router/app_router_test.dart` cambió su aserción de
+`find.text('Home placeholder')` a `find.byType(HomeScreen)`.
+
+**Validación de las 3 tasks:** `flutter analyze` sin issues y `flutter
+test` en verde (50/50) al cierre de cada una y al cierre del Sprint.
+
+---
+
 ## Estado del repositorio
 
 - **Rama principal:** `main`, sincronizada con `origin/main` hasta el cierre
@@ -380,7 +438,9 @@ test` en verde (40/40) al cierre de cada una y al cierre del Sprint.
   `feature/router-auth-guards`, `feature/app-bootstrap`,
   `feature/auth-core-providers`, `feature/auth-perfil-model`,
   `feature/auth-repositories`, `feature/auth-riverpod-providers`,
-  `feature/auth-login-screen`, `feature/auth-router-integration`.
+  `feature/auth-login-screen`, `feature/auth-router-integration`,
+  `feature/dashboard-home-screen`, `feature/dashboard-logout-action`,
+  `feature/dashboard-router-integration`.
 - **Remoto:** `origin` → `https://github.com/JosueJafet/ZUNGOFFEE-MOVIL-APP.git`.
 - **Commits de Sprint 2 (historial de `main`, en orden, después de los 11 de
   Sprint 0.5/Sprint 1):**
@@ -425,6 +485,16 @@ test` en verde (40/40) al cierre de cada una y al cierre del Sprint.
   14. `feat(auth): add real LoginScreen with form validation and error display`
   15. `test(router): assert LoginScreen renders instead of the removed placeholder`
   16. `feat(router): serve the real LoginScreen on the login route`
+- **Commits de Sprint 4 (historial de `main`, en orden, después de los 16
+  de Sprint 3, sin contar el commit de documentación de cierre de
+  Sprint 3):**
+  1. `feat(dashboard): add real HomeScreen consuming perfilProvider`
+  2. `feat(auth): add LogoutController for the sign-out action`
+  3. `feat(dashboard): wire logout action into HomeScreen`
+  4. `test(dashboard): verify two rapid logout taps don't fire signOut() twice`
+  5. `fix(auth): guard LogoutController.signOut against concurrent invocation`
+  6. `feat(router): serve the real HomeScreen on the home route`
+  7. `test(router): assert HomeScreen renders instead of the removed placeholder`
 
 ---
 
@@ -448,12 +518,12 @@ lib/
       network_exception.dart
     router/                 Navegación (GoRouter) — implementado (Sprint 1 + 2)
       app_router.dart       AppRouter.build(AuthSessionService)
-      app_routes.dart       Ruta login -> LoginScreen (features/auth), desde Sprint 3
+      app_routes.dart       login -> LoginScreen (Sprint 3), home -> HomeScreen (Sprint 4)
       auth_redirect.dart
       go_router_refresh_stream.dart
       route_names.dart
       route_paths.dart
-      screens/              Pantallas placeholder restantes (splash, home)
+      screens/              Pantalla placeholder restante (splash)
     services/               Sesión/Supabase — implementado (Sprint 2)
       auth_session_service.dart
       auth_providers.dart   authSessionServiceProvider (Sprint 3)
@@ -487,10 +557,17 @@ lib/
         screens/
           login_screen.dart
         widgets/                  (vacío)
+    dashboard/                Implementado (Sprint 4) — Home real
+      data/                       (vacío — no necesitó capa de datos propia)
+      presentation/
+        providers/                (vacío — usa los providers de auth/)
+        screens/
+          home_screen.dart
+        widgets/                  (vacío)
     <resto de features>/     Todos vacíos (solo `.gitkeep`), mismo patrón
                               data/{datasources,dtos,models,repositories}
                               y presentation/{providers,screens,widgets}
-                              que `auth/`.
+                              que `auth/`/`dashboard/`.
   shared/                   Elementos reutilizables entre features (vacío)
     extensions/
     mixins/
@@ -511,8 +588,11 @@ test/
     data/dtos/perfil_dto_test.dart
     data/datasources/perfil_remote_datasource_test.dart
     data/repositories/auth_repository_test.dart, perfil_repository_test.dart
-    presentation/providers/perfil_providers_test.dart, login_controller_test.dart
+    presentation/providers/perfil_providers_test.dart, login_controller_test.dart,
+      logout_controller_test.dart
     presentation/screens/login_screen_test.dart
+  features/dashboard/
+    presentation/screens/home_screen_test.dart
   widget_test.dart
 docs/
   PROJECT_STATUS.md         Este documento
@@ -572,6 +652,16 @@ android/, ios/              Scaffolding estándar de `flutter create`
     `PerfilRepository` no son interfaces, así que los tests que necesitan un
     doble de prueba los subclasifican directamente y sobreescriben solo el
     método necesario (patrón usado en Sprint 3, Tasks 3–5).
+16. **La feature `dashboard` extiende la misma regla de no depender del
+    Router** (Sprint 4): ni `HomeScreen` ni `LogoutController` navegan ni
+    importan `core/router/` — el redirect a `/login` tras el logout sigue
+    ocurriendo solo por el cambio de estado de sesión, igual que `auth`.
+17. **Guards de re-entrancia en `AsyncNotifier` se ponen en el controller,
+    no en el widget** (Sprint 4, `LogoutController.signOut`): el estado se
+    actualiza de forma sincrónica al invocar la acción, pero el rebuild
+    que deshabilita el control de UI ocurre recién en el siguiente frame
+    — un guard `if (state.isLoading) return;` al inicio del método
+    protege contra invocaciones repetidas sin depender de ese timing.
 
 ---
 
@@ -579,9 +669,17 @@ android/, ios/              Scaffolding estándar de `flutter create`
 
 Lo que falta por implementar, en el orden en que fue quedando pendiente:
 
-- **Push de los commits de Sprint 2 y Sprint 3 a `origin/main`**: aprobados
-  localmente, pendiente de que el usuario confirme el push (no se ha hecho
-  todavía).
+- **Push de los commits de Sprint 2, Sprint 3 y Sprint 4 a `origin/main`**:
+  aprobados localmente, pendiente de que el usuario confirme el push (no
+  se ha hecho todavía).
+- **`.metadata` con las entradas `android`/`ios` eliminadas y `windows/`
+  sin commitear**: efecto secundario de `flutter create --platforms=windows .`
+  (ejecutado para poder correr la app en Windows Desktop durante una
+  verificación visual manual). Confirmado que es comportamiento esperado
+  del propio comando (reescribe `migration.platforms` solo con lo pasado
+  en `--platforms`) y que no afecta las carpetas `android/`/`ios/` reales.
+  Queda deliberadamente sin resolver/commitear hasta que el usuario
+  decida si restaurar esas entradas o dejarlo así.
 - **Application ID / Bundle ID siguen siendo placeholders**:
   `com.example.zungofee_mobile` (Android) y `com.example.zungofeeMobile`
   (iOS). Detectado en Sprint 0, no resuelto en ningún sprint posterior.
@@ -596,16 +694,17 @@ Lo que falta por implementar, en el orden en que fue quedando pendiente:
   assets no agregados.
 - **Botón "soft destructivo"** del mock de la Guía de Marca sigue sin
   equivalente en el theme; pendiente para `shared/widgets/buttons`.
-- **`features/auth` es el único módulo con código** — el resto de
-  `features/*` (clientes, compras, dashboard, inventario, notificaciones,
-  perfil, procesamiento, proveedores, reportes, ventas) sigue vacío.
-- **`shared/` completo** (extensions, mixins, widgets) sigue vacío.
-- **Edición de perfil** (`PATCH /perfil`): fuera de alcance de Sprint 3;
+- **`features/auth` y `features/dashboard` son los únicos módulos con
+  código** — el resto de `features/*` (clientes, compras, inventario,
+  notificaciones, perfil, procesamiento, proveedores, reportes, ventas)
+  sigue vacío.
+- **`shared/` completo** (extensions, mixins, widgets) sigue vacío —
+  ninguna Task de Sprint 3 ni Sprint 4 encontró duplicación real que
+  justificara empezarlo.
+- **Edición de perfil** (`PATCH /perfil`): fuera de alcance;
   `Perfil`/`PerfilRepository` solo cubren lectura (`GET /perfil`).
-- **Pantalla de Home/Dashboard real** (consumir `Perfil`, botón de cerrar
-  sesión): `HomePlaceholderScreen` no se tocó en Sprint 3;
-  `AuthRepository.signOut()` ya existe y está testeado, pero sin ninguna UI
-  que lo dispare todavía.
+- **Diálogo de confirmación antes de logout**: decisión explícita de
+  dejarlo fuera de Sprint 4; el botón ejecuta `signOut()` de inmediato.
 - **Guards por rol en el router**: sigue distinguiendo solo autenticado/no
   autenticado, no por rol — depende de leer `perfilProvider` desde el
   router o un guard equivalente, no diseñado todavía.
@@ -620,17 +719,14 @@ Lo que falta por implementar, en el orden en que fue quedando pendiente:
 
 ## Próximo Sprint recomendado
 
-**Aún no diseñado.** Candidato natural: **Dashboard/Home real**, ya que
-`features/auth` (login, perfil, estado de sesión vía Riverpod) está
-completo y es la dependencia natural de cualquier pantalla que muestre
-datos del usuario o de su bodega — reemplazar `HomePlaceholderScreen`
-consumiendo `perfilProvider` (ej. "Bienvenido, {nombre}") y agregar el
-botón de cerrar sesión (`AuthRepository.signOut()` ya existe y está
-testeado, solo falta la UI que lo dispare). Alternativamente, podría ser el
-segundo módulo de negocio (`proveedores`, `inventario`, etc.) si esa es la
-prioridad de negocio. Este alcance no ha sido diseñado ni aprobado — cuando
-se decida, corresponde repetir el mismo proceso de diseño de Sprint
-(desglose en Tasks, revisión antes de implementar).
+**Aún no diseñado.** Con `auth` y `dashboard` (Home) completos, los
+candidatos naturales son: **guards por rol en el router** (ya se puede
+leer `perfilProvider.rol` para distinguir `empleado`/`admin_bodega`/
+`super_admin`), o el **segundo módulo de negocio real** (`proveedores`,
+`inventario`, etc.), según la prioridad de negocio. Este alcance no ha
+sido diseñado ni aprobado — cuando se decida, corresponde repetir el
+mismo proceso de diseño de Sprint (desglose en Tasks, revisión antes de
+implementar).
 
 No perder de vista los pendientes de configuración nativa (Application
 ID, firma de release) — no bloquean el próximo Sprint, pero deben
@@ -659,6 +755,6 @@ Render) — no hay todavía un ambiente de producción separado.
 
 ## Próximo Hito
 
-**Sprint 3 (módulo de autenticación, `features/auth`) ya se completó** —
-ver detalle en "Sprints completados" y en "Próximo Sprint recomendado" para
-lo que sigue (aún sin diseñar formalmente).
+**Sprint 3 (autenticación) y Sprint 4 (Home/Dashboard) ya se
+completaron** — ver detalle en "Sprints completados" y en "Próximo
+Sprint recomendado" para lo que sigue (aún sin diseñar formalmente).
