@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'core/router/app_router.dart';
-import 'core/services/auth_session_service.dart';
+import 'core/services/auth_providers.dart';
 import 'core/services/supabase_bootstrap.dart';
 import 'core/theme/app_theme.dart';
 
@@ -16,14 +15,24 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await SupabaseBootstrap.initialize();
 
+  // `ProviderContainer` se crea a mano (en vez de dejar que `ProviderScope`
+  // cree el suyo) para poder leer `authSessionServiceProvider` aquí mismo y
+  // construir el router con la misma instancia que el resto de la app
+  // obtendrá vía Riverpod — nunca una instancia separada "de main.dart".
+  final container = ProviderContainer();
+
   // El router se construye una única vez aquí (nunca dentro de `build`,
   // para no perder el historial de navegación ni resuscribirse al
   // stream de auth en cada rebuild) y se pasa hacia abajo por
   // constructor.
-  final authSessionService = AuthSessionService(Supabase.instance.client);
-  final router = AppRouter.build(authSessionService);
+  final router = AppRouter.build(container.read(authSessionServiceProvider));
 
-  runApp(ProviderScope(child: ZungofeeApp(router: router)));
+  runApp(
+    UncontrolledProviderScope(
+      container: container,
+      child: ZungofeeApp(router: router),
+    ),
+  );
 }
 
 class ZungofeeApp extends StatelessWidget {
