@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:zungofee_mobile/core/router/app_router.dart';
 import 'package:zungofee_mobile/core/services/auth_session_service.dart';
 import 'package:zungofee_mobile/features/auth/presentation/screens/login_screen.dart';
+import 'package:zungofee_mobile/features/dashboard/presentation/screens/home_screen.dart';
 
 void main() {
   group('AppRouter (sin sesión activa)', () {
@@ -51,7 +52,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(LoginScreen), findsOneWidget);
-      expect(find.text('Home placeholder'), findsNothing);
+      expect(find.byType(HomeScreen), findsNothing);
     });
   });
 }
