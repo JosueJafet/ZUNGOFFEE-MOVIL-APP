@@ -10,7 +10,13 @@ import 'proveedor_providers.dart';
 /// invalida `proveedoresProvider` para que la lista (Task 4) refleje el
 /// cambio en su próxima lectura — mismo patrón de invalidación ya usado
 /// en Sprint 4 para `perfilProvider`.
-class ProveedorFormController extends AsyncNotifier<void> {
+///
+/// `autoDispose`: `ProveedorFormScreen` (Task 5) se monta una vez por
+/// cada intento de crear/editar. Sin `autoDispose`, el estado de un envío
+/// fallido (`AsyncError`) sobrevive al cerrar esa pantalla y se filtra a
+/// la siguiente vez que se abre el formulario (probado con un test de
+/// regresión antes de aplicar este fix).
+class ProveedorFormController extends AutoDisposeAsyncNotifier<void> {
   @override
   FutureOr<void> build() {}
 
@@ -49,6 +55,6 @@ class ProveedorFormController extends AsyncNotifier<void> {
 }
 
 final proveedorFormControllerProvider =
-    AsyncNotifierProvider<ProveedorFormController, void>(
+    AsyncNotifierProvider.autoDispose<ProveedorFormController, void>(
       ProveedorFormController.new,
     );
