@@ -4,43 +4,83 @@
 > de IA) pueda retomar el proyecto exactamente desde este punto sin perder
 > contexto. Actualizar este archivo al cerrar cada Sprint.
 
-Última actualización: cierre de Sprint 1 (Task 1 y Task 2), previo a la pausa
-del desarrollo.
+Última actualización: cierre de Sprint 2 (Tasks 1–6), con `main` ya
+integrando todo lo aprobado.
+
+---
+
+## Project Snapshot
+
+| Campo | Estado |
+|---|---|
+| Sprint actual | Sprint 2 completado (Tasks 1–6) |
+| Arquitectura | Clean Architecture por feature + capa `core/` transversal |
+| Backend | NestJS + Prisma + Supabase (Postgres), staging en Render — integrado |
+| Autenticación | Supabase Auth (JWT), con guards de sesión en GoRouter |
+| Tests | 25/25 pasando (`flutter test`) |
+| flutter analyze | Sin issues |
+| Entorno | Flutter `>=3.35.6` / Dart `>=3.9.0`; solo staging (sin producción separada) |
+| Plataforma objetivo | Android |
+| Rama principal | `main` (fast-forward de las 8 ramas de Sprint 1+2; push pendiente) |
+| Próximo Sprint | Sprint 3 — Feature Auth |
 
 ---
 
 ## Información general
 
 - **Nombre del proyecto:** Zungofee Mobile (paquete Dart: `zungofee_mobile`).
-- **Objetivo:** aplicación móvil empresarial para gestión de bodega de café
-  ("Zungoffee Mobile — Enterprise Mobile Application for Coffee Warehouse
-  Management", según `pubspec.yaml`). Debe verse y comportarse como la misma
-  identidad de producto que el panel web existente (misma paleta, tipografía
-  y jerarquía de componentes).
-- **Estado actual:** infraestructura base (Sprint 0, 0.5 y Sprint 1 — Tasks 1
-  y 2) completada y aprobada. **Desarrollo pausado** a la espera del backend
-  oficial (ver sección "Información importante").
+- **Objetivo:** aplicación móvil (Zungo Coffee) para la operación diaria en
+  campo de una bodega de café — registrar compras a productores, ver
+  existencias, procesar (tostar/moler) y registrar ventas. Es uno de los dos
+  clientes de la misma API REST (el otro es el panel web en Next.js, para
+  `admin_bodega`/`super_admin`); la app móvil es principalmente para
+  `empleado` y `admin_bodega` en campo. Debe verse y comportarse como la
+  misma identidad de producto que el panel web (misma paleta, tipografía y
+  jerarquía de componentes).
+- **Estado actual:** infraestructura base completa — Sprint 0, 0.5, Sprint 1
+  (Theme + Router) y Sprint 2 (Network, Session, Constants/Utils, Router
+  Guards, App Bootstrap) implementados y aprobados. El backend oficial
+  (staging) ya está desplegado e integrado. Aún no existe ningún módulo de
+  negocio real (`features/*` siguen vacíos). Ver "Próximo Sprint
+  recomendado".
 - **Plataforma objetivo:** Android. El proyecto también contiene el
   scaffolding de `ios/` generado por `flutter create`, pero el foco de
   desarrollo declarado es Android.
 - **Arquitectura utilizada:** Clean Architecture por *feature*, con
   separación `data/` (`datasources`, `dtos`, `models`, `repositories`) y
   `presentation/` (`providers`, `screens`, `widgets`) dentro de cada módulo
-  de negocio, más una capa `core/` (infraestructura transversal) y `shared/`
-  (elementos reutilizables entre features). Ver detalle en "Estructura
-  actual del proyecto".
+  de negocio, más una capa `core/` (infraestructura transversal, ya
+  sustancialmente construida en Sprint 2) y `shared/` (elementos reutilizables
+  entre features, aún vacío). Ver detalle en "Estructura actual del
+  proyecto".
+- **Backend:** NestJS + Prisma sobre PostgreSQL (Supabase), multi-tenant.
+  Staging desplegado en Render (`https://zungo-coffee-api.onrender.com`,
+  plan free — cold start de ~30-50s tras inactividad). Aún no existe un
+  ambiente de producción separado. Autenticación 100% vía Supabase Auth
+  (JWT), no vía la API de NestJS. Documentación completa del contrato de API
+  en `CONTEXTO-MOVIL-FLUTTER.md` (compartido en conversación; ver
+  "Pendientes" sobre versionarlo).
 - **Tecnologías aprobadas** (declaradas en `pubspec.yaml`):
   - **Flutter / Dart:** SDK Dart `>=3.3.0 <4.0.0`; toolchain resuelto con
     Flutter `>=3.35.6` / Dart `>=3.9.0` (`pubspec.lock`).
-  - **Gestión de estado:** `flutter_riverpod ^2.5.1`.
-  - **Cliente HTTP:** `dio ^5.4.3` (declarado; aún no implementado).
-  - **Navegación:** `go_router ^14.2.0` (implementado en Sprint 1 — Task 2).
+  - **Gestión de estado:** `flutter_riverpod ^2.5.1` (declarado; usado hoy
+    solo para envolver la app con `ProviderScope` — aún sin providers
+    propios).
+  - **Cliente HTTP:** `dio ^5.4.3` — **implementado** en Sprint 2
+    (`ApiClient`, `core/api/`).
+  - **Navegación:** `go_router ^14.2.0` — implementado en Sprint 1,
+    extendido con guards de sesión en Sprint 2.
+  - **Autenticación:** `supabase_flutter ^2.16.0` — **nueva dependencia de
+    Sprint 2** (Task 2), envuelta por `AuthSessionService`.
   - **Almacenamiento seguro:** `flutter_secure_storage ^9.2.2` (declarado;
-    aún no implementado).
+    **deliberadamente sin usar** — Supabase persiste su propia sesión;
+    reservado para otros secretos si hicieran falta a futuro).
   - **Modelos/serialización:** `freezed_annotation ^2.4.4` +
     `json_annotation ^4.9.0`, con `build_runner`, `freezed` y
-    `json_serializable` como dev dependencies (declarados; aún no usados).
-  - **Utilidades:** `intl ^0.19.0`, `cupertino_icons ^1.0.8`.
+    `json_serializable` como dev dependencies (declarados; aún no usados —
+    para cuando existan DTOs/models de una feature).
+  - **Utilidades:** `intl ^0.19.0` (usado por `ApiDate` desde Sprint 2),
+    `cupertino_icons ^1.0.8`.
   - **Lint:** `flutter_lints ^4.0.0`, vía `analysis_options.yaml`, sin reglas
     adicionales (política explícita: no agregar reglas sin autorización).
   - **Android toolchain:** Gradle 8.12, AGP 8.9.1, Kotlin 2.1.0.
@@ -54,209 +94,227 @@ del desarrollo.
 **Objetivo:** auditar el proyecto Flutter recién creado antes de tocar
 código, sin modificar ningún archivo.
 
-**Qué se hizo:** revisión de `pubspec.yaml`, `analysis_options.yaml`,
-estructura de `lib/`, `android/`, `ios/` y configuración general.
+**Hallazgos principales:** no existía repositorio Git; `test/widget_test.dart`
+era el test de plantilla del contador (roto, referenciaba `MyApp`); Application
+ID/Bundle ID seguían siendo el placeholder `com.example.*`; firma de release
+de Android usando `signingConfigs.debug`; no se encontró en el repositorio la
+documentación de arquitectura referenciada en comentarios de `pubspec.yaml`
+("doc 02", "doc 03", ADR-004, ADR-005). Todo esto **sigue pendiente** salvo
+lo corregido en Sprint 0.5 (ver "Pendientes").
 
-**Hallazgos principales:**
-- El proyecto era un `flutter create` estándar con toolchain moderno y
-  coherente (Gradle/AGP/Kotlin actuales), `pubspec.lock` ya resuelto sin
-  conflictos.
-- La estructura de carpetas por *feature* en `lib/` ya existía (con
-  archivos `.gitkeep`), anticipando el diseño arquitectónico.
-- **No existía repositorio Git** (`.git/` ausente) pese a que ya había un
-  `.gitignore` configurado.
-- `test/widget_test.dart` era el test de plantilla del contador de
-  `flutter create`, y referenciaba una clase `MyApp` inexistente
-  (`lib/main.dart` define `ZungofeeApp`) — test roto desde el origen.
-- Application ID / Bundle ID seguían siendo el placeholder
-  `com.example.zungofee_mobile` (Android) / `com.example.zungofeeMobile`
-  (iOS). **Sigue pendiente**, ver "Pendientes".
-- Firma de release de Android usando `signingConfigs.debug` (marcado con
-  `TODO` en `build.gradle.kts`). **Sigue pendiente.**
-- No se encontró en el repositorio (ni en directorios cercanos) la
-  documentación de arquitectura referenciada en comentarios de
-  `pubspec.yaml` ("doc 02", "doc 03", ADR-004, ADR-005).
-
-**Archivos creados/modificados:** ninguno (tarea de solo lectura).
-
-**Decisiones de arquitectura:** ninguna tomada en esta etapa; solo
+**Archivos creados/modificados:** ninguno. **Decisiones:** ninguna, solo
 diagnóstico.
 
 ---
 
 ### Sprint 0.5 — Preparación de infraestructura
 
-**Objetivo:** dejar el proyecto listo para el desarrollo oficial, corrigiendo
-los bloqueantes detectados en Sprint 0.
+**Objetivo:** dejar el proyecto listo para el desarrollo oficial.
 
-**Qué se implementó:**
-1. Se inicializó Git (`git init`) — el repositorio no existía previamente.
-2. Se configuró el remoto `origin` apuntando a
-   `https://github.com/JosueJafet/ZUNGOFFEE-MOVIL-APP.git`.
-3. Se corrigió `test/widget_test.dart`: se reemplazó el smoke test de
-   plantilla (dependiente de `MyApp` y un contador inexistente) por un test
-   mínimo que renderiza `ZungofeeApp` dentro de un `ProviderScope` y verifica
-   que se construya sin errores.
-4. Primer commit de la estructura base del proyecto (ya con el test
-   corregido, para no versionar un test roto).
+**Qué se implementó:** `git init`; remoto `origin` configurado
+(`https://github.com/JosueJafet/ZUNGOFFEE-MOVIL-APP.git`); se corrigió
+`test/widget_test.dart` (smoke test de plantilla → smoke test real de
+`ZungofeeApp`); primer commit de la estructura base (ya con el test
+corregido).
 
-**Archivos creados:** ninguno nuevo (fuera del propio repositorio Git).
-
-**Archivos modificados:** `test/widget_test.dart`.
-
-**Decisiones de arquitectura:**
-- El primer commit se hizo con la estructura ya "sana" (test corregido)
-  en vez de versionar primero el estado roto y arreglarlo después, para que
-  el historial no arranque con una regresión conocida.
-- No se resolvieron en esta etapa los placeholders de Application ID/Bundle
-  ID ni la firma de release: quedaron explícitamente fuera de alcance de
-  Sprint 0.5 y siguen pendientes.
+**Decisiones:** el primer commit se hizo con la estructura ya "sana", no con
+el estado roto. Los placeholders de Application ID/Bundle ID y la firma de
+release quedaron explícitamente fuera de alcance y siguen pendientes.
 
 ---
 
 ### Sprint 1 — Task 1: Theme System
 
-**Objetivo:** construir el sistema de theming de la app en
-`lib/core/theme/`, basado estrictamente en la Guía de Marca oficial de
-Zungoffee (PDF `Zungoffee-Guia-de-Marca`, compartida por el usuario), sin
-inventar colores, tipografía, espaciados ni radios.
+**Objetivo:** construir el sistema de theming en `lib/core/theme/`, basado
+estrictamente en la Guía de Marca oficial de Zungoffee (PDF, compartido por
+el usuario), sin inventar colores, tipografía, espaciados ni radios.
 
-**Qué se implementó:** tokens de diseño en capas (color, tipografía,
-espaciado, radios), una `ThemeExtension` para tokens sin slot equivalente en
-`ColorScheme`, y un `AppTheme` que compone todo en `ThemeData.light` /
-`ThemeData.dark`, incluyendo estilos de botones, inputs, cards y chips, para
-que los widgets estándar de Material hereden el estilo de marca vía
-`Theme.of(context)`.
+**Qué se implementó:** `app_colors.dart` (paleta fija + roles semánticos
+claro/oscuro + colores de las 5 etapas de café), `app_typography.dart`
+(Poppins/Inter/JetBrains Mono), `app_spacing.dart`, `app_radius.dart`,
+`theme_extensions.dart` (`AppColorsExtension` + `context.appColors`), y
+`app_theme.dart` (`AppTheme.light`/`dark`, incluyendo botones/inputs/
+cards/chips).
 
-**Archivos creados** (`lib/core/theme/`):
-- `app_colors.dart` — `AppColors` (paleta fija: cereza, oliva, pergamino,
-  tueste, oro tostado, ink), `AppLightColors` / `AppDarkColors` (roles
-  semánticos background/card/foreground/primary/secondary/
-  mutedForeground/destructive), `AppCoffeeStageColors` (5 etapas de
-  `estados_cafe`: uva, húmedo, pergamino, tueste, molido).
-- `app_typography.dart` — `AppFontFamily` (Poppins/Inter/JetBrains Mono) y
-  `AppTypography` (display, heading, subheading, body, caption,
-  tabularData).
-- `app_spacing.dart` — `AppSpacing` (`space2`=8, `space4`=16, `space6`=24;
-  únicamente los tokens documentados en la guía).
-- `app_radius.dart` — `AppRadius` (`sm`=6, `md`=8, `lg`=10, `xl`=14) +
-  getters `BorderRadius` de conveniencia.
-- `theme_extensions.dart` — `AppColorsExtension` (accent, mutedForeground,
-  colores de etapa) + extensión `context.appColors`.
-- `app_theme.dart` — `AppTheme.light` / `AppTheme.dark`.
-
-**Decisiones de arquitectura:**
-- Contenedores de tokens implementados como `abstract final class` (Dart 3):
-  no instanciables, solo namespaces estáticos.
-- No se registraron los archivos de fuente (`Poppins`/`Inter`/`JetBrains
-  Mono`) en `pubspec.yaml` (`flutter.fonts`): implicaría agregar assets, algo
-  fuera de alcance de la tarea ("no agregar dependencias nuevas"). Los
-  nombres de familia están declarados y listos para cuando se agreguen los
-  `.ttf`.
-- `JetBrains Mono` no tenía tamaño/peso explícito en la guía (a diferencia
-  de los otros 5 estilos); se usó 16px/400 (la unidad base `1rem` del propio
-  sistema de la guía) en vez de inventar un valor, dejándolo documentado en
-  el código como supuesto explícito.
-- Tokens `on*` (texto sobre color) no definidos por la guía: `onPrimary` /
-  `onError` = blanco (estándar de contraste sobre tonos saturados, visible
-  en el mock "Registrar mi bodega" de la guía); `onSecondary` / `onSurface`
-  = `foreground` del tema correspondiente.
-- Mapeo de los 6 estilos de marca a slots de `TextTheme` de Material
-  (`headlineMedium→display`, `titleLarge→heading`, `titleMedium→subheading`,
-  `bodyLarge→body`, `bodyMedium→caption`, `labelLarge→tabularData`): decisión
-  de diseño, ya que la guía no nombra slots de Material.
-- El botón "soft destructivo" ("Eliminar lote" en el mock) no se themó a
-  nivel `ThemeData` por no corresponder a ningún tipo de botón estándar de
-  Material; queda para la futura tarea de widgets reutilizables
-  (`shared/widgets/buttons`).
-- **No se modificó `main.dart`**: el alcance de la tarea era únicamente
-  `lib/core/theme/`. Conectar `MaterialApp` con `AppTheme.light`/`dark`
-  queda pendiente (ver "Pendientes").
-- La Guía de Marca en sí (PDF) **no está guardada en el repositorio**; fue
-  compartida directamente en la conversación. Ver "Pendientes".
-
-**Validación:** `flutter analyze` sin issues; `flutter test` con todos los
-tests pasando.
+**Decisiones clave:** tokens como `abstract final class` (namespaces
+estáticos); fuentes declaradas por nombre pero **sin registrar** en
+`pubspec.yaml` (implicaría assets, fuera de alcance); `JetBrains Mono` sin
+tamaño explícito en la guía → se usó 16px/400 (la unidad base `1rem` del
+propio sistema de la guía) como supuesto documentado; tokens `on*` no
+definidos por la guía → blanco sobre tonos saturados, `foreground` del tema
+sobre `secondary`; mapeo de los 6 estilos de marca a slots de `TextTheme` de
+Material fue decisión de diseño propia. No se tocó `main.dart` (fuera de
+alcance).
 
 ---
 
 ### Sprint 1 — Task 2: Router Infrastructure
 
-**Objetivo:** construir la infraestructura de navegación en
-`lib/core/router/` usando GoRouter como único sistema de rutas, centralizada
-y escalable, sin implementar pantallas de negocio reales.
+**Objetivo:** infraestructura de navegación en `lib/core/router/` con
+GoRouter, centralizada y escalable, sin pantallas de negocio reales.
 
-**Qué se implementó:** nombres y paths de ruta centralizados en constantes
-propias, una tabla única de rutas (`AppRoutes.routes`) y un punto único de
-acceso al `GoRouter` (`AppRouter.router`). Dos pantallas placeholder
-mínimas (`SplashPlaceholderScreen`, `HomePlaceholderScreen`) para validar
-que la navegación funciona, más un test que verifica la transición entre
-ambas.
+**Qué se implementó:** `route_names.dart`/`route_paths.dart` (constantes
+centralizadas), `app_routes.dart` (`AppRoutes.routes`), `app_router.dart`
+(en ese momento, `AppRouter.router` como `static final` sin dependencias),
+pantallas placeholder `SplashPlaceholderScreen`/`HomePlaceholderScreen`, y un
+test de navegación splash → home.
 
-**Archivos creados:**
-- `lib/core/router/route_names.dart` — `RouteNames`.
-- `lib/core/router/route_paths.dart` — `RoutePaths`.
-- `lib/core/router/app_routes.dart` — `AppRoutes.routes`.
-- `lib/core/router/app_router.dart` — `AppRouter.router`.
-- `lib/core/router/screens/splash_placeholder_screen.dart` —
-  `SplashPlaceholderScreen`.
-- `lib/core/router/screens/home_placeholder_screen.dart` —
-  `HomePlaceholderScreen`.
-- `test/core/router/app_router_test.dart` — test de navegación
-  splash → home.
+**Decisiones clave:** nombres y paths en archivos separados; escalar rutas
+vía lista (`AppRoutes.routes`) sin tocar `app_router.dart`; placeholders
+dentro de `core/router/screens/` (no en `features/`), marcados para
+reemplazo futuro; sin Riverpod provider para el router (fuera de alcance).
+No se tocó `main.dart`.
 
-**Archivos eliminados:** `lib/core/router/.gitkeep` (la carpeta dejó de
-estar vacía).
+---
 
-**Decisiones de arquitectura:**
-- Nombres (`RouteNames`) y paths (`RoutePaths`) en archivos separados:
-  separa "cómo se navega por nombre" de "cómo se navega por URL"; el resto
-  del código no debería usar strings de ruta directamente.
-- Escalabilidad vía lista (`AppRoutes.routes`), no vía edición de
-  `GoRouter`: agregar un módulo futuro solo requiere una constante nueva en
-  `RouteNames`/`RoutePaths` y una entrada en la lista; `app_router.dart` no
-  cambia.
-- Pantallas placeholder ubicadas dentro de `core/router/screens/` (no en
-  `features/`): son código de infraestructura desechable para probar el
-  router, marcadas explícitamente en el código para reemplazo futuro.
-- Sin Riverpod provider para el router (fuera de alcance de la tarea):
-  `AppRouter.router` es un getter estático, mismo patrón que `AppTheme`.
-- **No se modificó `main.dart`**: mismo criterio que en Task 1: alcance
-  limitado a `lib/core/router/`. Conectar
-  `MaterialApp.router(routerConfig: AppRouter.router)` queda pendiente.
+### Sprint 2 — Network & Session Infrastructure
 
-**Validación:** `flutter analyze` sin issues; `flutter test` con todos los
-tests pasando (incluye el nuevo test de navegación).
+Con el backend oficial ya desplegado (staging, Render) y su contrato de API
+documentado (`CONTEXTO-MOVIL-FLUTTER.md`), este Sprint completó el resto de
+`core/` y conectó por primera vez la app con Supabase/la API real — sin
+implementar ninguna pantalla o lógica de negocio de una feature.
+
+#### Task 1 — Environment Configuration (`lib/core/config/`)
+
+**Qué se implementó:** `app_environment.dart` (`AppEnvironment`) con URL/anon
+key de Supabase y URL base de la API (staging por defecto,
+`--dart-define=API_BASE_URL=...` para local), y timeouts de red de 60s
+pensados para el cold start documentado de Render.
+
+**Decisiones:** el anon key se embebe como default en código — el propio
+contexto técnico aclara que es un valor público seguro por diseño de
+Supabase (protegido por RLS), a diferencia de la `service_role key` (nunca
+debe estar en la app). Sin sistema de flavors dev/staging/prod: el backend
+documenta que aún no existe un ambiente de producción separado.
+
+#### Task 2 — Session Service Foundation (`lib/core/services/`)
+
+**Qué se implementó:** `supabase_bootstrap.dart` (`SupabaseBootstrap.
+initialize()`) y `auth_session_service.dart` (`AuthSessionService`: sesión
+actual, JWT, `isAuthenticated`, `onAuthStateChange`, `signInWithPassword`,
+`signOut`).
+
+**Decisiones:** nueva dependencia `supabase_flutter ^2.16.0`. Se usó
+`publishableKey` (no `anonKey`, deprecado en esta versión del SDK) al
+inicializar Supabase. **No** se usa `flutter_secure_storage` para el JWT:
+Supabase ya persiste y refresca su propia sesión — reinventarlo sería
+duplicar trabajo. `AuthSessionService` recibe el `SupabaseClient` por
+constructor (no lee el singleton `Supabase.instance` directamente) para
+poder sustituirlo en tests.
+
+#### Task 3 — Network Client & Error Handling (`lib/core/api/` + `lib/core/errors/`)
+
+**Qué se implementó:** `api_exception.dart` (`ApiException`, con
+`isForbidden`/`isUnauthorized`/`isBadRequest`), `network_exception.dart`
+(`NetworkException`, para fallas de conectividad sin respuesta), y
+`api_client.dart` (`ApiClient`: cliente Dio centralizado con interceptor de
+`Authorization: Bearer` y traducción de cualquier `DioException` a una de
+las dos excepciones tipadas).
+
+**Decisiones:** manejo de errores con **excepciones tipadas** (no
+Result/Either) — decisión validada explícitamente con el usuario, por
+integrar sin boilerplate con `AsyncValue.guard` de Riverpod. Se introdujo
+`SessionTokenProvider` (interfaz en `core/api`, implementada por
+`AuthSessionService`) para invertir la dependencia y poder testear
+`ApiClient` sin Supabase. La traducción de errores se hace en un método
+interno (`_guard`/`_translate`), no en un `Interceptor.onError`, porque la
+API de Dio solo permite relanzar como `DioException` — así los repositories
+reciben la excepción tipada directamente. `message` se parsea también como
+posible `List<String>` (formato de validación de NestJS), sin inventar
+datos nuevos. Sin cola de reintentos/offline (mencionado en el contexto
+técnico como decisión futura, no de este sprint).
+
+#### Task 4 — Domain Constants & Parsing Utilities (`lib/core/constants/` + `lib/core/utils/`)
+
+**Qué se implementó:** `estado_cafe.dart` (`EstadoCafeId`: catálogo de 7
+IDs; `EstadoCafeTransiciones.esValida`: reglas de transición documentadas —
+pergamino→tostado, tostado→molido), `app_role.dart` (`AppRole`),
+`pagination_limits.dart` (`PaginationLimits`), `bigint_id.dart` (`BigIntId`:
+IDs BigInt que llegan como `String`), `api_decimal.dart` (`ApiDecimal`:
+decimales que llegan como `String`), `api_date.dart` (`ApiDate`: formato
+`YYYY-MM-DD` / ISO completo).
+
+**Decisiones:** todos los valores tomados literalmente del contexto técnico,
+sin inventar ninguno. Los parsers aceptan defensivamente `num` además de
+`String` (tolerancia a un cambio futuro del backend, no una suposición sobre
+el contrato actual). `EstadoCafeTransiciones.esValida` es solo una
+validación temprana de UX — la API sigue siendo la fuente de verdad final.
+
+#### Task 5 — Router Session-Aware Guards (extiende `lib/core/router/`)
+
+**Qué se implementó:** ruta `login` (`LoginPlaceholderScreen`),
+`auth_redirect.dart` (`AuthRedirect.resolve`: lógica pura de redirect según
+sesión) y `go_router_refresh_stream.dart` (`GoRouterRefreshStream`: conecta
+`onAuthStateChange` con `GoRouter.refreshListenable`). `AppRouter` pasó de
+`static final GoRouter router` a `static GoRouter build(AuthSessionService)`.
+
+**Decisiones:** toda ruta que no sea `login` se trata como protegida (no hay
+lista explícita de "rutas públicas" porque no existe otra hoy). La decisión
+de redirect se aisló en una función pura (`AuthRedirect.resolve`) para poder
+testear las 4 combinaciones sin Supabase — ahí es literalmente donde se
+simula la "sesión activa" en los tests, no autenticando de verdad. El test
+de integración del router solo cubre el caso "sin sesión" (con un
+`SupabaseClient` real sin sesión persistida); simular un login real habría
+requerido falsificar las respuestas HTTP de GoTrue.
+
+#### Task 6 — Application Bootstrap (`lib/main.dart`)
+
+**Qué se implementó:** `main()` ahora `async`: inicializa Supabase antes de
+`runApp`, construye `AuthSessionService` y el `GoRouter`
+(`AppRouter.build(...)`) **una única vez**, y los pasa por constructor a
+`ZungofeeApp`, que ahora usa `MaterialApp.router` con `theme`/`darkTheme` de
+`AppTheme`.
+
+**Decisiones:** el router se construye una sola vez en `main()`, nunca
+dentro de `build()` (perdería historial de navegación y se re-suscribiría al
+stream de auth en cada rebuild) — por eso `ZungofeeApp` pasó a recibir
+`router` por constructor. Bug encontrado y corregido durante la validación:
+todo `SupabaseClient` arranca un `Timer.periodic` de auto-refresh al
+construirse; los tests que crean uno deben cerrarlo con `.dispose()` en
+`tearDown` o `flutter test` falla por "timer pendiente" (corregido en
+`widget_test.dart` y `app_router_test.dart`).
+
+**Validación de las 6 tasks:** `flutter analyze` sin issues y `flutter test`
+en verde (25/25) al cierre de cada una.
 
 ---
 
 ## Estado del repositorio
 
-- **Rama principal:** `main` (renombrada desde `master` al cerrar el
-  Sprint 1; ya publicada en `origin/main`).
-- **Ramas existentes:**
-  - `main` — integra todo el trabajo aprobado hasta la fecha (Sprint 0.5 +
-    Sprint 1 Task 1 + Task 2). Sincronizada con `origin/main`.
-  - `feature/theme-system` — rama de trabajo de Sprint 1 Task 1, ya
-    integrada (fast-forward) en `main`. No eliminada.
-  - `feature/router-infrastructure` — rama de trabajo de Sprint 1 Task 2,
-    ya integrada (fast-forward) en `main`. No eliminada.
+- **Rama principal:** `main`, sincronizada con `origin/main` hasta el cierre
+  de Sprint 1 (el push de los commits de Sprint 2 aún no se ha hecho — ver
+  nota al final).
+- **Ramas existentes** (todas ya integradas en `main` vía fast-forward, ninguna
+  eliminada): `feature/theme-system`, `feature/router-infrastructure`,
+  `feature/core-config`, `feature/core-session-service`,
+  `feature/core-network-client`, `feature/core-constants-utils`,
+  `feature/router-auth-guards`, `feature/app-bootstrap`.
 - **Remoto:** `origin` → `https://github.com/JosueJafet/ZUNGOFFEE-MOVIL-APP.git`.
-  Se hizo el primer push de `main` (`git push -u origin main`); las ramas
-  `feature/*` permanecen solo locales.
-- **Commits importantes (historial de `main`, en orden):**
-  1. `chore: initial Flutter project structure` — primer commit del
-     proyecto (Sprint 0.5).
-  2. `feat(theme): add brand color tokens`
-  3. `feat(theme): add typography tokens`
-  4. `feat(theme): add spacing and radius tokens`
-  5. `feat(theme): add theme extension for brand-specific tokens`
-  6. `feat(theme): implement application theme system`
-  7. `feat(router): add centralized route name and path constants`
-  8. `feat(router): add minimal placeholder screens for navigation testing`
-  9. `feat(router): configure application router`
-  10. `test(router): verify navigation between placeholder screens`
-  11. `chore(router): remove now-unneeded .gitkeep`
+- **Commits de Sprint 2 (historial de `main`, en orden, después de los 11 de
+  Sprint 0.5/Sprint 1):**
+  1. `feat(config): add environment configuration for Supabase and API`
+  2. `chore(config): remove now-unneeded .gitkeep`
+  3. `chore(deps): add supabase_flutter dependency`
+  4. `feat(services): add Supabase SDK bootstrap`
+  5. `feat(services): add AuthSessionService wrapper over Supabase Auth`
+  6. `chore(services): remove now-unneeded .gitkeep`
+  7. `feat(errors): add ApiException and NetworkException`
+  8. `feat(api): add SessionTokenProvider interface, implemented by AuthSessionService`
+  9. `feat(api): add centralized Dio client with auth header and error translation`
+  10. `test(api): verify ApiClient auth header and error translation`
+  11. `chore(api,errors): remove now-unneeded .gitkeep files`
+  12. `feat(constants): add EstadoCafeId catalog and valid processing transitions`
+  13. `feat(constants): add AppRole and PaginationLimits constants`
+  14. `feat(utils): add BigIntId parsing helper`
+  15. `feat(utils): add ApiDecimal parsing helper`
+  16. `feat(utils): add ApiDate parsing helper`
+  17. `chore(constants,utils): remove now-unneeded .gitkeep files`
+  18. `feat(router): add login placeholder route`
+  19. `feat(router): add pure AuthRedirect decision logic`
+  20. `feat(router): add GoRouterRefreshStream to react to auth state changes`
+  21. `feat(router): guard routes based on AuthSessionService session state`
+  22. `feat(app): wire Supabase bootstrap, AppTheme and AppRouter into main.dart`
+  23. `test(router): dispose SupabaseClient to avoid leaking its auto-refresh timer`
 
 ---
 
@@ -265,15 +323,34 @@ tests pasando (incluye el nuevo test de navegación).
 ```
 lib/
   core/                     Infraestructura transversal (sin lógica de negocio)
-    api/                    (vacío — pendiente: cliente Dio)
-    config/                 (vacío)
-    constants/              (vacío)
-    errors/                 (vacío)
-    router/                 Navegación (GoRouter) — implementado
-      screens/              Pantallas placeholder de validación
-    services/               (vacío)
-    theme/                  Sistema de theming — implementado
-    utils/                  (vacío)
+    api/                    Cliente Dio + errores tipados — implementado (Sprint 2)
+      api_client.dart
+      session_token_provider.dart
+    config/                 Configuración de entorno — implementado (Sprint 2)
+      app_environment.dart
+    constants/              Constantes de dominio — implementado (Sprint 2)
+      app_role.dart
+      estado_cafe.dart
+      pagination_limits.dart
+    errors/                 Excepciones tipadas — implementado (Sprint 2)
+      api_exception.dart
+      network_exception.dart
+    router/                 Navegación (GoRouter) — implementado (Sprint 1 + 2)
+      app_router.dart       AppRouter.build(AuthSessionService)
+      app_routes.dart
+      auth_redirect.dart
+      go_router_refresh_stream.dart
+      route_names.dart
+      route_paths.dart
+      screens/              Pantallas placeholder (splash, home, login)
+    services/               Sesión/Supabase — implementado (Sprint 2)
+      auth_session_service.dart
+      supabase_bootstrap.dart
+    theme/                  Sistema de theming — implementado (Sprint 1)
+    utils/                  Parseo de datos de la API — implementado (Sprint 2)
+      api_date.dart
+      api_decimal.dart
+      bigint_id.dart
   features/                 Un directorio por módulo de negocio, mismo
                              patrón en los 9 módulos: auth, clientes,
                              compras, dashboard, inventario, notificaciones,
@@ -294,12 +371,17 @@ lib/
     mixins/
     widgets/
       buttons/ cards/ dialogs/ empty_states/ inputs/ loaders/ snackbars/
-  main.dart                 Entry point mínimo (ProviderScope + MaterialApp
-                             con un Scaffold estático). Aún no conecta
-                             AppTheme ni AppRouter.
+  main.dart                 Bootstrap: inicializa Supabase, construye
+                             AuthSessionService + AppRouter una vez, y monta
+                             MaterialApp.router con AppTheme.
 test/
-  core/router/app_router_test.dart   Test de navegación
-  widget_test.dart                   Smoke test de ZungofeeApp
+  core/
+    api/api_client_test.dart
+    constants/estado_cafe_test.dart
+    router/app_router_test.dart
+    router/auth_redirect_test.dart
+    utils/api_date_test.dart, api_decimal_test.dart, bigint_id_test.dart
+  widget_test.dart
 docs/
   PROJECT_STATUS.md         Este documento
 android/, ios/              Scaffolding estándar de `flutter create`
@@ -310,32 +392,44 @@ android/, ios/              Scaffolding estándar de `flutter create`
 ## Decisiones arquitectónicas
 
 1. **Clean Architecture por feature**, con capas `data/` y `presentation/`
-   dentro de cada módulo — definido antes de Sprint 0 (ya existía en el
-   scaffold inicial), mantenido sin cambios en todos los sprints.
-2. **Riverpod** (`flutter_riverpod`) como gestor de estado oficial —
-   declarado en `pubspec.yaml`, usado por ahora solo para envolver la app
-   (`ProviderScope`) en `main.dart`.
-3. **GoRouter** como único sistema de navegación — implementado en
-   Sprint 1 Task 2, sin guards/middleware/deep links (explícitamente fuera
-   de alcance por ahora).
+   dentro de cada módulo — sin cambios desde el scaffold inicial.
+2. **Riverpod** como gestor de estado oficial — declarado, usado hoy solo
+   para `ProviderScope`; sin providers propios todavía (a propósito, ninguna
+   tarea de Sprint 1/2 los necesitaba).
+3. **GoRouter** como único sistema de navegación, ahora con guards de sesión
+   (`AuthRedirect` + `GoRouterRefreshStream`), sin roles/permisos por ruta
+   todavía (eso depende del perfil/rol del usuario, que es trabajo de
+   feature).
 4. **Sistema de theming basado 100% en la Guía de Marca oficial**, sin
-   valores inventados; separación en capas (colores / tipografía /
-   espaciado / radios / extensión de tema / composición final en
-   `AppTheme`).
-5. **Tokens de diseño como `abstract final class` con miembros estáticos**
-   (patrón Dart 3): evita instanciación, funciona como namespace puro.
-6. **Nombres y paths de ruta centralizados** en constantes propias
-   (`RouteNames`, `RoutePaths`) para evitar strings repetidos.
-7. **Cada tarea de infraestructura se limita estrictamente a su alcance
-   declarado** (p. ej. Theme System no toca `main.dart`; Router
-   Infrastructure no toca `features/`): decisión de proceso repetida en
-   ambas tareas de Sprint 1, para mantener cada Pull Request pequeño y
-   revisable de forma aislada.
-8. **`analysis_options.yaml` usa únicamente `flutter_lints` base**, sin
-   reglas adicionales, por política explícita del equipo (comentario en el
-   propio archivo).
-9. **Rama principal `main`** (no `master`), con flujo de ramas
-   `feature/*` → merge (fast-forward) → `main`.
+   valores inventados.
+5. **Tokens/namespaces como `abstract final class` con miembros estáticos**
+   (patrón Dart 3) para todo lo que es configuración pura sin estado
+   (`AppTheme`, `AppEnvironment`, `AppRole`, `EstadoCafeId`, etc.).
+6. **Excepciones tipadas para errores de API** (`ApiException`/
+   `NetworkException`), no Result/Either — decisión explícita para integrar
+   sin boilerplate con `AsyncValue.guard` de Riverpod.
+7. **Inversión de dependencias en los puntos de integración con SDKs
+   externos**: `SessionTokenProvider` (en `core/api`) es implementado por
+   `AuthSessionService` (en `core/services`), para que el cliente de red no
+   dependa del SDK de Supabase y sea testeable con un fake.
+8. **Clases con estado real (que envuelven I/O externo) se inyectan por
+   constructor**, rompiendo a propósito el patrón "namespace estático" —
+   `AuthSessionService`, `ApiClient` — para permitir tests con fakes/clientes
+   de prueba.
+9. **`AppRouter` es un builder (`AppRouter.build(authSessionService)`), no
+   un campo estático fijo**: necesita una dependencia en tiempo de
+   ejecución (la sesión), así que quien ensambla la app decide cuándo
+   construirlo — siempre una sola vez, nunca dentro de `build()`.
+10. **Sin sistema de flavors dev/staging/prod**: el backend no tiene aún un
+    ambiente de producción separado; se sobreescribe la URL vía
+    `--dart-define` para desarrollo local contra `localhost:3000`.
+11. **Cada tarea de infraestructura se limita estrictamente a su alcance
+    declarado** — patrón repetido en las 8 tareas de Sprint 1+2, para
+    mantener cada rama pequeña y revisable de forma aislada.
+12. **`analysis_options.yaml` usa únicamente `flutter_lints` base**, sin
+    reglas adicionales.
+13. **Rama principal `main`**, con flujo `feature/*` → merge (fast-forward)
+    → `main`, sin eliminar las ramas ya integradas.
 
 ---
 
@@ -343,71 +437,91 @@ android/, ios/              Scaffolding estándar de `flutter create`
 
 Lo que falta por implementar, en el orden en que fue quedando pendiente:
 
-- **Conectar `AppTheme` y `AppRouter` en `main.dart`**: hoy `main.dart`
-  sigue siendo el `MaterialApp` estático generado en Sprint 0; no usa
-  `ThemeData` de `AppTheme` ni `MaterialApp.router` con `AppRouter.router`.
+- **Push de los commits de Sprint 2 a `origin/main`**: aprobado localmente,
+  pendiente de que el usuario confirme el push (no se ha hecho todavía).
 - **Application ID / Bundle ID siguen siendo placeholders**:
   `com.example.zungofee_mobile` (Android) y `com.example.zungofeeMobile`
   (iOS). Detectado en Sprint 0, no resuelto en ningún sprint posterior.
-- **Firma de release de Android** sigue usando `signingConfigs.debug`
-  (marcado con `TODO` en `android/app/build.gradle.kts`). No resuelto.
-- **La Guía de Marca (PDF) no está versionada en el repositorio.** Fue
-  compartida directamente en la conversación durante Sprint 1 Task 1;
-  se recomienda guardarla en `docs/` (p. ej. `docs/brand/`) para que
-  quede disponible sin depender del historial de chat.
-- **Registro de fuentes de marca** (`Poppins`, `Inter`, `JetBrains Mono`)
-  en `pubspec.yaml` (`flutter.fonts`) y sus archivos `.ttf`: los nombres de
-  familia ya están declarados en `AppTypography`, pero los assets no se han
-  agregado.
-- **Botón "soft destructivo"** (variante vista en el mock "Eliminar lote"
-  de la Guía de Marca) no tiene equivalente en los temas de botón estándar
-  de Material; pendiente para cuando se implementen los widgets
-  reutilizables de `shared/widgets/buttons`.
-- **Ningún módulo de `features/` tiene código** — todas las carpetas
-  siguen vacías (`.gitkeep`), incluyendo `auth`, que normalmente sería el
-  primer módulo a implementar.
-- **`core/api`, `core/config`, `core/constants`, `core/errors`,
-  `core/services`, `core/utils`** siguen vacíos — ningún cliente Dio,
-  manejo de errores, servicios (p. ej. `flutter_secure_storage`) ni
-  utilidades implementados todavía.
+- **Firma de release de Android** sigue usando `signingConfigs.debug`. No
+  resuelto.
+- **La Guía de Marca (PDF) y el contexto técnico del backend
+  (`CONTEXTO-MOVIL-FLUTTER.md`) no están versionados en el repositorio** —
+  ambos fueron compartidos directamente en la conversación. Se recomienda
+  guardarlos en `docs/` para que no dependan del historial de chat.
+- **Registro de fuentes de marca** (`Poppins`, `Inter`, `JetBrains Mono`) en
+  `pubspec.yaml` (`flutter.fonts`) y sus archivos `.ttf`: nombres declarados,
+  assets no agregados.
+- **Botón "soft destructivo"** del mock de la Guía de Marca sigue sin
+  equivalente en el theme; pendiente para `shared/widgets/buttons`.
+- **Ningún módulo de `features/` tiene código** — todas las carpetas siguen
+  vacías, incluyendo `auth`.
 - **`shared/` completo** (extensions, mixins, widgets) sigue vacío.
-- **Sin integración con backend real**: no hay definido aún un cliente Dio,
-  DTOs, modelos ni repositorios — bloqueado a propósito (ver "Información
-  importante").
+- **Sin repositories/DTOs/models de ningún módulo de negocio** — `core/api`,
+  `core/errors`, `core/constants` y `core/utils` ya están listos para que
+  cada feature los reutilice, pero ninguna feature los usa todavía.
+- **Sin providers de Riverpod propios** — `ProviderScope` está en `main.dart`
+  desde Sprint 0, pero no hay ningún provider real (de auth, de datos, etc.).
+- **Cola de operaciones offline / reintentos de red en campo**: mencionado
+  en el contexto técnico como decisión futura, no abordado todavía.
+- **Registro de dispositivo push** (`firebase_messaging`,
+  `POST /notificaciones/dispositivos`): el propio backend aclara que el
+  envío real de push no está conectado del lado servidor todavía; no es
+  prioritario.
+- **Roles/permisos por ruta** (ej. "solo `admin_bodega` puede entrar aquí"):
+  el router hoy solo distingue autenticado/no autenticado, no por rol —
+  depende de tener cargado el perfil del usuario (trabajo de feature).
 
 ---
 
 ## Próximo Sprint recomendado
 
-**Sprint 1 — Task 3 (o Sprint 2, según se decida numerar): completar la
-base de `core/` y ensamblar `main.dart`.**
+**Sprint 3 — Feature: Auth (login real).**
 
-Concretamente, cuando se retome el desarrollo:
-1. Conectar `AppTheme` (claro/oscuro) y `AppRouter` en `main.dart`,
-   reemplazando el `MaterialApp` estático actual por
-   `MaterialApp.router` con `theme`/`darkTheme` y `routerConfig`.
-2. Resolver los pendientes de configuración nativa (Application ID real,
-   firma de release) antes de que bloqueen un primer build de
-   distribución.
-3. Recién después de eso, y **solo cuando el backend oficial esté
-   desplegado y su contrato de API confirmado**, iniciar el primer módulo
-   de negocio real (candidato natural: `features/auth`, ya que el resto de
-   módulos probablemente dependan de sesión/autenticación).
+Es el candidato natural: toda la infraestructura que necesita (Supabase,
+`ApiClient`, guards del router, tema) ya está lista, y el resto de módulos de
+negocio probablemente dependan de sesión/perfil de usuario.
 
-No se recomienda iniciar ningún módulo de `features/` antes de tener
-confirmado el contrato del backend, para evitar tener que rehacer DTOs,
-modelos o repositorios.
+Alcance sugerido:
+1. Reemplazar `LoginPlaceholderScreen` por la pantalla real de login
+   (formulario de correo/contraseña contra `AuthSessionService.
+   signInWithPassword`).
+2. Repository/provider de Riverpod para `GET /perfil` (rol, nombre, tenant)
+   usando `ApiClient` — primer uso real de `core/api` por una feature.
+3. Exponer el estado de sesión/perfil vía Riverpod para que el resto de la
+   app (y, más adelante, guards por rol en el router) puedan leerlo.
+4. Manejar en la UI los casos ya documentados: credenciales inválidas,
+   `ApiException`/`NetworkException` del login o de `/perfil`.
+
+No perder de vista los pendientes de configuración nativa (Application
+ID, firma de release) — no bloquean Sprint 3, pero deben resolverse antes de
+cualquier build de distribución real.
 
 ---
 
 ## Información importante
 
-**El desarrollo queda pausado a la espera del despliegue oficial del
-backend.** La aplicación móvil debe adaptarse al backend existente (no al
-revés): estructuras de datos, endpoints, autenticación, estados de negocio
-(como `estados_cafe`) y cualquier contrato de API deberán tomarse
-directamente de lo que el backend ya define, sin anticipar ni inventar
-modelos, DTOs o repositorios mientras ese backend no esté confirmado y
-accesible. Cuando se retome el proyecto, el primer paso antes de tocar
-`features/` debe ser validar contra el backend real qué datos y contratos
-existen.
+El backend oficial (staging) ya está desplegado y la app está integrada
+contra él desde Sprint 2 — la pausa que motivó `CONTEXTO-MOVIL-FLUTTER.md`
+ya se resolvió. Sigue aplicando el principio de fondo: **la app debe
+adaptarse al backend existente, no al revés**. Cualquier estructura de
+datos, endpoint, regla de negocio o estado (`estados_cafe`, roles, límites de
+paginación, formato de IDs/decimales/fechas) debe tomarse del contrato ya
+documentado en `CONTEXTO-MOVIL-FLUTTER.md` — no inventar ni anticipar campos
+o comportamientos que ese documento no confirme. Si el contrato cambia
+(nuevo endpoint, campo, regla), este documento y el código de `core/`
+deben actualizarse juntos, no solo uno de los dos.
+
+Nota sobre el ambiente: `https://zungo-coffee-api.onrender.com` sigue siendo
+**staging**, con cold start de ~30-50s tras inactividad (plan free de
+Render) — no hay todavía un ambiente de producción separado.
+
+---
+
+## Próximo Hito
+
+**Sprint 3 corresponde al módulo de autenticación (`features/auth`)**, el
+primer módulo de negocio real del proyecto. Alcance, en breve:
+- Pantalla de login real (reemplaza `LoginPlaceholderScreen`).
+- Repository/provider de Riverpod para `GET /perfil`.
+- Exposición del estado de sesión/perfil al resto de la app.
+- Manejo en la UI de errores de login/perfil (`ApiException`/`NetworkException`).
