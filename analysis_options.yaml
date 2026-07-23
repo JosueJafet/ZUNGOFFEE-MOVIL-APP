@@ -1,5 +1,14 @@
 include: package:flutter_lints/flutter.yaml
 
+analyzer:
+  errors:
+    # Falso positivo conocido de `freezed` + `json_serializable`: un
+    # `@JsonKey` en un parámetro de constructor de una clase `@freezed`
+    # siempre se reporta como "invalid_annotation_target" pese a que el
+    # código generado es correcto. Recomendado por la documentación
+    # oficial de `freezed`.
+    invalid_annotation_target: ignore
+
 linter:
   rules:
     # Reglas base de flutter_lints. No se agregan reglas adicionales
