@@ -23,14 +23,16 @@ class _FakeSessionTokenProvider implements SessionTokenProvider {
 }
 
 class _FakeAuthRepository extends AuthRepository {
-  _FakeAuthRepository(super.authSessionService, {this.signOutError});
+  _FakeAuthRepository(super.authSessionService, {this.signOutError, this.signOutDelay});
 
   final Object? signOutError;
+  final Duration? signOutDelay;
   int signOutCallCount = 0;
 
   @override
   Future<void> signOut() async {
     signOutCallCount++;
+    if (signOutDelay != null) await Future<void>.delayed(signOutDelay!);
     if (signOutError != null) throw signOutError!;
   }
 }
@@ -175,6 +177,32 @@ void main() {
         await tester.pumpWidget(_wrap(repository, fakeAuthRepository));
         await tester.pumpAndSettle();
 
+        await tester.tap(find.byTooltip('Cerrar sesión'));
+        await tester.pumpAndSettle();
+
+        expect(fakeAuthRepository.signOutCallCount, 1);
+      },
+    );
+
+    testWidgets(
+      'logout: dos taps seguidos sin pump entre ellos, ¿disparan signOut() '
+      'dos veces?',
+      (tester) async {
+        // Delay para mantener la primera llamada "en vuelo" mientras se
+        // dispara el segundo tap, y sin pump() entre los dos taps: el
+        // árbol de widgets no se reconstruye entre ambos, así que si el
+        // botón no se deshabilita de forma síncrona, el segundo tap
+        // vuelve a golpear el mismo IconButton habilitado.
+        final fakeAuthRepository = _FakeAuthRepository(
+          AuthSessionService(supabaseClient),
+          signOutDelay: const Duration(milliseconds: 50),
+        );
+        final repository = _FakePerfilRepository([() async => _perfilDeEjemplo]);
+
+        await tester.pumpWidget(_wrap(repository, fakeAuthRepository));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byTooltip('Cerrar sesión'));
         await tester.tap(find.byTooltip('Cerrar sesión'));
         await tester.pumpAndSettle();
 
