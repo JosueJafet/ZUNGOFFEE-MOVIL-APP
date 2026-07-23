@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:zungofee_mobile/core/router/app_router.dart';
 import 'package:zungofee_mobile/core/services/auth_session_service.dart';
+import 'package:zungofee_mobile/features/auth/presentation/screens/login_screen.dart';
 
 void main() {
   group('AppRouter (sin sesión activa)', () {
@@ -27,10 +29,12 @@ void main() {
     testWidgets('redirige de splash a login al arrancar', (tester) async {
       final router = AppRouter.build(authSessionService);
 
-      await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+      await tester.pumpWidget(
+        ProviderScope(child: MaterialApp.router(routerConfig: router)),
+      );
       await tester.pumpAndSettle();
 
-      expect(find.text('Login placeholder'), findsOneWidget);
+      expect(find.byType(LoginScreen), findsOneWidget);
     });
 
     testWidgets('bloquea la navegación directa a home y redirige a login', (
@@ -38,13 +42,15 @@ void main() {
     ) async {
       final router = AppRouter.build(authSessionService);
 
-      await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+      await tester.pumpWidget(
+        ProviderScope(child: MaterialApp.router(routerConfig: router)),
+      );
       await tester.pumpAndSettle();
 
       router.go('/home');
       await tester.pumpAndSettle();
 
-      expect(find.text('Login placeholder'), findsOneWidget);
+      expect(find.byType(LoginScreen), findsOneWidget);
       expect(find.text('Home placeholder'), findsNothing);
     });
   });
