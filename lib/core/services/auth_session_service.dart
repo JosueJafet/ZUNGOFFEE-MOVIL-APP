@@ -1,16 +1,19 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../api/session_token_provider.dart';
+
 /// Envoltorio delgado sobre `SupabaseClient.auth` (Supabase Auth).
 ///
 /// Es el único punto del proyecto que debe hablar directamente con el SDK
-/// de Supabase Auth: el interceptor de red (cliente Dio), el router y,
-/// más adelante, los providers de `features/auth`, deben pasar por aquí
-/// en vez de llamar a `Supabase.instance.client.auth` por su cuenta.
+/// de Supabase Auth: el cliente de red (`ApiClient`, vía la interfaz
+/// [SessionTokenProvider]), el router y, más adelante, los providers de
+/// `features/auth`, deben pasar por aquí en vez de llamar a
+/// `Supabase.instance.client.auth` por su cuenta.
 ///
 /// Recibe el [SupabaseClient] por constructor (en vez de leer el
 /// singleton `Supabase.instance` directamente) para poder sustituirlo por
 /// un cliente de prueba en tests, sin depender de un SDK ya inicializado.
-class AuthSessionService {
+class AuthSessionService implements SessionTokenProvider {
   const AuthSessionService(this._client);
 
   final SupabaseClient _client;
@@ -21,6 +24,7 @@ class AuthSessionService {
   /// JWT de la sesión activa, listo para `Authorization: Bearer <token>`.
   /// `null` si no hay sesión — nunca se debe cachear este valor en una
   /// variable propia, para no mandar un token vencido.
+  @override
   String? get accessToken => currentSession?.accessToken;
 
   /// `true` si hay una sesión activa.
