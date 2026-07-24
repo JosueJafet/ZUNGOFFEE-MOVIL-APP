@@ -4,8 +4,8 @@
 > de IA) pueda retomar el proyecto exactamente desde este punto sin perder
 > contexto. Actualizar este archivo al cerrar cada Sprint.
 
-Última actualización: cierre de Sprint 4 (Tasks 1–3), con `main` ya
-integrando todo lo aprobado.
+Última actualización: cierre de Sprint 5 (Tasks 1–6), con `main` ya
+integrando todo lo aprobado y sincronizado con `origin/main`.
 
 ---
 
@@ -13,17 +13,18 @@ integrando todo lo aprobado.
 
 | Campo | Estado |
 |---|---|
-| Sprint actual | Sprint 4 completado (Tasks 1–3) |
+| Sprint actual | Sprint 5 completado (Tasks 1–6) |
 | Arquitectura | Clean Architecture por feature + capa `core/` transversal |
 | Backend | NestJS + Prisma + Supabase (Postgres), staging en Render — integrado |
 | Autenticación | Login real (`features/auth`) contra Supabase Auth, con guards de sesión en GoRouter y perfil (`GET /perfil`) vía Riverpod |
-| Dashboard | Home real (`features/dashboard`) con bienvenida desde `Perfil` y logout funcional |
-| Tests | 50/50 pasando (`flutter test`) |
+| Dashboard | Home real (`features/dashboard`) con bienvenida desde `Perfil`, logout funcional y entrada de navegación a Proveedores |
+| Proveedores | Primer módulo de negocio real (`features/proveedores`): listar, crear y editar proveedores, integrado al Router |
+| Tests | 88/88 pasando (`flutter test`) |
 | flutter analyze | Sin issues |
 | Entorno | Flutter `>=3.35.6` / Dart `>=3.9.0`; solo staging (sin producción separada) |
 | Plataforma objetivo | Android |
-| Rama principal | `main` (fast-forward de las 17 ramas de Sprint 1+2+3+4; push pendiente) |
-| Próximo Sprint | Por definir — candidatos: guards por rol en el router, o el siguiente módulo de negocio |
+| Rama principal | `main` (fast-forward de las 23 ramas de Sprint 1+2+3+4+5; sincronizada con `origin/main`) |
+| Próximo Sprint | Por definir — candidatos: guards por rol en el router, o el siguiente módulo de negocio (`compras`, `clientes`, `inventario`) |
 
 ---
 
@@ -41,11 +42,14 @@ integrando todo lo aprobado.
 - **Estado actual:** infraestructura base completa — Sprint 0, 0.5, Sprint 1
   (Theme + Router), Sprint 2 (Network, Session, Constants/Utils, Router
   Guards, App Bootstrap), Sprint 3 (feature `auth`: login real, perfil,
-  providers de Riverpod) y Sprint 4 (feature `dashboard`: Home real con
-  bienvenida y logout) implementados y aprobados. El backend oficial
-  (staging) ya está desplegado e integrado. `features/auth` y
-  `features/dashboard` son los únicos módulos de negocio con código real;
-  el resto de `features/*` sigue vacío. Ver "Próximo Sprint recomendado".
+  providers de Riverpod), Sprint 4 (feature `dashboard`: Home real con
+  bienvenida y logout) y Sprint 5 (feature `proveedores`: primer módulo de
+  negocio real — listar, crear y editar proveedores, integrado al Router)
+  implementados y aprobados. El backend oficial (staging) ya está
+  desplegado e integrado. `features/auth`, `features/dashboard` y
+  `features/proveedores` son los únicos módulos de negocio con código
+  real; el resto de `features/*` sigue vacío. Ver "Próximo Sprint
+  recomendado".
 - **Plataforma objetivo:** Android. El proyecto también contiene el
   scaffolding de `ios/` generado por `flutter create`, pero el foco de
   desarrollo declarado es Android.
@@ -426,11 +430,123 @@ test` en verde (50/50) al cierre de cada una y al cierre del Sprint.
 
 ---
 
+### Sprint 5 — Feature: Proveedores (primer módulo de negocio real)
+
+Primer módulo de negocio operativo del proyecto (más allá de `auth` y
+`dashboard`), siguiendo el flujo documentado en
+`CONTEXTO-MOVIL-FLUTTER.md`: listar, crear y editar proveedores
+(`GET`/`POST`/`PATCH /proveedores`). A diferencia de `auth`/`dashboard`,
+esta feature **sí navega directamente vía GoRouter** (`context.push`/
+`context.pop`) — la regla de "no depender del Router" de Sprints 3/4
+aplicaba específicamente a login/logout, no a la navegación normal entre
+pantallas de una feature de negocio.
+
+#### Task 1 — Proveedor: DTO y modelo de dominio (`lib/features/proveedores/data/`)
+
+**Qué se implementó:** `ProveedorDto` (freezed + `json_serializable`,
+fiel al JSON snake_case de la API) y el modelo de dominio `Proveedor`
+(camelCase), con `ProveedorDto.toDomain()` como mapeo — mismo patrón que
+`PerfilDto`/`Perfil` (Sprint 3).
+
+**Decisiones:** `tipoId` se incluyó en el modelo (viene de la API) pero
+se omitió del formulario de este Sprint — depende del catálogo
+compartido `GET /catalogos`, que ninguna feature ha consumido todavía;
+esa decisión de arquitectura (dónde vive un recurso compartido entre
+features) se pospuso hasta que una segunda feature también lo necesite.
+Verificado que `toDomain()` es puramente estructural, sin lógica de
+negocio, valores por defecto ni validación.
+
+#### Task 2 — Proveedores: Repository (`lib/features/proveedores/data/datasources/`, `.../repositories/`)
+
+**Qué se implementó:** `ProveedorRemoteDataSource` (`getProveedores()`,
+`crear(...)`, `actualizar(id, ...)`) y `ProveedorRepository` (mapea a
+`Proveedor`/`List<Proveedor>`, deja pasar `ApiException`/
+`NetworkException` sin envolver) — mismo patrón que
+`PerfilRemoteDataSource`/`PerfilRepository`.
+
+**Decisiones:** `actualizar()`/`crear()` arman el body solo con los
+campos no nulos (`if (campo != null) 'clave': campo`), para no
+sobreescribir con `null` un campo que el usuario no quiso cambiar en una
+actualización parcial.
+
+#### Task 3 — Providers de Riverpod de la feature (`lib/features/proveedores/presentation/providers/`)
+
+**Qué se implementó:** `proveedorRepositoryProvider`, `proveedoresProvider`
+(`FutureProvider<List<Proveedor>>`) y `ProveedorFormController`
+(`AsyncNotifier<void>` con `crear(...)`/`actualizar(id, ...)`, cada uno
+invalida `proveedoresProvider` al terminar con éxito).
+
+**Decisiones:** se consideró agregar un guard de re-entrancia (como el de
+`LogoutController`, Sprint 4) pero se retiró — la regla acordada es
+evidence-driven: no se agrega lógica defensiva sin una prueba que
+demuestre la condición de carrera, y aquí no había tal prueba.
+
+#### Task 4 — Pantalla de lista de Proveedores (`lib/features/proveedores/presentation/screens/proveedores_list_screen.dart`)
+
+**Qué se implementó:** `ProveedoresListScreen` (`ConsumerWidget`) con los
+4 estados de `proveedoresProvider` (loading/error/vacío/datos), edición
+condicionada a `perfil.rol == AppRole.adminBodega`, y FAB para crear
+(todos los roles).
+
+**Decisiones (arquitectónica, revisada explícitamente):** la pantalla
+**no importa `go_router`** — expone `onCrear`/`onEditar` como callbacks,
+invocados por el FAB y el tap de cada item. La navegación real (wiring a
+`context.push`) se resolvió en Task 6, en la capa de routing, para no
+forward-referenciar rutas que aún no existían y mantener la pantalla
+testeable sin un `GoRouter` real.
+
+#### Task 5 — Formulario de Proveedor, crear/editar (`lib/features/proveedores/presentation/screens/proveedor_form_screen.dart`)
+
+**Qué se implementó:** `ProveedorFormScreen({Proveedor? proveedorExistente,
+required onGuardado})`, un solo formulario reutilizado para ambos modos;
+componente de UI puro sobre `ProveedorFormController`; invoca
+`onGuardado()` (no `context.pop()` directo) cuando el guardado termina
+con éxito.
+
+**Dos bugs reales encontrados y corregidos de forma evidence-driven**
+(test primero contra la implementación sin modificar, fix solo tras
+verlo fallar):
+1. `next.hasValue` no es una señal confiable de éxito en
+   `AsyncValue`/Riverpod: el framework preserva el valor anterior a
+   través de loading/error (para UIs "sin parpadeo"), así que sigue en
+   `true` incluso en un `AsyncError`. La condición correcta para detectar
+   éxito es `!next.hasError`.
+2. `ProveedorFormController` no era `autoDispose`: un envío fallido dejaba
+   su `AsyncError` "pegado" en el provider global, y la siguiente vez que
+   se abría el formulario (nueva instancia de pantalla) mostraba de
+   entrada el error del intento anterior. Corregido con
+   `AsyncNotifierProvider.autoDispose` — su ciclo de vida queda atado
+   exclusivamente a `ProveedorFormScreen`.
+
+#### Task 6 — Integración con el Router y entrada desde Home (`lib/core/router/`, `lib/features/dashboard/presentation/screens/home_screen.dart`)
+
+**Qué se implementó:** `RouteNames`/`RoutePaths.proveedores` y
+`.proveedorFormulario`; 2 `GoRoute` nuevos en `app_routes.dart` — el de
+`/proveedores` construye `ProveedoresListScreen` pasándole
+`onCrear`/`onEditar` que llaman `context.push(...)` (con
+`extra: proveedor` para editar); el de `/proveedores/formulario` lee
+`state.extra as Proveedor?` (`null` = modo crear) y le pasa
+`onGuardado: () => context.pop()` a `ProveedorFormScreen`. `HomeScreen`
+gana un botón "Proveedores" que navega con
+`context.push(RoutePaths.proveedores)`.
+
+**Decisiones:** toda la navegación de la feature vive en
+`app_routes.dart`, no en las pantallas — cumple la arquitectura aprobada
+en Tasks 4/5. Sin cambios en `AppRouter`/`AuthRedirect`: cualquier ruta
+que no sea `login` ya se trata como protegida desde Sprint 2. El botón de
+`HomeScreen` es la primera excepción deliberada a "no navega" (Sprint 4):
+un `context.push` disparado por una acción real del usuario, no por un
+cambio de estado de sesión.
+
+**Validación de las 6 tasks:** `flutter analyze` sin issues y `flutter
+test` en verde (88/88) al cierre de cada una y al cierre del Sprint.
+
+---
+
 ## Estado del repositorio
 
-- **Rama principal:** `main`, sincronizada con `origin/main` hasta el cierre
-  de Sprint 1 (el push de los commits de Sprint 2 aún no se ha hecho — ver
-  nota al final).
+- **Rama principal:** `main`, sincronizada con `origin/main` (push de
+  Sprint 2, 3, 4 y 5 ya confirmado).
 - **Ramas existentes** (todas ya integradas en `main` vía fast-forward, ninguna
   eliminada): `feature/theme-system`, `feature/router-infrastructure`,
   `feature/core-config`, `feature/core-session-service`,
@@ -440,7 +556,10 @@ test` en verde (50/50) al cierre de cada una y al cierre del Sprint.
   `feature/auth-repositories`, `feature/auth-riverpod-providers`,
   `feature/auth-login-screen`, `feature/auth-router-integration`,
   `feature/dashboard-home-screen`, `feature/dashboard-logout-action`,
-  `feature/dashboard-router-integration`.
+  `feature/dashboard-router-integration`, `feature/proveedores-model`,
+  `feature/proveedores-repository`, `feature/proveedores-providers`,
+  `feature/proveedores-list-screen`, `feature/proveedores-form-screen`,
+  `feature/proveedores-router`.
 - **Remoto:** `origin` → `https://github.com/JosueJafet/ZUNGOFFEE-MOVIL-APP.git`.
 - **Commits de Sprint 2 (historial de `main`, en orden, después de los 11 de
   Sprint 0.5/Sprint 1):**
@@ -495,6 +614,21 @@ test` en verde (50/50) al cierre de cada una y al cierre del Sprint.
   5. `fix(auth): guard LogoutController.signOut against concurrent invocation`
   6. `feat(router): serve the real HomeScreen on the home route`
   7. `test(router): assert HomeScreen renders instead of the removed placeholder`
+- **Commits de Sprint 5 (historial de `main`, en orden, después de los 7
+  de Sprint 4, sin contar el commit de documentación de cierre de
+  Sprint 4):**
+  1. `feat(proveedores): add Proveedor domain model`
+  2. `feat(proveedores): add ProveedorDto for GET/POST/PATCH /proveedores`
+  3. `test(proveedores): verify ProveedorDto parsing and mapping to Proveedor`
+  4. `feat(proveedores): add ProveedorRemoteDataSource for /proveedores`
+  5. `feat(proveedores): add ProveedorRepository`
+  6. `feat(proveedores): add proveedorRepositoryProvider and proveedoresProvider`
+  7. `feat(proveedores): add ProveedorFormController for crear/actualizar`
+  8. `feat(proveedores): add ProveedoresListScreen`
+  9. `fix(proveedores): make ProveedorFormController autoDispose`
+  10. `feat(proveedores): add ProveedorFormScreen`
+  11. `feat(router): wire proveedores routes to GoRouter`
+  12. `feat(dashboard): add navigation entry point to Proveedores`
 
 ---
 
@@ -518,7 +652,9 @@ lib/
       network_exception.dart
     router/                 Navegación (GoRouter) — implementado (Sprint 1 + 2)
       app_router.dart       AppRouter.build(AuthSessionService)
-      app_routes.dart       login -> LoginScreen (Sprint 3), home -> HomeScreen (Sprint 4)
+      app_routes.dart       login -> LoginScreen (Sprint 3), home -> HomeScreen
+                             (Sprint 4), proveedores/proveedorFormulario ->
+                             ProveedoresListScreen/ProveedorFormScreen (Sprint 5)
       auth_redirect.dart
       go_router_refresh_stream.dart
       route_names.dart
@@ -557,17 +693,39 @@ lib/
         screens/
           login_screen.dart
         widgets/                  (vacío)
-    dashboard/                Implementado (Sprint 4) — Home real
+    dashboard/                Implementado (Sprint 4) — Home real, más el
+                               punto de entrada a Proveedores (Sprint 5)
       data/                       (vacío — no necesitó capa de datos propia)
       presentation/
         providers/                (vacío — usa los providers de auth/)
         screens/
           home_screen.dart
         widgets/                  (vacío)
+    proveedores/              Implementado (Sprint 5) — primer módulo de
+                               negocio real: listar, crear y editar
+      data/
+        datasources/
+          proveedor_remote_datasource.dart
+        dtos/
+          proveedor_dto.dart
+        models/
+          proveedor.dart
+        repositories/
+          proveedor_repository.dart
+      presentation/
+        providers/
+          proveedor_providers.dart       proveedorRepositoryProvider,
+                                          proveedoresProvider
+          proveedor_form_controller.dart proveedorFormControllerProvider
+                                          (autoDispose)
+        screens/
+          proveedores_list_screen.dart
+          proveedor_form_screen.dart
+        widgets/                  (vacío)
     <resto de features>/     Todos vacíos (solo `.gitkeep`), mismo patrón
                               data/{datasources,dtos,models,repositories}
                               y presentation/{providers,screens,widgets}
-                              que `auth/`/`dashboard/`.
+                              que `auth/`/`dashboard/`/`proveedores/`.
   shared/                   Elementos reutilizables entre features (vacío)
     extensions/
     mixins/
@@ -583,6 +741,7 @@ test/
     constants/estado_cafe_test.dart
     router/app_router_test.dart
     router/auth_redirect_test.dart
+    router/app_routes_proveedores_test.dart
     utils/api_date_test.dart, api_decimal_test.dart, bigint_id_test.dart
   features/auth/
     data/dtos/perfil_dto_test.dart
@@ -593,6 +752,14 @@ test/
     presentation/screens/login_screen_test.dart
   features/dashboard/
     presentation/screens/home_screen_test.dart
+  features/proveedores/
+    data/dtos/proveedor_dto_test.dart
+    data/datasources/proveedor_remote_datasource_test.dart
+    data/repositories/proveedor_repository_test.dart
+    presentation/providers/proveedor_providers_test.dart,
+      proveedor_form_controller_test.dart
+    presentation/screens/proveedores_list_screen_test.dart,
+      proveedor_form_screen_test.dart
   widget_test.dart
 docs/
   PROJECT_STATUS.md         Este documento
@@ -662,6 +829,31 @@ android/, ios/              Scaffolding estándar de `flutter create`
     que deshabilita el control de UI ocurre recién en el siguiente frame
     — un guard `if (state.isLoading) return;` al inicio del método
     protege contra invocaciones repetidas sin depender de ese timing.
+18. **Features de negocio "hoja" (con pantallas propias que se navegan
+    entre sí) sí pueden navegar directamente vía GoRouter** (Sprint 5,
+    `proveedores`) — a diferencia de la regla de Sprints 3/4 (que aplica
+    específicamente a login/logue-out, gobernados solo por el estado de
+    sesión). Aun así, las pantallas de la feature (`ProveedoresListScreen`,
+    `ProveedorFormScreen`) **no importan `go_router`**: exponen callbacks
+    (`onCrear`/`onEditar`/`onGuardado`) y es la capa de routing
+    (`app_routes.dart`) la que decide cuándo hacer `context.push`/`pop` —
+    mantiene las pantallas testeables sin un `GoRouter` real y evita que
+    una Task de pantalla dependa de rutas que otra Task todavía no creó.
+19. **`AsyncValue.hasValue` no es una señal confiable de "esta operación
+    tuvo éxito"** (Sprint 5, bug real encontrado en `ProveedorFormScreen`):
+    Riverpod preserva el valor anterior a través de transiciones de
+    loading/error (para UIs "sin parpadeo"), así que `hasValue` sigue en
+    `true` incluso en un `AsyncError`. La señal correcta para "esta
+    operación específica tuvo éxito" es `!next.hasError` (o
+    `next is AsyncData`), comparado contra el `previous.isLoading` que
+    inició esa operación.
+20. **Providers de formulario que se montan una vez por pantalla deben ser
+    `autoDispose`** (Sprint 5, `ProveedorFormController`): sin
+    `autoDispose`, el estado de un envío fallido sobrevive al cerrar la
+    pantalla y se filtra a la siguiente vez que se abre el mismo
+    formulario. Confirmado con un test de regresión (push/pop real vía
+    `Navigator`) antes de aplicar el fix — el mismo patrón evidence-driven
+    de la Decisión 17.
 
 ---
 
@@ -669,9 +861,6 @@ android/, ios/              Scaffolding estándar de `flutter create`
 
 Lo que falta por implementar, en el orden en que fue quedando pendiente:
 
-- **Push de los commits de Sprint 2, Sprint 3 y Sprint 4 a `origin/main`**:
-  aprobados localmente, pendiente de que el usuario confirme el push (no
-  se ha hecho todavía).
 - **`.metadata` con las entradas `android`/`ios` eliminadas y `windows/`
   sin commitear**: efecto secundario de `flutter create --platforms=windows .`
   (ejecutado para poder correr la app en Windows Desktop durante una
@@ -694,12 +883,12 @@ Lo que falta por implementar, en el orden en que fue quedando pendiente:
   assets no agregados.
 - **Botón "soft destructivo"** del mock de la Guía de Marca sigue sin
   equivalente en el theme; pendiente para `shared/widgets/buttons`.
-- **`features/auth` y `features/dashboard` son los únicos módulos con
-  código** — el resto de `features/*` (clientes, compras, inventario,
-  notificaciones, perfil, procesamiento, proveedores, reportes, ventas)
-  sigue vacío.
+- **`features/auth`, `features/dashboard` y `features/proveedores` son los
+  únicos módulos con código** — el resto de `features/*` (clientes,
+  compras, inventario, notificaciones, perfil, procesamiento, reportes,
+  ventas) sigue vacío.
 - **`shared/` completo** (extensions, mixins, widgets) sigue vacío —
-  ninguna Task de Sprint 3 ni Sprint 4 encontró duplicación real que
+  ninguna Task de Sprint 3, 4 ni 5 encontró duplicación real que
   justificara empezarlo.
 - **Edición de perfil** (`PATCH /perfil`): fuera de alcance;
   `Perfil`/`PerfilRepository` solo cubren lectura (`GET /perfil`).
@@ -708,6 +897,15 @@ Lo que falta por implementar, en el orden en que fue quedando pendiente:
 - **Guards por rol en el router**: sigue distinguiendo solo autenticado/no
   autenticado, no por rol — depende de leer `perfilProvider` desde el
   router o un guard equivalente, no diseñado todavía.
+- **`tipoId` de `Proveedor` sin selector en el formulario**: la feature
+  `proveedores` (Sprint 5) omitió deliberadamente ese campo del
+  formulario — depende de `GET /catalogos` (`proveedoresTipo`), que
+  ninguna feature ha consumido todavía; queda pendiente decidir dónde
+  vive un catálogo compartido entre features cuando una segunda feature
+  (`compras`, `ventas`, `clientes`) también lo necesite.
+- **Eliminar/desactivar proveedor, búsqueda, filtros, paginación**: no
+  documentados para `/proveedores` en el contrato actual, fuera de
+  alcance de Sprint 5.
 - **Cola de operaciones offline / reintentos de red en campo**: mencionado
   en el contexto técnico como decisión futura, no abordado todavía.
 - **Registro de dispositivo push** (`firebase_messaging`,
@@ -719,13 +917,15 @@ Lo que falta por implementar, en el orden en que fue quedando pendiente:
 
 ## Próximo Sprint recomendado
 
-**Aún no diseñado.** Con `auth` y `dashboard` (Home) completos, los
-candidatos naturales son: **guards por rol en el router** (ya se puede
-leer `perfilProvider.rol` para distinguir `empleado`/`admin_bodega`/
-`super_admin`), o el **segundo módulo de negocio real** (`proveedores`,
-`inventario`, etc.), según la prioridad de negocio. Este alcance no ha
-sido diseñado ni aprobado — cuando se decida, corresponde repetir el
-mismo proceso de diseño de Sprint (desglose en Tasks, revisión antes de
+**Aún no diseñado.** Con `auth`, `dashboard` (Home) y `proveedores`
+completos, los candidatos naturales son: **guards por rol en el router**
+(ya se puede leer `perfilProvider.rol` para distinguir `empleado`/
+`admin_bodega`/`super_admin`), o el **segundo módulo de negocio real**
+(`compras`, que depende de que existan proveedores registrados —
+ya lo están; `clientes`, mismo patrón que `proveedores`; o
+`inventario`), según la prioridad de negocio. Este alcance no ha sido
+diseñado ni aprobado — cuando se decida, corresponde repetir el mismo
+proceso de diseño de Sprint (desglose en Tasks, revisión antes de
 implementar).
 
 No perder de vista los pendientes de configuración nativa (Application
@@ -755,6 +955,7 @@ Render) — no hay todavía un ambiente de producción separado.
 
 ## Próximo Hito
 
-**Sprint 3 (autenticación) y Sprint 4 (Home/Dashboard) ya se
-completaron** — ver detalle en "Sprints completados" y en "Próximo
-Sprint recomendado" para lo que sigue (aún sin diseñar formalmente).
+**Sprint 3 (autenticación), Sprint 4 (Home/Dashboard) y Sprint 5
+(Proveedores, primer módulo de negocio real) ya se completaron** — ver
+detalle en "Sprints completados" y en "Próximo Sprint recomendado" para
+lo que sigue (aún sin diseñar formalmente).
