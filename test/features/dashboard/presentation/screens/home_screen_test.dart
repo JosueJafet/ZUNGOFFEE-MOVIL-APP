@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:zungofee_mobile/core/api/api_client.dart';
 import 'package:zungofee_mobile/core/api/session_token_provider.dart';
 import 'package:zungofee_mobile/core/errors/api_exception.dart';
 import 'package:zungofee_mobile/core/errors/network_exception.dart';
+import 'package:zungofee_mobile/core/router/route_paths.dart';
 import 'package:zungofee_mobile/core/services/auth_session_service.dart';
 import 'package:zungofee_mobile/core/theme/app_theme.dart';
 import 'package:zungofee_mobile/features/auth/data/datasources/perfil_remote_datasource.dart';
@@ -74,6 +76,39 @@ Widget _wrap(PerfilRepository perfilRepository, AuthRepository authRepository) {
       perfilRepositoryProvider.overrideWithValue(perfilRepository),
     ],
     child: MaterialApp(theme: AppTheme.light, home: const HomeScreen()),
+  );
+}
+
+/// A diferencia de `_wrap`, monta `HomeScreen` sobre un `GoRouter` real
+/// (con una segunda ruta placeholder, no la `ProveedoresListScreen` real)
+/// — lo único que le compete a `HomeScreen` es navegar a la ruta
+/// correcta (Sprint 5, Task 6); qué muestra esa ruta es responsabilidad
+/// de `app_routes_proveedores_test.dart`.
+Widget _wrapWithRouter(
+  PerfilRepository perfilRepository,
+  AuthRepository authRepository,
+) {
+  final router = GoRouter(
+    initialLocation: RoutePaths.home,
+    routes: [
+      GoRoute(
+        path: RoutePaths.home,
+        builder: (context, state) => const HomeScreen(),
+      ),
+      GoRoute(
+        path: RoutePaths.proveedores,
+        builder: (context, state) =>
+            const Scaffold(body: Text('Placeholder de Proveedores')),
+      ),
+    ],
+  );
+
+  return ProviderScope(
+    overrides: [
+      authRepositoryProvider.overrideWithValue(authRepository),
+      perfilRepositoryProvider.overrideWithValue(perfilRepository),
+    ],
+    child: MaterialApp.router(theme: AppTheme.light, routerConfig: router),
   );
 }
 
@@ -231,5 +266,22 @@ void main() {
 
       expect(find.text('Error al cerrar sesión'), findsOneWidget);
     });
+
+    testWidgets(
+      'tap en "Proveedores" navega a RoutePaths.proveedores (Sprint 5, '
+      'Task 6)',
+      (tester) async {
+        final repository = _FakePerfilRepository([() async => _perfilDeEjemplo]);
+
+        await tester.pumpWidget(_wrapWithRouter(repository, authRepository));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('Proveedores'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Placeholder de Proveedores'), findsOneWidget);
+        expect(find.byType(HomeScreen), findsNothing);
+      },
+    );
   });
 }

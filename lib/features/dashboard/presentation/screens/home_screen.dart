@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/errors/api_exception.dart';
 import '../../../../core/errors/network_exception.dart';
+import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/theme_extensions.dart';
 import '../../../auth/presentation/providers/logout_controller.dart';
@@ -11,8 +13,11 @@ import '../../../auth/presentation/providers/perfil_providers.dart';
 /// Pantalla real de inicio: muestra un mensaje de bienvenida con el
 /// perfil del usuario autenticado (`GET /perfil`, `features/auth`).
 ///
-/// No navega ni depende de `core/router/` — ver nota de arquitectura del
-/// Sprint 4 (misma regla que ya sigue `features/auth`).
+/// No depende del estado de sesión para navegar — la única redirección
+/// por sesión sigue siendo la de `AppRouter` (Sprint 4). La entrada a
+/// `features/proveedores` (Sprint 5, Task 6) es la primera excepción
+/// deliberada a "no navega": un `context.push` disparado por una acción
+/// real del usuario, no por un cambio de estado de sesión.
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
@@ -110,6 +115,14 @@ class HomeScreen extends ConsumerWidget {
                   ),
                 ),
               ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(AppSpacing.space4),
+            child: FilledButton.tonalIcon(
+              onPressed: () => context.push(RoutePaths.proveedores),
+              icon: const Icon(Icons.storefront),
+              label: const Text('Proveedores'),
             ),
           ),
         ],
