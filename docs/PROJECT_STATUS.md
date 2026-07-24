@@ -4,7 +4,7 @@
 > de IA) pueda retomar el proyecto exactamente desde este punto sin perder
 > contexto. Actualizar este archivo al cerrar cada Sprint.
 
-Última actualización: cierre de Sprint 5 (Tasks 1–6), con `main` ya
+Última actualización: cierre de Sprint 6 (Tasks 1–8), con `main` ya
 integrando todo lo aprobado y sincronizado con `origin/main`.
 
 ---
@@ -13,18 +13,21 @@ integrando todo lo aprobado y sincronizado con `origin/main`.
 
 | Campo | Estado |
 |---|---|
-| Sprint actual | Sprint 5 completado (Tasks 1–6) |
+| Sprint actual | Sprint 6 completado (Tasks 1–8) |
 | Arquitectura | Clean Architecture por feature + capa `core/` transversal |
 | Backend | NestJS + Prisma + Supabase (Postgres), staging en Render — integrado |
 | Autenticación | Login real (`features/auth`) contra Supabase Auth, con guards de sesión en GoRouter y perfil (`GET /perfil`) vía Riverpod |
-| Dashboard | Home real (`features/dashboard`) con bienvenida desde `Perfil`, logout funcional y entrada de navegación a Proveedores |
+| Dashboard | Home real (`features/dashboard`) con bienvenida desde `Perfil`, logout funcional y entradas de navegación a Proveedores/Compras/Existencias |
 | Proveedores | Primer módulo de negocio real (`features/proveedores`): listar, crear y editar proveedores, integrado al Router |
-| Tests | 88/88 pasando (`flutter test`) |
+| Compras | Segundo módulo de negocio real (`features/compras`): registrar una compra con una o más líneas, integrado al Router |
+| Inventario | Primera capa de datos y pantalla real (`features/inventario`): ver existencias actuales (`GET /lotes/existencias`) |
+| Catálogos | Recurso compartido entre features (`features/catalogos`): métodos de pago, variedades, niveles de altura y estados de café (`GET /catalogos`) |
+| Tests | 129/129 pasando (`flutter test`) |
 | flutter analyze | Sin issues |
 | Entorno | Flutter `>=3.35.6` / Dart `>=3.9.0`; solo staging (sin producción separada) |
 | Plataforma objetivo | Android |
-| Rama principal | `main` (fast-forward de las 23 ramas de Sprint 1+2+3+4+5; sincronizada con `origin/main`) |
-| Próximo Sprint | Por definir — candidatos: guards por rol en el router, o el siguiente módulo de negocio (`compras`, `clientes`, `inventario`) |
+| Rama principal | `main` (fast-forward de las 31 ramas de Sprint 1+2+3+4+5+6; sincronizada con `origin/main`) |
+| Próximo Sprint | Por definir — candidatos: `ventas` (consume las existencias ya visibles), completar `tipoId` en Proveedores con `catalogosProvider`, o guards por rol en el router |
 
 ---
 
@@ -43,13 +46,15 @@ integrando todo lo aprobado y sincronizado con `origin/main`.
   (Theme + Router), Sprint 2 (Network, Session, Constants/Utils, Router
   Guards, App Bootstrap), Sprint 3 (feature `auth`: login real, perfil,
   providers de Riverpod), Sprint 4 (feature `dashboard`: Home real con
-  bienvenida y logout) y Sprint 5 (feature `proveedores`: primer módulo de
+  bienvenida y logout), Sprint 5 (feature `proveedores`: primer módulo de
   negocio real — listar, crear y editar proveedores, integrado al Router)
-  implementados y aprobados. El backend oficial (staging) ya está
-  desplegado e integrado. `features/auth`, `features/dashboard` y
-  `features/proveedores` son los únicos módulos de negocio con código
-  real; el resto de `features/*` sigue vacío. Ver "Próximo Sprint
-  recomendado".
+  y Sprint 6 (features `catalogos`/`compras`/`inventario`: catálogos
+  compartidos, registrar una compra con líneas, y ver existencias
+  actuales) implementados y aprobados. El backend oficial (staging) ya
+  está desplegado e integrado. `features/auth`, `features/dashboard`,
+  `features/proveedores`, `features/catalogos`, `features/compras` y
+  `features/inventario` son los únicos módulos con código real; el resto
+  de `features/*` sigue vacío. Ver "Próximo Sprint recomendado".
 - **Plataforma objetivo:** Android. El proyecto también contiene el
   scaffolding de `ios/` generado por `flutter create`, pero el foco de
   desarrollo declarado es Android.
@@ -543,10 +548,142 @@ test` en verde (88/88) al cierre de cada una y al cierre del Sprint.
 
 ---
 
+### Sprint 6 — Feature: Compras (segundo módulo de negocio real)
+
+Segundo módulo de negocio operativo, continuando el flujo documentado en
+`CONTEXTO-MOVIL-FLUTTER.md`: "productor trae café → si no está
+registrado, se crea en `proveedores` (Sprint 5) → se registra la
+**compra**". Cada línea de una compra genera automáticamente un **lote**
+(`GET /lotes/existencias`), el recurso que el futuro módulo de Inventario
+va a gestionar — este Sprint le da a `features/inventario/` su primera
+capa de datos y pantalla reales en vez de código provisional dentro de
+`compras/`. También introdujo el primer recurso de datos compartido
+entre features (`features/catalogos/`), resolviendo la decisión que
+Sprint 5 dejó pendiente explícitamente.
+
+#### Task 1 — Catálogos: modelo, DTO, repository y provider (`lib/features/catalogos/`)
+
+**Qué se implementó:** 4 modelos de dominio propios (`MetodoPago`,
+`VariedadCafe`, `NivelAltura` con `msnmMin`/`msnmMax`,
+`EstadoCafeCatalogo` con `unidadMedidaId`) en vez de un `CatalogoItem`
+genérico, el agregado `Catalogos`, `CatalogosDto` (+ 4 sub-DTOs
+anidados), `CatalogosRemoteDataSource` (`GET /catalogos`),
+`CatalogosRepository` y `catalogosProvider` (`FutureProvider<Catalogos>`,
+se cachea sola, no depende de sesión).
+
+**Decisiones:** se eligió `features/catalogos/` y no `core/catalogos/`
+porque representa datos de dominio de negocio reales, no infraestructura
+(Decisión arquitectónica #1). Un modelo genérico `{id, nombre}` habría
+perdido campos reales del contrato (`unidadMedidaId`, `msnmMin/Max`) —
+corregido a modelos específicos tras revisión explícita. La forma exacta
+del JSON (camelCase/snake_case de cada catálogo) se asumió por
+consistencia con el resto de la API y queda pendiente de confirmar
+contra el backend/Swagger real (ver "Pendientes").
+
+#### Task 2 — Compra: modelo de dominio y DTO (`lib/features/compras/data/`)
+
+**Qué se implementó:** `Compra` (freezed) y `CompraDto`, fieles a la
+respuesta de `POST /compras` — sin modelar `lineas` (esa respuesta no las
+devuelve).
+
+**Decisiones:** `fecha`/`total` se tipan como `String` en el DTO (fieles
+al JSON) y se convierten en `toDomain()` vía `ApiDate.fromResponse`/
+`ApiDecimal.fromJson` — mismo patrón que `PerfilDto.fechaCreacion`
+(Sprint 3).
+
+#### Task 3 — Compras: Repository y DataSource (`lib/features/compras/data/datasources/`, `.../repositories/`)
+
+**Qué se implementó:** `LineaCompraInput` (clase simple, solo `toJson()`,
+nunca se recibe) y `ComprasRemoteDataSource.crear(...)` → `POST
+/compras`; `ComprasRepository.crear(...)` → `Compra`.
+
+**Decisiones:** `metodoPagoId` es opcional según la documentación del
+endpoint — solo se incluye en el body si no es `null`, mismo patrón de
+body parcial que `ProveedorRemoteDataSource.actualizar` (Sprint 5).
+
+#### Task 4 — Lote: modelo, DTO, Repository y DataSource (`lib/features/inventario/`)
+
+**Qué se implementó:** primera capa de datos real de
+`features/inventario/` — `Lote` (aplanado desde los objetos anidados del
+JSON, mismo criterio que `Perfil` en Sprint 3), `LoteDto` (+ 3 sub-DTOs
+anidados), `LotesRemoteDataSource.getExistencias(...)` (`GET
+/lotes/existencias`) y `LotesRepository`.
+
+**Decisiones:** `Lote.id` vía `BigIntId.fromJson` y
+`saldo`/`cantidadInicial` vía `ApiDecimal.fromJson` — ambas utilidades de
+Sprint 2 ya documentaban `lotes` como uno de sus casos de uso, antes de
+que este Sprint las usara. `page`/`pageSize` con default de
+`PaginationLimits.defaultPageSize`, también ya listado para `lotes`.
+
+#### Task 5 — Providers de Riverpod: `compras` + `inventario` (`lib/features/compras/presentation/providers/`, `lib/features/inventario/presentation/providers/`)
+
+**Qué se implementó:** `comprasRepositoryProvider`,
+`CompraFormController` (`AutoDisposeAsyncNotifier<void>`, invalida
+`existenciasProvider` al terminar con éxito) y
+`lotesRepositoryProvider`/`existenciasProvider`
+(`FutureProvider<List<Lote>>`).
+
+**Decisiones:** `CompraFormController` es `autoDispose` desde el diseño
+inicial (no como fix posterior) — mismo motivo que
+`ProveedorFormController` (Sprint 5). Sin guard de re-entrancia: la regla
+evidence-driven ya establecida sigue vigente, no se agregó sin una prueba
+que demuestre la condición de carrera.
+
+#### Task 6 — Pantalla de Existencias (`lib/features/inventario/presentation/screens/existencias_list_screen.dart`)
+
+**Qué se implementó:** `ExistenciasListScreen` (`ConsumerWidget`),
+primera pantalla real de Inventario — loading/error/vacío/datos de
+`existenciasProvider`, puramente de lectura (la API no expone ninguna
+acción sobre un lote en este contrato).
+
+**Decisiones:** sin callbacks (a diferencia de `ProveedoresListScreen`):
+no hay ninguna acción que cablear desde el router más allá de mostrar la
+pantalla.
+
+#### Task 7 — Formulario de Registrar Compra (`lib/features/compras/presentation/screens/compra_form_screen.dart`)
+
+**Qué se implementó:** `CompraFormScreen({required onGuardado})` — un
+selector de proveedor (`proveedoresProvider`, Sprint 5), un selector de
+método de pago opcional, y una lista dinámica de líneas (agregar/quitar),
+cada una con selectores de estado de café/variedad/nivel de altura
+(`catalogosProvider`) y campos numéricos de humedad/cantidad/costo
+unitario.
+
+**Decisiones:** espera ambos recursos async (`proveedoresProvider` +
+`catalogosProvider`) antes de renderizar el formulario, cada uno con su
+propio loading/error/reintentar independiente. `estadosCafe` se filtra
+con `EstadoCafeId.compraValidos` (Sprint 2) sobre los nombres reales del
+catálogo, sin duplicar esa lógica de validez. `_LineaFormData` es estado
+local puro de la pantalla (no un DTO ni modelo de dominio), convertido a
+`LineaCompraInput` recién al enviar. `onGuardado()` en vez de
+`context.pop()` directo, igual que `ProveedorFormScreen`.
+
+#### Task 8 — Integración con el Router y entrada desde Home (`lib/core/router/`, `lib/features/dashboard/presentation/screens/home_screen.dart`)
+
+**Qué se implementó:** `RouteNames`/`RoutePaths.compraFormulario`
+(`/compras/formulario`) y `.existencias` (`/inventario/existencias`); 2
+`GoRoute` nuevos — el de compras construye
+`CompraFormScreen(onGuardado: () => context.pop())`; el de existencias
+construye `ExistenciasListScreen()` (sin callbacks). `HomeScreen` gana 2
+botones nuevos ("Registrar compra", "Ver existencias"), envueltos junto
+con "Proveedores" en un `Wrap` para no desbordar con 3 botones.
+
+**Decisiones:** sin cambios en `AppRouter`/`AuthRedirect`, mismo motivo de
+siempre. El test de "guardar exitoso hace pop" se corrigió a mitad de
+escritura: la primera versión empujaba `/compras/formulario` como única
+ruta del stack de prueba (sin nada a donde volver), así que se rediseñó
+para empujarlo sobre una ruta real ya en el stack — mismo patrón que
+`HomeScreen` usa en producción.
+
+**Validación de las 8 tasks:** `flutter analyze` sin issues y `flutter
+test` en verde (129/129) al cierre de cada una y al cierre del Sprint.
+
+---
+
 ## Estado del repositorio
 
 - **Rama principal:** `main`, sincronizada con `origin/main` (push de
-  Sprint 2, 3, 4 y 5 ya confirmado).
+  Sprint 2, 3, 4, 5 y 6 ya confirmado).
 - **Ramas existentes** (todas ya integradas en `main` vía fast-forward, ninguna
   eliminada): `feature/theme-system`, `feature/router-infrastructure`,
   `feature/core-config`, `feature/core-session-service`,
@@ -559,7 +696,11 @@ test` en verde (88/88) al cierre de cada una y al cierre del Sprint.
   `feature/dashboard-router-integration`, `feature/proveedores-model`,
   `feature/proveedores-repository`, `feature/proveedores-providers`,
   `feature/proveedores-list-screen`, `feature/proveedores-form-screen`,
-  `feature/proveedores-router`.
+  `feature/proveedores-router`, `feature/catalogos-model`,
+  `feature/compras-model`, `feature/compras-repository`,
+  `feature/inventario-model`, `feature/compras-inventario-providers`,
+  `feature/inventario-existencias-screen`, `feature/compras-form-screen`,
+  `feature/compras-inventario-router`.
 - **Remoto:** `origin` → `https://github.com/JosueJafet/ZUNGOFFEE-MOVIL-APP.git`.
 - **Commits de Sprint 2 (historial de `main`, en orden, después de los 11 de
   Sprint 0.5/Sprint 1):**
@@ -629,6 +770,24 @@ test` en verde (88/88) al cierre de cada una y al cierre del Sprint.
   10. `feat(proveedores): add ProveedorFormScreen`
   11. `feat(router): wire proveedores routes to GoRouter`
   12. `feat(dashboard): add navigation entry point to Proveedores`
+- **Commits de Sprint 6 (historial de `main`, en orden, después de los 12
+  de Sprint 5, sin contar el commit de documentación de cierre de
+  Sprint 5):**
+  1. `feat(catalogos): add Catalogos models, DTO, repository and provider for GET /catalogos`
+  2. `feat(compras): add Compra domain model and DTO for POST /compras`
+  3. `feat(compras): add ComprasRemoteDataSource and ComprasRepository for POST /compras`
+  4. `feat(compras): add ComprasRemoteDataSource and ComprasRepository sources`
+  5. `feat(inventario): add Lote model, DTO, repository and datasource for GET /lotes/existencias`
+  6. `feat(compras,inventario): add compras/existencias Riverpod providers`
+  7. `feat(inventario): add ExistenciasListScreen`
+  8. `feat(compras): add CompraFormScreen`
+  9. `feat(router): wire compras/inventario routes and Home entry points`
+
+  (Commits 3 y 4 corresponden a Task 3: el primero se comiteó
+  incompleto por error humano — solo capturó la eliminación de los
+  `.gitkeep`, no los archivos nuevos — y el segundo lo corrigió agregando
+  los archivos reales, en vez de amendear, siguiendo la política del
+  proyecto de nunca reescribir un commit ya creado.)
 
 ---
 
@@ -654,7 +813,9 @@ lib/
       app_router.dart       AppRouter.build(AuthSessionService)
       app_routes.dart       login -> LoginScreen (Sprint 3), home -> HomeScreen
                              (Sprint 4), proveedores/proveedorFormulario ->
-                             ProveedoresListScreen/ProveedorFormScreen (Sprint 5)
+                             ProveedoresListScreen/ProveedorFormScreen (Sprint 5),
+                             compraFormulario/existencias ->
+                             CompraFormScreen/ExistenciasListScreen (Sprint 6)
       auth_redirect.dart
       go_router_refresh_stream.dart
       route_names.dart
@@ -669,11 +830,14 @@ lib/
       api_date.dart
       api_decimal.dart
       bigint_id.dart
-  features/                 Un directorio por módulo de negocio, mismo
-                             patrón en los 9 módulos: auth, clientes,
-                             compras, dashboard, inventario, notificaciones,
-                             perfil, procesamiento, proveedores, reportes,
-                             ventas.
+  features/                 Un directorio por módulo, mismo patrón en los
+                             12: los 11 del scaffold original (auth,
+                             clientes, compras, dashboard, inventario,
+                             notificaciones, perfil, procesamiento,
+                             proveedores, reportes, ventas) más
+                             `catalogos/` (agregado en Sprint 6 — primer
+                             recurso de datos compartido entre features,
+                             sin pantallas propias).
     auth/                   Implementado (Sprint 3) — login real + perfil
       data/
         datasources/
@@ -693,8 +857,9 @@ lib/
         screens/
           login_screen.dart
         widgets/                  (vacío)
-    dashboard/                Implementado (Sprint 4) — Home real, más el
-                               punto de entrada a Proveedores (Sprint 5)
+    dashboard/                Implementado (Sprint 4) — Home real, más los
+                               puntos de entrada a Proveedores (Sprint 5) y
+                               Compras/Existencias (Sprint 6)
       data/                       (vacío — no necesitó capa de datos propia)
       presentation/
         providers/                (vacío — usa los providers de auth/)
@@ -722,6 +887,64 @@ lib/
           proveedores_list_screen.dart
           proveedor_form_screen.dart
         widgets/                  (vacío)
+    catalogos/                Implementado (Sprint 6) — recurso de datos
+                               compartido entre features, sin pantallas
+                               propias
+      data/
+        datasources/
+          catalogos_remote_datasource.dart
+        dtos/
+          catalogos_dto.dart          + 4 sub-DTOs anidados
+        models/
+          metodo_pago.dart
+          variedad_cafe.dart
+          nivel_altura.dart
+          estado_cafe_catalogo.dart
+          catalogos.dart               agregado de los 4 anteriores
+        repositories/
+          catalogos_repository.dart
+      presentation/
+        providers/
+          catalogos_providers.dart    catalogosRepositoryProvider,
+                                        catalogosProvider
+    compras/                  Implementado (Sprint 6) — segundo módulo de
+                               negocio real: registrar una compra
+      data/
+        datasources/
+          compras_remote_datasource.dart   + LineaCompraInput
+        dtos/
+          compra_dto.dart
+        models/
+          compra.dart
+        repositories/
+          compras_repository.dart
+      presentation/
+        providers/
+          compras_providers.dart       comprasRepositoryProvider
+          compra_form_controller.dart  compraFormControllerProvider
+                                        (autoDispose)
+        screens/
+          compra_form_screen.dart
+        widgets/                  (vacío)
+    inventario/                Implementado (Sprint 6) — ver existencias
+                               actuales; primera capa de datos y pantalla
+                               real de este módulo
+      data/
+        datasources/
+          lotes_remote_datasource.dart
+        dtos/
+          lote_dto.dart                + 3 sub-DTOs anidados
+        models/
+          lote.dart                    aplanado desde el JSON anidado
+        repositories/
+          lotes_repository.dart
+      presentation/
+        providers/
+          lotes_providers.dart         lotesRepositoryProvider,
+                                        existenciasProvider
+        screens/
+          existencias_list_screen.dart
+        widgets/                  (vacío)
     <resto de features>/     Todos vacíos (solo `.gitkeep`), mismo patrón
                               data/{datasources,dtos,models,repositories}
                               y presentation/{providers,screens,widgets}
@@ -742,6 +965,7 @@ test/
     router/app_router_test.dart
     router/auth_redirect_test.dart
     router/app_routes_proveedores_test.dart
+    router/app_routes_compras_inventario_test.dart
     utils/api_date_test.dart, api_decimal_test.dart, bigint_id_test.dart
   features/auth/
     data/dtos/perfil_dto_test.dart
@@ -760,6 +984,23 @@ test/
       proveedor_form_controller_test.dart
     presentation/screens/proveedores_list_screen_test.dart,
       proveedor_form_screen_test.dart
+  features/catalogos/
+    data/dtos/catalogos_dto_test.dart
+    data/datasources/catalogos_remote_datasource_test.dart
+    data/repositories/catalogos_repository_test.dart
+    presentation/providers/catalogos_providers_test.dart
+  features/compras/
+    data/dtos/compra_dto_test.dart
+    data/datasources/compras_remote_datasource_test.dart
+    data/repositories/compras_repository_test.dart
+    presentation/providers/compra_form_controller_test.dart
+    presentation/screens/compra_form_screen_test.dart
+  features/inventario/
+    data/dtos/lote_dto_test.dart
+    data/datasources/lotes_remote_datasource_test.dart
+    data/repositories/lotes_repository_test.dart
+    presentation/providers/lotes_providers_test.dart
+    presentation/screens/existencias_list_screen_test.dart
   widget_test.dart
 docs/
   PROJECT_STATUS.md         Este documento
@@ -854,6 +1095,35 @@ android/, ios/              Scaffolding estándar de `flutter create`
     formulario. Confirmado con un test de regresión (push/pop real vía
     `Navigator`) antes de aplicar el fix — el mismo patrón evidence-driven
     de la Decisión 17.
+21. **Recursos de datos compartidos entre features viven en su propio
+    módulo `features/<recurso>/`, no en `core/`** (Sprint 6,
+    `features/catalogos/`): `core/` es infraestructura sin lógica de
+    negocio (Decisión 1); un catálogo de variedades de café, métodos de
+    pago, etc. es dominio de negocio real, aunque no tenga pantallas
+    propias. Otras features lo consumen igual que ya consumían
+    `perfilProvider` de `auth` — dependencia cruzada entre features ya
+    aceptada, no un patrón nuevo.
+22. **Modelar cada catálogo con su propio tipo, nunca un `{id, nombre}`
+    genérico** (Sprint 6, `features/catalogos/`): colapsar distintos
+    catálogos a una forma común pierde silenciosamente los campos que no
+    todos comparten (`unidadMedidaId` en `estadosCafe`, `msnmMin`/
+    `msnmMax` en `nivelesAltura`). Se corrigió tras revisión explícita,
+    antes de implementar Task 1.
+23. **Un módulo puede heredar su primera capa de datos de otro Sprint sin
+    tener pantallas propias todavía** (Sprint 6, `features/inventario/`):
+    `Lote`/`LotesRepository`/`existenciasProvider` se construyeron para
+    que `compras` pudiera invalidar las existencias tras registrar una
+    compra, pero viven en `inventario/` (el dueño conceptual del
+    recurso) desde el día uno, no dentro de `compras/` para migrar
+    después.
+24. **Pantallas que dependen de más de un recurso async esperan a todos
+    antes de renderizar el formulario, cada uno con su propio
+    loading/error/reintentar** (Sprint 6, `CompraFormScreen`: espera
+    `proveedoresProvider` y `catalogosProvider`) — primera vez que una
+    pantalla del proyecto necesita más de un recurso async simultáneo
+    para tener sentido, a diferencia de `ProveedoresListScreen` (Sprint
+    5), donde el segundo provider (`perfilProvider`) solo condicionaba un
+    detalle de UI, no la posibilidad de renderizar el formulario.
 
 ---
 
@@ -883,12 +1153,12 @@ Lo que falta por implementar, en el orden en que fue quedando pendiente:
   assets no agregados.
 - **Botón "soft destructivo"** del mock de la Guía de Marca sigue sin
   equivalente en el theme; pendiente para `shared/widgets/buttons`.
-- **`features/auth`, `features/dashboard` y `features/proveedores` son los
-  únicos módulos con código** — el resto de `features/*` (clientes,
-  compras, inventario, notificaciones, perfil, procesamiento, reportes,
-  ventas) sigue vacío.
+- **`features/auth`, `features/dashboard`, `features/proveedores`,
+  `features/catalogos`, `features/compras` y `features/inventario` son
+  los únicos módulos con código** — el resto de `features/*` (clientes,
+  notificaciones, perfil, procesamiento, reportes, ventas) sigue vacío.
 - **`shared/` completo** (extensions, mixins, widgets) sigue vacío —
-  ninguna Task de Sprint 3, 4 ni 5 encontró duplicación real que
+  ninguna Task de Sprint 3, 4, 5 ni 6 encontró duplicación real que
   justificara empezarlo.
 - **Edición de perfil** (`PATCH /perfil`): fuera de alcance;
   `Perfil`/`PerfilRepository` solo cubren lectura (`GET /perfil`).
@@ -899,10 +1169,11 @@ Lo que falta por implementar, en el orden en que fue quedando pendiente:
   router o un guard equivalente, no diseñado todavía.
 - **`tipoId` de `Proveedor` sin selector en el formulario**: la feature
   `proveedores` (Sprint 5) omitió deliberadamente ese campo del
-  formulario — depende de `GET /catalogos` (`proveedoresTipo`), que
-  ninguna feature ha consumido todavía; queda pendiente decidir dónde
-  vive un catálogo compartido entre features cuando una segunda feature
-  (`compras`, `ventas`, `clientes`) también lo necesite.
+  formulario. Ya no depende de una decisión de arquitectura pendiente —
+  `features/catalogos/` (Sprint 6) resolvió dónde vive un catálogo
+  compartido entre features — pero cablear `tipoId` en
+  `ProveedorFormScreen` usando `catalogosProvider` sigue sin hacerse
+  (sería reabrir una feature ya cerrada; sin aprobar todavía).
 - **Eliminar/desactivar proveedor, búsqueda, filtros, paginación**: no
   documentados para `/proveedores` en el contrato actual, fuera de
   alcance de Sprint 5.
@@ -912,21 +1183,45 @@ Lo que falta por implementar, en el orden en que fue quedando pendiente:
   `POST /notificaciones/dispositivos`): el propio backend aclara que el
   envío real de push no está conectado del lado servidor todavía; no es
   prioritario.
+- **Forma exacta del JSON de `GET /catalogos` sin confirmar
+  literalmente** (Sprint 6): se asumieron los nombres de clave
+  (camelCase para los grupos, snake_case para `unidad_medida_id`/
+  `msnm_min`/`msnm_max`) por consistencia con el resto de la API, no
+  porque se haya visto el JSON textual completo de ese endpoint. Verificar
+  contra el backend/Swagger real antes de dar el módulo por
+  completamente cerrado; si difiere, es un ajuste de `@JsonKey` en
+  `CatalogosDto`, no un rediseño.
+- **Sin historial/listado de compras** (`GET /compras`, `GET
+  /compras/:id`): no fueron parte del contrato compartido en Sprint 6 —
+  ese Sprint solo cubrió registrar una compra y ver existencias. Agregar
+  cuando se comparta ese contrato.
+- **Sin anular una compra**: el campo `anulada` de `Compra` se mapea de
+  solo lectura; no hay endpoint de anulación en el contrato compartido.
+- **Sin ninguna acción sobre un lote más allá de verlo** (transformar/
+  procesar, mover, ajustar) — corresponde al futuro módulo
+  `procesamiento`/inventario completo, no a Sprint 6.
+- **Sin guards de rol en `compras`/`inventario`**: el contrato compartido
+  en Sprint 6 no especificó qué roles pueden llamar `POST /compras` ni
+  `GET /lotes/existencias` (a diferencia de la tabla de roles que sí
+  trajo Sprint 5 para `proveedores`). Si se confirman restricciones,
+  agregar con el mismo patrón ya usado en `ProveedoresListScreen`
+  (`perfil.rol == AppRole.x`).
 
 ---
 
 ## Próximo Sprint recomendado
 
-**Aún no diseñado.** Con `auth`, `dashboard` (Home) y `proveedores`
-completos, los candidatos naturales son: **guards por rol en el router**
-(ya se puede leer `perfilProvider.rol` para distinguir `empleado`/
-`admin_bodega`/`super_admin`), o el **segundo módulo de negocio real**
-(`compras`, que depende de que existan proveedores registrados —
-ya lo están; `clientes`, mismo patrón que `proveedores`; o
-`inventario`), según la prioridad de negocio. Este alcance no ha sido
-diseñado ni aprobado — cuando se decida, corresponde repetir el mismo
-proceso de diseño de Sprint (desglose en Tasks, revisión antes de
-implementar).
+**Aún no diseñado.** Con `auth`, `dashboard` (Home), `proveedores`,
+`catalogos`, `compras` e `inventario` (existencias) completos, los
+candidatos naturales son: **`ventas`** (consume directamente las
+existencias que `inventario` ya expone — el próximo paso lógico del
+flujo de negocio), **completar `tipoId` en el formulario de
+Proveedores** ahora que `catalogosProvider` existe (Sprint 6 resolvió esa
+dependencia), o **guards por rol en el router** (ya se puede leer
+`perfilProvider.rol` para distinguir `empleado`/`admin_bodega`/
+`super_admin`). Este alcance no ha sido diseñado ni aprobado — cuando se
+decida, corresponde repetir el mismo proceso de diseño de Sprint
+(desglose en Tasks, revisión antes de implementar).
 
 No perder de vista los pendientes de configuración nativa (Application
 ID, firma de release) — no bloquean el próximo Sprint, pero deben
@@ -955,7 +1250,8 @@ Render) — no hay todavía un ambiente de producción separado.
 
 ## Próximo Hito
 
-**Sprint 3 (autenticación), Sprint 4 (Home/Dashboard) y Sprint 5
-(Proveedores, primer módulo de negocio real) ya se completaron** — ver
-detalle en "Sprints completados" y en "Próximo Sprint recomendado" para
-lo que sigue (aún sin diseñar formalmente).
+**Sprint 3 (autenticación), Sprint 4 (Home/Dashboard), Sprint 5
+(Proveedores, primer módulo de negocio real) y Sprint 6 (Compras,
+Catálogos e Inventario/existencias) ya se completaron** — ver detalle en
+"Sprints completados" y en "Próximo Sprint recomendado" para lo que sigue
+(aún sin diseñar formalmente).
