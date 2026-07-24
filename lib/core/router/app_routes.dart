@@ -1,7 +1,9 @@
 import 'package:go_router/go_router.dart';
 
 import '../../features/auth/presentation/screens/login_screen.dart';
+import '../../features/compras/presentation/screens/compra_form_screen.dart';
 import '../../features/dashboard/presentation/screens/home_screen.dart';
+import '../../features/inventario/presentation/screens/existencias_list_screen.dart';
 import '../../features/proveedores/data/models/proveedor.dart';
 import '../../features/proveedores/presentation/screens/proveedor_form_screen.dart';
 import '../../features/proveedores/presentation/screens/proveedores_list_screen.dart';
@@ -57,6 +59,18 @@ abstract final class AppRoutes {
         proveedorExistente: state.extra as Proveedor?,
         onGuardado: () => context.pop(),
       ),
+    ),
+    GoRoute(
+      name: RouteNames.compraFormulario,
+      path: RoutePaths.compraFormulario,
+      builder: (context, state) =>
+          CompraFormScreen(onGuardado: () => context.pop()),
+    ),
+    GoRoute(
+      name: RouteNames.existencias,
+      path: RoutePaths.existencias,
+      // Solo lectura, sin callbacks — ver Sprint 6, Task 6.
+      builder: (context, state) => const ExistenciasListScreen(),
     ),
   ];
 }

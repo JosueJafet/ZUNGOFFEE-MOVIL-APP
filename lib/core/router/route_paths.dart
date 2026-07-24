@@ -11,4 +11,6 @@ abstract final class RoutePaths {
   static const String login = '/login';
   static const String proveedores = '/proveedores';
   static const String proveedorFormulario = '/proveedores/formulario';
+  static const String compraFormulario = '/compras/formulario';
+  static const String existencias = '/inventario/existencias';
 }

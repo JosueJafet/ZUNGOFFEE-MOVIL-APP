@@ -119,10 +119,27 @@ class HomeScreen extends ConsumerWidget {
           ),
           Padding(
             padding: const EdgeInsets.all(AppSpacing.space4),
-            child: FilledButton.tonalIcon(
-              onPressed: () => context.push(RoutePaths.proveedores),
-              icon: const Icon(Icons.storefront),
-              label: const Text('Proveedores'),
+            child: Wrap(
+              alignment: WrapAlignment.center,
+              spacing: AppSpacing.space4,
+              runSpacing: AppSpacing.space2,
+              children: [
+                FilledButton.tonalIcon(
+                  onPressed: () => context.push(RoutePaths.proveedores),
+                  icon: const Icon(Icons.storefront),
+                  label: const Text('Proveedores'),
+                ),
+                FilledButton.tonalIcon(
+                  onPressed: () => context.push(RoutePaths.compraFormulario),
+                  icon: const Icon(Icons.shopping_cart_outlined),
+                  label: const Text('Registrar compra'),
+                ),
+                FilledButton.tonalIcon(
+                  onPressed: () => context.push(RoutePaths.existencias),
+                  icon: const Icon(Icons.inventory_2_outlined),
+                  label: const Text('Ver existencias'),
+                ),
+              ],
             ),
           ),
         ],
