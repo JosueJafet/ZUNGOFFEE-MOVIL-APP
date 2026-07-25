@@ -23,4 +23,11 @@ class VentasRepository {
     );
     return dto.toDomain();
   }
+
+  Future<List<Venta>> listar({int page = 1, int pageSize = 20}) async {
+    final dtos = await _remoteDataSource.listar(page: page, pageSize: pageSize);
+    return dtos.map((dto) => dto.toDomain()).toList();
+  }
+
+  Future<void> anular(int id) => _remoteDataSource.anular(id);
 }

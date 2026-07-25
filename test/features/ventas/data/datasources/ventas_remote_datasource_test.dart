@@ -135,5 +135,63 @@ void main() {
       final body = adapter.lastRequest?.data as Map<String, dynamic>;
       expect(body['lineas'], hasLength(2));
     });
+
+    test(
+      'listar llama GET /ventas?page&pageSize y parsea un array plano',
+      () async {
+        final adapter = _FakeHttpClientAdapter(
+          (options) => _jsonResponse([_ventaJson()], 200),
+        );
+        final dataSource = VentasRemoteDataSource(
+          ApiClient(_FakeSessionTokenProvider('token-123'), dio: _dioWithAdapter(adapter)),
+        );
+
+        final dtos = await dataSource.listar(page: 2, pageSize: 10);
+
+        expect(adapter.lastRequest?.method, 'GET');
+        expect(adapter.lastRequest?.path, '/ventas');
+        expect(adapter.lastRequest?.queryParameters, {'page': 2, 'pageSize': 10});
+        expect(dtos, hasLength(1));
+        expect(dtos.single.id, 30);
+      },
+    );
+
+    test(
+      'listar también parsea la respuesta si viene envuelta en un Map '
+      '(Sprint 9, Decisión 5: no depende del nombre de la clave)',
+      () async {
+        final adapter = _FakeHttpClientAdapter(
+          (options) => _jsonResponse({
+            'meta': {'page': 1},
+            'algunaClave': [_ventaJson()],
+          }, 200),
+        );
+        final dataSource = VentasRemoteDataSource(
+          ApiClient(_FakeSessionTokenProvider('token-123'), dio: _dioWithAdapter(adapter)),
+        );
+
+        final dtos = await dataSource.listar();
+
+        expect(dtos, hasLength(1));
+      },
+    );
+
+    test(
+      'anular llama PATCH /ventas/:id/anular sin parsear el cuerpo de la '
+      'respuesta',
+      () async {
+        final adapter = _FakeHttpClientAdapter(
+          (options) => _jsonResponse({'cualquierCosa': true}, 200),
+        );
+        final dataSource = VentasRemoteDataSource(
+          ApiClient(_FakeSessionTokenProvider('token-123'), dio: _dioWithAdapter(adapter)),
+        );
+
+        await dataSource.anular(30);
+
+        expect(adapter.lastRequest?.method, 'PATCH');
+        expect(adapter.lastRequest?.path, '/ventas/30/anular');
+      },
+    );
   });
 }

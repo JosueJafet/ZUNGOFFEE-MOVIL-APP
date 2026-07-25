@@ -124,5 +124,40 @@ void main() {
         );
       },
     );
+
+    test('listar mapea el array de la API a List<Venta>', () async {
+      final repository = _repositoryWithAdapter(
+        _FakeHttpClientAdapter((options) => _jsonResponse([_ventaJson()], 200)),
+      );
+
+      final ventas = await repository.listar();
+
+      expect(ventas, hasLength(1));
+      expect(ventas.single.id, 30);
+      expect(ventas.single.anulada, isFalse);
+    });
+
+    test('anular propaga un ApiException tal cual', () async {
+      final repository = _repositoryWithAdapter(
+        _FakeHttpClientAdapter(
+          (options) => _jsonResponse({
+            'statusCode': 400,
+            'message': 'La venta ya estaba anulada',
+            'error': 'Bad Request',
+          }, 400),
+        ),
+      );
+
+      await expectLater(
+        repository.anular(30),
+        throwsA(
+          isA<ApiException>().having(
+            (e) => e.message,
+            'message',
+            'La venta ya estaba anulada',
+          ),
+        ),
+      );
+    });
   });
 }

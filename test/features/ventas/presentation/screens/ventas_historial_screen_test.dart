@@ -1,0 +1,325 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+import 'package:zungofee_mobile/core/api/api_client.dart';
+import 'package:zungofee_mobile/core/api/session_token_provider.dart';
+import 'package:zungofee_mobile/core/constants/app_role.dart';
+import 'package:zungofee_mobile/core/errors/api_exception.dart';
+import 'package:zungofee_mobile/core/services/auth_session_service.dart';
+import 'package:zungofee_mobile/core/theme/app_theme.dart';
+import 'package:zungofee_mobile/features/auth/data/datasources/perfil_remote_datasource.dart';
+import 'package:zungofee_mobile/features/auth/data/models/perfil.dart';
+import 'package:zungofee_mobile/features/auth/data/repositories/auth_repository.dart';
+import 'package:zungofee_mobile/features/auth/data/repositories/perfil_repository.dart';
+import 'package:zungofee_mobile/features/auth/presentation/providers/auth_providers.dart';
+import 'package:zungofee_mobile/features/auth/presentation/providers/perfil_providers.dart';
+import 'package:zungofee_mobile/features/ventas/data/datasources/ventas_remote_datasource.dart';
+import 'package:zungofee_mobile/features/ventas/data/models/venta.dart';
+import 'package:zungofee_mobile/features/ventas/data/repositories/ventas_repository.dart';
+import 'package:zungofee_mobile/features/ventas/presentation/providers/ventas_providers.dart';
+import 'package:zungofee_mobile/features/ventas/presentation/screens/ventas_historial_screen.dart';
+
+class _FakeSessionTokenProvider implements SessionTokenProvider {
+  @override
+  String? get accessToken => null;
+}
+
+class _FakePerfilRepository extends PerfilRepository {
+  _FakePerfilRepository(this._perfil)
+    : super(PerfilRemoteDataSource(ApiClient(_FakeSessionTokenProvider())));
+
+  final Perfil _perfil;
+
+  @override
+  Future<Perfil> getPerfil() async => _perfil;
+}
+
+class _FakeVentasRepository extends VentasRepository {
+  _FakeVentasRepository(this._responses)
+    : super(VentasRemoteDataSource(ApiClient(_FakeSessionTokenProvider())));
+
+  final List<Future<List<Venta>> Function()> _responses;
+  int listarCallCount = 0;
+  int anularCallCount = 0;
+  Object? anularError;
+
+  @override
+  Future<List<Venta>> listar({int page = 1, int pageSize = 20}) {
+    final index = listarCallCount < _responses.length
+        ? listarCallCount
+        : _responses.length - 1;
+    listarCallCount++;
+    return _responses[index]();
+  }
+
+  @override
+  Future<void> anular(int id) async {
+    anularCallCount++;
+    if (anularError != null) throw anularError!;
+  }
+}
+
+Perfil _perfilConRol(String rol) => Perfil(
+  id: 7,
+  nombre: 'Juan Pérez',
+  activo: true,
+  fechaCreacion: DateTime.parse('2026-01-15T10:30:00.000Z'),
+  rol: rol,
+  tenantId: 3,
+  tenantNombre: 'Bodega Central',
+);
+
+const _ventaActiva = Venta(
+  id: 30,
+  tenantId: 5,
+  clienteId: 7,
+  usuarioId: 3,
+  total: 750,
+  anulada: false,
+);
+
+const _ventaAnulada = Venta(
+  id: 31,
+  tenantId: 5,
+  clienteId: 7,
+  usuarioId: 3,
+  total: 300,
+  anulada: true,
+);
+
+Widget _wrap({
+  required PerfilRepository perfilRepository,
+  required VentasRepository ventasRepository,
+  required AuthRepository authRepository,
+}) {
+  return ProviderScope(
+    overrides: [
+      authRepositoryProvider.overrideWithValue(authRepository),
+      perfilRepositoryProvider.overrideWithValue(perfilRepository),
+      ventasRepositoryProvider.overrideWithValue(ventasRepository),
+    ],
+    child: MaterialApp(
+      theme: AppTheme.light,
+      home: const VentasHistorialScreen(),
+    ),
+  );
+}
+
+void main() {
+  group('VentasHistorialScreen', () {
+    late SupabaseClient supabaseClient;
+    late AuthRepository authRepository;
+
+    setUp(() {
+      supabaseClient = SupabaseClient('https://example.test', 'test-anon-key');
+      authRepository = AuthRepository(AuthSessionService(supabaseClient));
+    });
+
+    tearDown(() => supabaseClient.dispose());
+
+    testWidgets(
+      'admin_bodega: una venta activa muestra el botón "Anular", una '
+      'anulada no',
+      (tester) async {
+        await tester.pumpWidget(
+          _wrap(
+            perfilRepository: _FakePerfilRepository(
+              _perfilConRol(AppRole.adminBodega),
+            ),
+            ventasRepository: _FakeVentasRepository([
+              () async => [_ventaActiva, _ventaAnulada],
+            ]),
+            authRepository: authRepository,
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('Venta #30'), findsOneWidget);
+        expect(find.text('Venta #31'), findsOneWidget);
+        expect(find.text('Anulada'), findsOneWidget);
+        expect(find.widgetWithText(TextButton, 'Anular'), findsOneWidget);
+      },
+    );
+
+    testWidgets('empleado: no muestra ningún botón "Anular"', (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          perfilRepository: _FakePerfilRepository(
+            _perfilConRol(AppRole.empleado),
+          ),
+          ventasRepository: _FakeVentasRepository([
+            () async => [_ventaActiva],
+          ]),
+          authRepository: authRepository,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.widgetWithText(TextButton, 'Anular'), findsNothing);
+    });
+
+    testWidgets('lista vacía: muestra el mensaje de "sin ventas"', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _wrap(
+          perfilRepository: _FakePerfilRepository(
+            _perfilConRol(AppRole.empleado),
+          ),
+          ventasRepository: _FakeVentasRepository([() async => []]),
+          authRepository: authRepository,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('No hay ventas registradas'), findsOneWidget);
+    });
+
+    testWidgets(
+      'confirmar el diálogo llama anular y refresca la lista',
+      (tester) async {
+        final repository = _FakeVentasRepository([
+          () async => [_ventaActiva],
+          () async => [_ventaAnulada],
+        ]);
+
+        await tester.pumpWidget(
+          _wrap(
+            perfilRepository: _FakePerfilRepository(
+              _perfilConRol(AppRole.adminBodega),
+            ),
+            ventasRepository: repository,
+            authRepository: authRepository,
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.widgetWithText(TextButton, 'Anular'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Anular venta'), findsOneWidget);
+
+        await tester.tap(find.widgetWithText(FilledButton, 'Anular'));
+        await tester.pumpAndSettle();
+
+        expect(repository.anularCallCount, 1);
+        expect(repository.listarCallCount, 2);
+      },
+    );
+
+    testWidgets('cancelar el diálogo no llama anular', (tester) async {
+      final repository = _FakeVentasRepository([
+        () async => [_ventaActiva],
+      ]);
+
+      await tester.pumpWidget(
+        _wrap(
+          perfilRepository: _FakePerfilRepository(
+            _perfilConRol(AppRole.adminBodega),
+          ),
+          ventasRepository: repository,
+          authRepository: authRepository,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.widgetWithText(TextButton, 'Anular'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.widgetWithText(TextButton, 'Cancelar'));
+      await tester.pumpAndSettle();
+
+      expect(repository.anularCallCount, 0);
+    });
+
+    testWidgets(
+      'un error al anular se muestra en un SnackBar',
+      (tester) async {
+        final repository = _FakeVentasRepository([
+          () async => [_ventaActiva],
+        ])..anularError = const ApiException(
+          statusCode: 400,
+          message: 'La venta ya estaba anulada',
+        );
+
+        await tester.pumpWidget(
+          _wrap(
+            perfilRepository: _FakePerfilRepository(
+              _perfilConRol(AppRole.adminBodega),
+            ),
+            ventasRepository: repository,
+            authRepository: authRepository,
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.widgetWithText(TextButton, 'Anular'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.widgetWithText(FilledButton, 'Anular'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('La venta ya estaba anulada'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'un error al anular sin mensaje muestra un fallback específico de '
+      'anular, no el de "no se pudo cargar"',
+      (tester) async {
+        final repository = _FakeVentasRepository([
+          () async => [_ventaActiva],
+        ])..anularError = const ApiException(statusCode: 400);
+
+        await tester.pumpWidget(
+          _wrap(
+            perfilRepository: _FakePerfilRepository(
+              _perfilConRol(AppRole.adminBodega),
+            ),
+            ventasRepository: repository,
+            authRepository: authRepository,
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.widgetWithText(TextButton, 'Anular'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.widgetWithText(FilledButton, 'Anular'));
+        await tester.pumpAndSettle();
+
+        expect(
+          find.text('No se pudo anular la venta. Intenta de nuevo.'),
+          findsOneWidget,
+        );
+        expect(
+          find.text('No se pudo cargar el historial de ventas. Intenta de nuevo.'),
+          findsNothing,
+        );
+      },
+    );
+
+    testWidgets('un ApiException al cargar muestra su mensaje', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _wrap(
+          perfilRepository: _FakePerfilRepository(
+            _perfilConRol(AppRole.empleado),
+          ),
+          ventasRepository: _FakeVentasRepository([
+            () async => throw const ApiException(
+              statusCode: 500,
+              message: 'Error del servidor',
+            ),
+          ]),
+          authRepository: authRepository,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Error del servidor'), findsOneWidget);
+      expect(find.widgetWithText(FilledButton, 'Reintentar'), findsOneWidget);
+    });
+  });
+}
