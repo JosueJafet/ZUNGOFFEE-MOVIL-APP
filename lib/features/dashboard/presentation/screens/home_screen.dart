@@ -139,6 +139,16 @@ class HomeScreen extends ConsumerWidget {
                   icon: const Icon(Icons.inventory_2_outlined),
                   label: const Text('Ver existencias'),
                 ),
+                FilledButton.tonalIcon(
+                  onPressed: () => context.push(RoutePaths.clientes),
+                  icon: const Icon(Icons.people_outline),
+                  label: const Text('Clientes'),
+                ),
+                FilledButton.tonalIcon(
+                  onPressed: () => context.push(RoutePaths.ventaFormulario),
+                  icon: const Icon(Icons.point_of_sale_outlined),
+                  label: const Text('Registrar venta'),
+                ),
               ],
             ),
           ),

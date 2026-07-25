@@ -110,6 +110,16 @@ Widget _wrapWithRouter(
         builder: (context, state) =>
             const Scaffold(body: Text('Placeholder de Existencias')),
       ),
+      GoRoute(
+        path: RoutePaths.clientes,
+        builder: (context, state) =>
+            const Scaffold(body: Text('Placeholder de Clientes')),
+      ),
+      GoRoute(
+        path: RoutePaths.ventaFormulario,
+        builder: (context, state) =>
+            const Scaffold(body: Text('Placeholder de Registrar venta')),
+      ),
     ],
   );
 
@@ -324,6 +334,39 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(find.text('Placeholder de Existencias'), findsOneWidget);
+        expect(find.byType(HomeScreen), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'tap en "Clientes" navega a RoutePaths.clientes (Sprint 7, Task 11)',
+      (tester) async {
+        final repository = _FakePerfilRepository([() async => _perfilDeEjemplo]);
+
+        await tester.pumpWidget(_wrapWithRouter(repository, authRepository));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('Clientes'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Placeholder de Clientes'), findsOneWidget);
+        expect(find.byType(HomeScreen), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'tap en "Registrar venta" navega a RoutePaths.ventaFormulario '
+      '(Sprint 7, Task 11)',
+      (tester) async {
+        final repository = _FakePerfilRepository([() async => _perfilDeEjemplo]);
+
+        await tester.pumpWidget(_wrapWithRouter(repository, authRepository));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('Registrar venta'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Placeholder de Registrar venta'), findsOneWidget);
         expect(find.byType(HomeScreen), findsNothing);
       },
     );

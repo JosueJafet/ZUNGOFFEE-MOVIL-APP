@@ -13,4 +13,7 @@ abstract final class RouteNames {
   static const String proveedorFormulario = 'proveedorFormulario';
   static const String compraFormulario = 'compraFormulario';
   static const String existencias = 'existencias';
+  static const String clientes = 'clientes';
+  static const String clienteFormulario = 'clienteFormulario';
+  static const String ventaFormulario = 'ventaFormulario';
 }

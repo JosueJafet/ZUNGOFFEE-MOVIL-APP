@@ -13,4 +13,7 @@ abstract final class RoutePaths {
   static const String proveedorFormulario = '/proveedores/formulario';
   static const String compraFormulario = '/compras/formulario';
   static const String existencias = '/inventario/existencias';
+  static const String clientes = '/clientes';
+  static const String clienteFormulario = '/clientes/formulario';
+  static const String ventaFormulario = '/ventas/formulario';
 }

@@ -1,12 +1,16 @@
 import 'package:go_router/go_router.dart';
 
 import '../../features/auth/presentation/screens/login_screen.dart';
+import '../../features/clientes/data/models/cliente.dart';
+import '../../features/clientes/presentation/screens/cliente_form_screen.dart';
+import '../../features/clientes/presentation/screens/clientes_list_screen.dart';
 import '../../features/compras/presentation/screens/compra_form_screen.dart';
 import '../../features/dashboard/presentation/screens/home_screen.dart';
 import '../../features/inventario/presentation/screens/existencias_list_screen.dart';
 import '../../features/proveedores/data/models/proveedor.dart';
 import '../../features/proveedores/presentation/screens/proveedor_form_screen.dart';
 import '../../features/proveedores/presentation/screens/proveedores_list_screen.dart';
+import '../../features/ventas/presentation/screens/venta_form_screen.dart';
 import 'route_names.dart';
 import 'route_paths.dart';
 import 'screens/splash_placeholder_screen.dart';
@@ -71,6 +75,33 @@ abstract final class AppRoutes {
       path: RoutePaths.existencias,
       // Solo lectura, sin callbacks — ver Sprint 6, Task 6.
       builder: (context, state) => const ExistenciasListScreen(),
+    ),
+    GoRoute(
+      name: RouteNames.clientes,
+      path: RoutePaths.clientes,
+      // Misma navegación de la capa de routing que Proveedores (Sprint 5):
+      // ClientesListScreen no importa go_router.
+      builder: (context, state) => ClientesListScreen(
+        onCrear: () => context.push(RoutePaths.clienteFormulario),
+        onEditar: (cliente) =>
+            context.push(RoutePaths.clienteFormulario, extra: cliente),
+      ),
+    ),
+    GoRoute(
+      name: RouteNames.clienteFormulario,
+      path: RoutePaths.clienteFormulario,
+      // `extra` es el `Cliente` a editar (modo editar) o `null` (modo
+      // crear) — enviado por el `onEditar`/`onCrear` de arriba.
+      builder: (context, state) => ClienteFormScreen(
+        clienteExistente: state.extra as Cliente?,
+        onGuardado: () => context.pop(),
+      ),
+    ),
+    GoRoute(
+      name: RouteNames.ventaFormulario,
+      path: RoutePaths.ventaFormulario,
+      builder: (context, state) =>
+          VentaFormScreen(onGuardado: () => context.pop()),
     ),
   ];
 }
