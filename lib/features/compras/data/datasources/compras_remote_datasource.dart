@@ -1,4 +1,5 @@
 import '../../../../core/api/api_client.dart';
+import '../../../../core/utils/api_list_response.dart';
 import '../dtos/compra_dto.dart';
 
 /// Una línea de una compra a registrar (`CONTEXTO-MOVIL-FLUTTER.md`,
@@ -55,5 +56,27 @@ class ComprasRemoteDataSource {
       },
     );
     return CompraDto.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  /// `GET /compras` (`CONTEXTO-MOVIL-FLUTTER.md`, sección 7). El contrato
+  /// no da ningún ejemplo de JSON de respuesta — se parsea con
+  /// [ApiListResponse.extractItems] en vez de asumir un shape (Sprint 9,
+  /// Decisión 5).
+  Future<List<CompraDto>> listar({int page = 1, int pageSize = 20}) async {
+    final response = await _apiClient.get(
+      '/compras',
+      queryParameters: {'page': page, 'pageSize': pageSize},
+    );
+    return ApiListResponse.extractItems(response.data)
+        .map((item) => CompraDto.fromJson(item as Map<String, dynamic>))
+        .toList();
+  }
+
+  /// `PATCH /compras/:id/anular` (sección 7): "400 si algún lote ya se
+  /// movió". No se parsea el cuerpo de la respuesta — el contrato tampoco
+  /// confirma qué devuelve (Sprint 9, Decisión 5); quien llama refresca
+  /// el historial con un `GET /compras` real tras el éxito.
+  Future<void> anular(int id) async {
+    await _apiClient.patch('/compras/$id/anular');
   }
 }

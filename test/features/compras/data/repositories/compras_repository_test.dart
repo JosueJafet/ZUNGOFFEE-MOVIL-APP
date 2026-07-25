@@ -123,5 +123,40 @@ void main() {
         );
       },
     );
+
+    test('listar mapea el array de la API a List<Compra>', () async {
+      final repository = _repositoryWithAdapter(
+        _FakeHttpClientAdapter((options) => _jsonResponse([_compraJson()], 200)),
+      );
+
+      final compras = await repository.listar();
+
+      expect(compras, hasLength(1));
+      expect(compras.single.id, 45);
+      expect(compras.single.anulada, isFalse);
+    });
+
+    test('anular propaga un ApiException tal cual', () async {
+      final repository = _repositoryWithAdapter(
+        _FakeHttpClientAdapter(
+          (options) => _jsonResponse({
+            'statusCode': 400,
+            'message': 'Algún lote ya se movió',
+            'error': 'Bad Request',
+          }, 400),
+        ),
+      );
+
+      await expectLater(
+        repository.anular(45),
+        throwsA(
+          isA<ApiException>().having(
+            (e) => e.message,
+            'message',
+            'Algún lote ya se movió',
+          ),
+        ),
+      );
+    });
   });
 }
