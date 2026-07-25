@@ -94,5 +94,63 @@ void main() {
         expect(dto.id, '9');
       },
     );
+
+    test(
+      'listar llama GET /procesamiento?page&pageSize y parsea un array plano',
+      () async {
+        final adapter = _FakeHttpClientAdapter(
+          (options) => _jsonResponse([_procesamientoJson()], 200),
+        );
+        final dataSource = ProcesamientoRemoteDataSource(
+          ApiClient(_FakeSessionTokenProvider('token-123'), dio: _dioWithAdapter(adapter)),
+        );
+
+        final dtos = await dataSource.listar(page: 2, pageSize: 10);
+
+        expect(adapter.lastRequest?.method, 'GET');
+        expect(adapter.lastRequest?.path, '/procesamiento');
+        expect(adapter.lastRequest?.queryParameters, {'page': 2, 'pageSize': 10});
+        expect(dtos, hasLength(1));
+        expect(dtos.single.id, '9');
+      },
+    );
+
+    test(
+      'listar también parsea la respuesta si viene envuelta en un Map '
+      '(Sprint 9, Decisión 5: no depende del nombre de la clave)',
+      () async {
+        final adapter = _FakeHttpClientAdapter(
+          (options) => _jsonResponse({
+            'meta': {'page': 1},
+            'algunaClave': [_procesamientoJson()],
+          }, 200),
+        );
+        final dataSource = ProcesamientoRemoteDataSource(
+          ApiClient(_FakeSessionTokenProvider('token-123'), dio: _dioWithAdapter(adapter)),
+        );
+
+        final dtos = await dataSource.listar();
+
+        expect(dtos, hasLength(1));
+      },
+    );
+
+    test(
+      'anular llama PATCH /procesamiento/:id/anular sin parsear el cuerpo '
+      'de la respuesta',
+      () async {
+        final adapter = _FakeHttpClientAdapter(
+          (options) => _jsonResponse({'cualquierCosa': true}, 200),
+        );
+        final dataSource = ProcesamientoRemoteDataSource(
+          ApiClient(_FakeSessionTokenProvider('token-123'), dio: _dioWithAdapter(adapter)),
+        );
+
+        await dataSource.anular('9');
+
+        expect(adapter.lastRequest?.method, 'PATCH');
+        expect(adapter.lastRequest?.path, '/procesamiento/9/anular');
+      },
+    );
   });
 }
