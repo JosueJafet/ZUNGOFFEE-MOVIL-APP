@@ -4,8 +4,9 @@
 > de IA) pueda retomar el proyecto exactamente desde este punto sin perder
 > contexto. Actualizar este archivo al cerrar cada Sprint.
 
-Última actualización: cierre de Sprint 6 (Tasks 1–8), con `main` ya
-integrando todo lo aprobado y sincronizado con `origin/main`.
+Última actualización: cierre de Sprint 7 (Tasks 1–11), con `main`
+integrando todo lo aprobado localmente (commits hechos directo sobre
+`main`, aún no empujados a `origin/main` — ver "Estado del repositorio").
 
 ---
 
@@ -13,21 +14,23 @@ integrando todo lo aprobado y sincronizado con `origin/main`.
 
 | Campo | Estado |
 |---|---|
-| Sprint actual | Sprint 6 completado (Tasks 1–8) |
+| Sprint actual | Sprint 7 completado (Tasks 1–11) |
 | Arquitectura | Clean Architecture por feature + capa `core/` transversal |
 | Backend | NestJS + Prisma + Supabase (Postgres), staging en Render — integrado |
 | Autenticación | Login real (`features/auth`) contra Supabase Auth, con guards de sesión en GoRouter y perfil (`GET /perfil`) vía Riverpod |
-| Dashboard | Home real (`features/dashboard`) con bienvenida desde `Perfil`, logout funcional y entradas de navegación a Proveedores/Compras/Existencias |
+| Dashboard | Home real (`features/dashboard`) con bienvenida desde `Perfil`, logout funcional y entradas de navegación a Proveedores/Compras/Existencias/Clientes/Ventas |
 | Proveedores | Primer módulo de negocio real (`features/proveedores`): listar, crear y editar proveedores, integrado al Router |
 | Compras | Segundo módulo de negocio real (`features/compras`): registrar una compra con una o más líneas, integrado al Router |
 | Inventario | Primera capa de datos y pantalla real (`features/inventario`): ver existencias actuales (`GET /lotes/existencias`) |
-| Catálogos | Recurso compartido entre features (`features/catalogos`): métodos de pago, variedades, niveles de altura y estados de café (`GET /catalogos`) |
-| Tests | 129/129 pasando (`flutter test`) |
+| Catálogos | Recurso compartido entre features (`features/catalogos`): métodos de pago, variedades, niveles de altura, estados de café y tipos de cliente (`GET /catalogos`) |
+| Clientes | Tercer módulo de negocio real (`features/clientes`, Sprint 7): listar, crear y editar clientes, integrado al Router |
+| Ventas | Cuarto módulo de negocio real (`features/ventas`, Sprint 7): registrar una venta con una o más líneas contra lotes existentes, integrado al Router |
+| Tests | 184/184 pasando (`flutter test`) |
 | flutter analyze | Sin issues |
 | Entorno | Flutter `>=3.35.6` / Dart `>=3.9.0`; solo staging (sin producción separada) |
 | Plataforma objetivo | Android |
-| Rama principal | `main` (fast-forward de las 31 ramas de Sprint 1+2+3+4+5+6; sincronizada con `origin/main`) |
-| Próximo Sprint | Por definir — candidatos: `ventas` (consume las existencias ya visibles), completar `tipoId` en Proveedores con `catalogosProvider`, o guards por rol en el router |
+| Rama principal | `main` — Sprint 7 se commiteó directo sobre `main` (sin ramas `feature/*` intermedias, a diferencia de Sprints 1–6); pendiente de `git push` a `origin/main` |
+| Próximo Sprint | Por definir — candidatos: guards por rol en el router, completar `tipoId`/`proveedoresTipo` en Proveedores (mismo patrón ya resuelto para Clientes), historial/reportes de compras y ventas juntos, o la deuda técnica listada en "Pendientes" |
 
 ---
 
@@ -47,14 +50,19 @@ integrando todo lo aprobado y sincronizado con `origin/main`.
   Guards, App Bootstrap), Sprint 3 (feature `auth`: login real, perfil,
   providers de Riverpod), Sprint 4 (feature `dashboard`: Home real con
   bienvenida y logout), Sprint 5 (feature `proveedores`: primer módulo de
-  negocio real — listar, crear y editar proveedores, integrado al Router)
-  y Sprint 6 (features `catalogos`/`compras`/`inventario`: catálogos
+  negocio real — listar, crear y editar proveedores, integrado al Router),
+  Sprint 6 (features `catalogos`/`compras`/`inventario`: catálogos
   compartidos, registrar una compra con líneas, y ver existencias
-  actuales) implementados y aprobados. El backend oficial (staging) ya
-  está desplegado e integrado. `features/auth`, `features/dashboard`,
-  `features/proveedores`, `features/catalogos`, `features/compras` y
-  `features/inventario` son los únicos módulos con código real; el resto
-  de `features/*` sigue vacío. Ver "Próximo Sprint recomendado".
+  actuales) y Sprint 7 (features `clientes`/`ventas`: CRUD completo de
+  clientes y registrar una venta con líneas contra lotes existentes)
+  implementados y aprobados. El backend oficial (staging) ya está
+  desplegado e integrado; en Sprint 7 el usuario compartió también el
+  documento completo `CONTEXTO-MOVIL-FLUTTER.md` (sigue sin versionarse en
+  el repo — ver "Pendientes"). `features/auth`, `features/dashboard`,
+  `features/proveedores`, `features/catalogos`, `features/compras`,
+  `features/inventario`, `features/clientes` y `features/ventas` son los
+  únicos módulos con código real; el resto de `features/*` sigue vacío.
+  Ver "Próximo Sprint recomendado".
 - **Plataforma objetivo:** Android. El proyecto también contiene el
   scaffolding de `ios/` generado por `flutter create`, pero el foco de
   desarrollo declarado es Android.
@@ -680,10 +688,157 @@ test` en verde (129/129) al cierre de cada una y al cierre del Sprint.
 
 ---
 
+### Sprint 7 — Features: Clientes y Ventas
+
+Cierra el flujo de negocio central documentado desde Sprint 0:
+"productor trae café → compra → inventario → **venta**". El usuario
+confirmó el contrato real de `POST /ventas` y, al investigar la
+dependencia de `clienteId`, se destapó que `features/clientes/` seguía
+vacío — a diferencia de `proveedorId` en Compras (Sprint 5), que ya
+existía. El usuario compartió el contrato de `/clientes` y, después, el
+documento completo `CONTEXTO-MOVIL-FLUTTER.md` (confirmando y ampliando
+ambos contratos), que sigue sin versionarse en el repo. El sprint se
+diseñó con el flujo investigación → plan (con 4 decisiones de arquitectura
+explícitas, alternativas e impacto) → revisión → implementación por Tasks,
+igual que Sprints 5 y 6.
+
+**Decisiones de arquitectura resueltas** (detalle completo en "Decisiones
+arquitectónicas" #25–28):
+1. Extender `Catalogos`/`CatalogosDto` solo con `clientesTipo` (no con
+   `proveedoresTipo`/`unidadesMedida`, sin consumidor todavía).
+2. No filtrar en el selector de venta los lotes por estado del café
+   (uva/húmedo) — el contrato de `POST /ventas` no lo pide, a diferencia
+   de compras; la API es el árbitro final.
+3. `clientes` incluye CRUD completo (crear + listar + editar), simétrico
+   a `proveedores` — a diferencia de Proveedores en Sprint 5, el contrato
+   ya confirma el catálogo (`clientesTipo`) que resuelve su `tipoId`.
+4. Sin historial de ventas (`GET /ventas`) en este sprint — mismo
+   criterio de alcance que Compras en Sprint 6 (solo `POST /compras`, sin
+   `GET /compras`).
+
+#### Task 1 — Catálogos: extender con `clientesTipo` (`lib/features/catalogos/data/`)
+
+**Qué se implementó:** `ClienteTipo`/`ClienteTipoDto` (mismo shape que
+`MetodoPago`: `id`, `nombre`) y el campo `clientesTipo` en
+`CatalogosDto`/`Catalogos`.
+
+**Decisiones:** el contrato real de `GET /catalogos` trae 7 grupos, no
+los 4 que Sprint 6 modeló; se agregó solo el grupo con consumidor real
+este sprint (`ClienteFormScreen`, Task 6) — `proveedoresTipo`/
+`unidadesMedida` quedan pendientes hasta que alguna feature los necesite
+(Decisión 1).
+
+#### Task 2 — Cliente: modelo de dominio y DTO (`lib/features/clientes/data/`)
+
+**Qué se implementó:** `ClienteDto` (+ mapeo `toDomain()`) y el modelo de
+dominio `Cliente` — mismo patrón que `ProveedorDto`/`Proveedor`
+(Sprint 5), sin `sexo`/`finca` (no aplican a un cliente).
+
+#### Task 3 — Clientes: Repository y DataSource (`lib/features/clientes/data/`)
+
+**Qué se implementó:** `ClienteRemoteDataSource` (`getClientes()`,
+`crear(...)`, `actualizar(id, ...)`) y `ClienteRepository` — mismo patrón
+de body parcial (solo campos no nulos) que `ProveedorRemoteDataSource`.
+
+#### Task 4 — Providers de Riverpod de Clientes (`lib/features/clientes/presentation/providers/`)
+
+**Qué se implementó:** `clienteRepositoryProvider`, `clientesProvider`
+(`FutureProvider<List<Cliente>>`) y `ClienteFormController`
+(`AsyncNotifierProvider.autoDispose`, invalida `clientesProvider` al
+terminar con éxito) — mismo patrón que `proveedorProviders`/
+`ProveedorFormController` (Sprint 5).
+
+#### Task 5 — Pantalla de lista de Clientes (`lib/features/clientes/presentation/screens/clientes_list_screen.dart`)
+
+**Qué se implementó:** `ClientesListScreen` — mismo patrón que
+`ProveedoresListScreen`: los 4 estados de `clientesProvider`, edición
+condicionada a `perfil.rol == AppRole.adminBodega`, FAB de crear para
+todos los roles.
+
+#### Task 6 — Formulario de Cliente, crear/editar (`lib/features/clientes/presentation/screens/cliente_form_screen.dart`)
+
+**Qué se implementó:** `ClienteFormScreen({Cliente? clienteExistente,
+required onGuardado})`, dual-mode igual que `ProveedorFormScreen`, con un
+selector de `tipoId` sobre `catalogosProvider.clientesTipo` (Task 1) —
+justo lo que Proveedores no pudo hacer en Sprint 5 por falta de ese
+catálogo.
+
+**Decisiones:** a diferencia de `ProveedorFormScreen`, este formulario sí
+espera un recurso async adicional (`catalogosProvider`) antes de
+renderizarse — mismo criterio ya usado en `CompraFormScreen` (Sprint 6,
+Decisión arquitectónica #24).
+
+#### Task 7 — Venta: modelo de dominio y DTO (`lib/features/ventas/data/`)
+
+**Qué se implementó:** `Venta`/`VentaDto`, fieles a la respuesta de
+`POST /ventas`. **Sin campo `fecha`**: a diferencia de `Compra`
+(Sprint 6), esa respuesta no la incluye. Tampoco modela `lineas` (mismo
+motivo que `Compra`: esa respuesta no las devuelve).
+
+#### Task 8 — Ventas: Repository y DataSource (`lib/features/ventas/data/`)
+
+**Qué se implementó:** `LineaVentaInput` (`loteId`, `cantidad`,
+`precioUnitario`; solo se manda, nunca se recibe) y
+`VentasRemoteDataSource.crear(...)` → `POST /ventas`;
+`VentasRepository.crear(...)` → `Venta`.
+
+**Decisiones:** `LineaVentaInput.loteId` se declara `String` (no `int`)
+porque coincide con `Lote.id` (`BigIntId`, Sprint 6) — el contrato acepta
+número o string, así que se manda tal cual sin parsear. Un `400` con
+"Saldo insuficiente en lote X" se deja propagar como cualquier otro
+`ApiException`, sin caso especial.
+
+#### Task 9 — Providers de Riverpod de Ventas (`lib/features/ventas/presentation/providers/`)
+
+**Qué se implementó:** `ventasRepositoryProvider` y `VentaFormController`
+(`autoDispose`, invalida `existenciasProvider` de `features/inventario`
+al terminar con éxito — una venta reduce el saldo de los lotes vendidos).
+
+**Decisiones:** mismo patrón exacto de invalidación cruzada entre
+features que `CompraFormController` (Sprint 6) ya estableció con
+`existenciasProvider` — reutilizado sin duplicar esa capa de datos.
+
+#### Task 10 — Formulario de Registrar Venta (`lib/features/ventas/presentation/screens/venta_form_screen.dart`)
+
+**Qué se implementó:** `VentaFormScreen({required onGuardado})` — selector
+de cliente (`clientesProvider`), selector de método de pago opcional
+(`catalogosProvider.metodosPago`) y líneas dinámicas (agregar/quitar),
+cada una con un selector de lote existente sobre `existenciasProvider`
+(saldo/estado/variedad/altura) más cantidad/precio unitario.
+
+**Decisiones:** espera tres recursos async (`clientesProvider` +
+`catalogosProvider` + `existenciasProvider`) antes de renderizar el
+formulario — un nivel más de anidamiento de `.when()` que
+`CompraFormScreen` (que esperaba dos); ver "Pendientes" sobre el costo de
+mantenimiento de este patrón. No filtra lotes por estado del café
+vendible (Decisión 2). El selector de lote muestra el saldo con
+`saldo.toStringAsFixed(2)`, igual que `ExistenciasListScreen` — corregido
+durante la revisión de código del sprint (interpolaba el `double` crudo,
+inconsistente con el formato ya establecido).
+
+#### Task 11 — Integración con el Router y entrada desde Home (`lib/core/router/`, `lib/features/dashboard/presentation/screens/home_screen.dart`)
+
+**Qué se implementó:** `RouteNames`/`RoutePaths.clientes`,
+`.clienteFormulario` y `.ventaFormulario`; 3 `GoRoute` nuevos, con el
+mismo wiring `onCrear`/`onEditar`/`onGuardado` que Proveedores/Compras.
+`HomeScreen` gana 2 botones nuevos ("Clientes", "Registrar venta").
+
+**Validación de las 11 tasks:** `flutter analyze` sin issues y `flutter
+test` en verde (184/184) al cierre de cada una y al cierre del Sprint. Se
+hizo además una revisión de código dedicada antes de commitear (a
+petición del usuario), que encontró y corrigió el bug de formato de
+`saldo` mencionado en Task 10, y documentó varios ítems de deuda técnica
+sin bloquear el sprint (ver "Pendientes").
+
+---
+
 ## Estado del repositorio
 
-- **Rama principal:** `main`, sincronizada con `origin/main` (push de
-  Sprint 2, 3, 4, 5 y 6 ya confirmado).
+- **Rama principal:** `main`, con Sprint 2 a 6 sincronizados con
+  `origin/main` (push ya confirmado). **Sprint 7 se commiteó directo sobre
+  `main`**, sin ramas `feature/*` intermedias por Task (a diferencia de
+  Sprints 1–6) — los 11 commits quedaron aplicados localmente; falta el
+  `git push` a `origin/main`.
 - **Ramas existentes** (todas ya integradas en `main` vía fast-forward, ninguna
   eliminada): `feature/theme-system`, `feature/router-infrastructure`,
   `feature/core-config`, `feature/core-session-service`,
@@ -788,6 +943,25 @@ test` en verde (129/129) al cierre de cada una y al cierre del Sprint.
   `.gitkeep`, no los archivos nuevos — y el segundo lo corrigió agregando
   los archivos reales, en vez de amendear, siguiendo la política del
   proyecto de nunca reescribir un commit ya creado.)
+- **Commits de Sprint 7 (historial de `main`, en orden, después de los 9
+  de Sprint 6, sin contar el commit de documentación de cierre de
+  Sprint 6) — hechos directo sobre `main`, sin ramas `feature/*`:**
+  1. `feat(catalogos): add clientesTipo catalog (ClienteTipo/ClienteTipoDto)`
+  2. `feat(clientes): add Cliente domain model and DTO for GET/POST/PATCH /clientes`
+  3. `feat(clientes): add ClienteRemoteDataSource and ClienteRepository`
+  4. `feat(clientes): add clienteRepositoryProvider, clientesProvider and ClienteFormController`
+  5. `feat(clientes): add ClientesListScreen`
+  6. `feat(clientes): add ClienteFormScreen`
+  7. `feat(ventas): add Venta domain model and DTO for POST /ventas`
+  8. `feat(ventas): add VentasRemoteDataSource and VentasRepository`
+  9. `feat(ventas): add ventasRepositoryProvider and VentaFormController`
+  10. `feat(ventas): add VentaFormScreen`
+  11. `feat(router): wire clientes/ventas routes and Home entry points`
+
+  (El fix del formato de `saldo` en `VentaFormScreen` — encontrado durante
+  la revisión de código previa a los commits — quedó incluido directo en
+  el commit 10, ya que esa revisión ocurrió antes de que Task 10 se
+  commiteara por primera vez, no como una corrección posterior.)
 
 ---
 
@@ -815,7 +989,10 @@ lib/
                              (Sprint 4), proveedores/proveedorFormulario ->
                              ProveedoresListScreen/ProveedorFormScreen (Sprint 5),
                              compraFormulario/existencias ->
-                             CompraFormScreen/ExistenciasListScreen (Sprint 6)
+                             CompraFormScreen/ExistenciasListScreen (Sprint 6),
+                             clientes/clienteFormulario ->
+                             ClientesListScreen/ClienteFormScreen,
+                             ventaFormulario -> VentaFormScreen (Sprint 7)
       auth_redirect.dart
       go_router_refresh_stream.dart
       route_names.dart
@@ -837,7 +1014,9 @@ lib/
                              proveedores, reportes, ventas) más
                              `catalogos/` (agregado en Sprint 6 — primer
                              recurso de datos compartido entre features,
-                             sin pantallas propias).
+                             sin pantallas propias). `clientes/` y
+                             `ventas/` pasaron de vacíos a implementados
+                             en Sprint 7.
     auth/                   Implementado (Sprint 3) — login real + perfil
       data/
         datasources/
@@ -887,20 +1066,21 @@ lib/
           proveedores_list_screen.dart
           proveedor_form_screen.dart
         widgets/                  (vacío)
-    catalogos/                Implementado (Sprint 6) — recurso de datos
-                               compartido entre features, sin pantallas
-                               propias
+    catalogos/                Implementado (Sprint 6, extendido en
+                               Sprint 7) — recurso de datos compartido
+                               entre features, sin pantallas propias
       data/
         datasources/
           catalogos_remote_datasource.dart
         dtos/
-          catalogos_dto.dart          + 4 sub-DTOs anidados
+          catalogos_dto.dart          + 5 sub-DTOs anidados
         models/
           metodo_pago.dart
           variedad_cafe.dart
           nivel_altura.dart
           estado_cafe_catalogo.dart
-          catalogos.dart               agregado de los 4 anteriores
+          cliente_tipo.dart             agregado en Sprint 7
+          catalogos.dart               agregado de los 5 anteriores
         repositories/
           catalogos_repository.dart
       presentation/
@@ -945,6 +1125,49 @@ lib/
         screens/
           existencias_list_screen.dart
         widgets/                  (vacío)
+    clientes/                 Implementado (Sprint 7) — tercer módulo de
+                               negocio real: listar, crear y editar
+                               clientes
+      data/
+        datasources/
+          cliente_remote_datasource.dart
+        dtos/
+          cliente_dto.dart
+        models/
+          cliente.dart
+        repositories/
+          cliente_repository.dart
+      presentation/
+        providers/
+          cliente_providers.dart       clienteRepositoryProvider,
+                                        clientesProvider
+          cliente_form_controller.dart clienteFormControllerProvider
+                                        (autoDispose)
+        screens/
+          clientes_list_screen.dart
+          cliente_form_screen.dart
+        widgets/                  (vacío)
+    ventas/                    Implementado (Sprint 7) — cuarto módulo de
+                               negocio real: registrar una venta contra
+                               lotes existentes
+      data/
+        datasources/
+          ventas_remote_datasource.dart    + LineaVentaInput
+        dtos/
+          venta_dto.dart
+        models/
+          venta.dart                       sin campo fecha (a diferencia
+                                            de Compra)
+        repositories/
+          ventas_repository.dart
+      presentation/
+        providers/
+          ventas_providers.dart        ventasRepositoryProvider
+          venta_form_controller.dart   ventaFormControllerProvider
+                                        (autoDispose)
+        screens/
+          venta_form_screen.dart
+        widgets/                  (vacío)
     <resto de features>/     Todos vacíos (solo `.gitkeep`), mismo patrón
                               data/{datasources,dtos,models,repositories}
                               y presentation/{providers,screens,widgets}
@@ -966,6 +1189,7 @@ test/
     router/auth_redirect_test.dart
     router/app_routes_proveedores_test.dart
     router/app_routes_compras_inventario_test.dart
+    router/app_routes_clientes_ventas_test.dart
     utils/api_date_test.dart, api_decimal_test.dart, bigint_id_test.dart
   features/auth/
     data/dtos/perfil_dto_test.dart
@@ -1001,6 +1225,20 @@ test/
     data/repositories/lotes_repository_test.dart
     presentation/providers/lotes_providers_test.dart
     presentation/screens/existencias_list_screen_test.dart
+  features/clientes/
+    data/dtos/cliente_dto_test.dart
+    data/datasources/cliente_remote_datasource_test.dart
+    data/repositories/cliente_repository_test.dart
+    presentation/providers/cliente_providers_test.dart,
+      cliente_form_controller_test.dart
+    presentation/screens/clientes_list_screen_test.dart,
+      cliente_form_screen_test.dart
+  features/ventas/
+    data/dtos/venta_dto_test.dart
+    data/datasources/ventas_remote_datasource_test.dart
+    data/repositories/ventas_repository_test.dart
+    presentation/providers/venta_form_controller_test.dart
+    presentation/screens/venta_form_screen_test.dart
   widget_test.dart
 docs/
   PROJECT_STATUS.md         Este documento
@@ -1124,6 +1362,37 @@ android/, ios/              Scaffolding estándar de `flutter create`
     para tener sentido, a diferencia de `ProveedoresListScreen` (Sprint
     5), donde el segundo provider (`perfilProvider`) solo condicionaba un
     detalle de UI, no la posibilidad de renderizar el formulario.
+25. **Un catálogo compartido se extiende solo con los grupos que tienen un
+    consumidor real, no con la forma completa del contrato** (Sprint 7,
+    Decisión 1): `GET /catalogos` confirma 7 grupos reales, pero
+    `CatalogosDto`/`Catalogos` solo modelan los 5 que algún feature usa
+    hoy (`clientesTipo` agregado este sprint). `proveedoresTipo`/
+    `unidadesMedida` quedan pendientes hasta que una feature los necesite
+    — mismo criterio de disciplina de alcance que la Decisión #11.
+26. **Un formulario no anticipa una regla de negocio que la sección del
+    contrato que documenta ESE endpoint no pide explícitamente**, aunque
+    otra sección más general del mismo documento sugiera la regla
+    (Sprint 7, Decisión 2): `VentaFormScreen` no filtra lotes por estado
+    del café (uva/húmedo no se venden, según la narrativa de negocio de
+    la sección 2.1), porque la sección que documenta específicamente
+    `POST /ventas` (6.5) no repite esa instrucción de filtrado como sí
+    hace la de compras (6.1). Si la API rechaza la venta, ya se maneja
+    con el mismo mecanismo genérico de `ApiException` que todo el resto
+    de la app.
+27. **Dos features con la misma forma estructural (CRUD de una entidad
+    simple) deben tener el mismo alcance, salvo que haya una razón
+    concreta para no hacerlo** (Sprint 7, Decisión 3): `clientes` incluyó
+    edición (`PATCH`) desde el día uno, a diferencia de cómo Proveedores
+    (Sprint 5) omitió `tipoId` por falta de catálogo — ahí sí había una
+    razón concreta ("sin consumidor todavía"); acá no la había, así que
+    omitir edición habría sido una asimetría sin justificación real.
+28. **Un sprint que reutiliza el patrón de otro sprint hereda también su
+    alcance acotado, no solo su arquitectura** (Sprint 7, Decisión 4):
+    `ventas` se quedó en "solo registrar" (`POST /ventas`), sin historial
+    (`GET /ventas`), exactamente como `compras` se quedó en Sprint 6 —
+    evita la asimetría de que un módulo tenga historial y el otro no, y
+    deja "historial de compras y ventas" como un futuro sprint que los
+    resuelve juntos.
 
 ---
 
@@ -1146,20 +1415,73 @@ Lo que falta por implementar, en el orden en que fue quedando pendiente:
   resuelto.
 - **La Guía de Marca (PDF) y el contexto técnico del backend
   (`CONTEXTO-MOVIL-FLUTTER.md`) no están versionados en el repositorio** —
-  ambos fueron compartidos directamente en la conversación. Se recomienda
-  guardarlos en `docs/` para que no dependan del historial de chat.
+  ambos fueron compartidos directamente en la conversación (en Sprint 7 el
+  usuario volvió a compartir el documento completo y actualizado). Se
+  recomienda guardarlos en `docs/` para que no dependan del historial de
+  chat — el contenido ya está disponible, solo falta el commit.
+- **`git push` a `origin/main` pendiente**: los 11 commits de Sprint 7
+  quedaron aplicados solo localmente (ver "Estado del repositorio").
 - **Registro de fuentes de marca** (`Poppins`, `Inter`, `JetBrains Mono`) en
   `pubspec.yaml` (`flutter.fonts`) y sus archivos `.ttf`: nombres declarados,
   assets no agregados.
 - **Botón "soft destructivo"** del mock de la Guía de Marca sigue sin
   equivalente en el theme; pendiente para `shared/widgets/buttons`.
 - **`features/auth`, `features/dashboard`, `features/proveedores`,
-  `features/catalogos`, `features/compras` y `features/inventario` son
-  los únicos módulos con código** — el resto de `features/*` (clientes,
-  notificaciones, perfil, procesamiento, reportes, ventas) sigue vacío.
-- **`shared/` completo** (extensions, mixins, widgets) sigue vacío —
-  ninguna Task de Sprint 3, 4, 5 ni 6 encontró duplicación real que
-  justificara empezarlo.
+  `features/catalogos`, `features/compras`, `features/inventario`,
+  `features/clientes` y `features/ventas` son los únicos módulos con
+  código** — el resto de `features/*` (notificaciones, perfil,
+  procesamiento, reportes) sigue vacío.
+- **`shared/` completo** (extensions, mixins, widgets) sigue vacío, pero
+  en Sprint 7 dejó de ser una decisión sin evidencia: la revisión de
+  código del sprint confirmó duplicación real de un mismo patrón de
+  manejo de errores (`_errorMessage(Object error)` + bloque "mensaje +
+  botón Reintentar") repetido, literal o casi literal, en 8 pantallas
+  (`HomeScreen`, `ProveedoresListScreen`, `ProveedorFormScreen`,
+  `CompraFormScreen`, `ExistenciasListScreen`, `ClientesListScreen`,
+  `ClienteFormScreen`, `VentaFormScreen`). Candidato concreto para
+  `shared/extensions` (mapeo de error → mensaje) +
+  `shared/widgets/empty_states` (vista de error/reintentar reutilizable)
+  en un futuro sprint de limpieza técnica — no bloqueó Sprint 7.
+- **Duplicación de infraestructura de tests** entre archivos de distintas
+  features (`_FakeSessionTokenProvider`, `_FakeHttpClientAdapter`,
+  `_jsonResponse`, `_dioWithAdapter`, `_tapVisible`/
+  `_seleccionarDropdown`): copiados literalmente en 6+ archivos de test
+  (`proveedores`, `compras`, `clientes`, `ventas`, routers). Candidato
+  para un `test/support/` compartido — identificado en la revisión de
+  código de Sprint 7, no bloqueante.
+- **`PATCH .../:id` nunca expone `estado` (activar/desactivar)**, ni para
+  `/proveedores/:id` (Sprint 5) ni para `/clientes/:id` (Sprint 7),
+  aunque el contrato documenta `estado?` como parte del body parcial de
+  ambos endpoints. Hoy no hay ninguna forma de desactivar un proveedor o
+  cliente desde la app.
+- **El patrón de "solo mandar campos no nulos" en las actualizaciones
+  parciales no permite limpiar explícitamente un campo ya seteado**: si
+  en `ClienteFormScreen`/`ProveedorFormScreen` el usuario borra un campo
+  opcional a vacío en modo editar, ese campo se omite del body (no se
+  manda `null` explícito) y el servidor nunca lo borra — la UI sugiere
+  que se limpió, pero no ocurre. Identificado en la revisión de código de
+  Sprint 7 (ya existía desde Proveedores, Sprint 5).
+- **`existenciasProvider` sigue sin paginación real** (`page=1,
+  pageSize=20` fijo, sin UI de paginación) — desde Sprint 7, `VentaFormScreen`
+  depende de él para el selector de lote de cada línea, así que una
+  bodega con más de 20 lotes con saldo vería el selector de venta
+  truncado en silencio, sin ningún indicio para el usuario. Antes
+  (Sprint 6, solo lectura en `ExistenciasListScreen`) era una limitación
+  menor; ahora afecta una acción transaccional.
+- **La pirámide de `.when()` anidados crece con cada formulario que
+  depende de más recursos async**: `CompraFormScreen` (Sprint 6) necesita
+  2 (`proveedoresProvider` + `catalogosProvider`); `VentaFormScreen`
+  (Sprint 7) ya necesita 3 (`clientesProvider` + `catalogosProvider` +
+  `existenciasProvider`), cada uno repitiendo su propio loading/error. Si
+  un futuro formulario necesita un 4º recurso, vale la pena un helper que
+  combine varios `AsyncValue` en uno solo.
+- **`Cliente`/`ClienteRepository`/`ClienteFormController` son
+  estructuralmente casi idénticos a `Proveedor`/`ProveedorRepository`/
+  `ProveedorFormController`** (mismo shape: nombre + tipo + lugar +
+  teléfono + estado). Con solo 2 ocurrencias no amerita abstraer todavía
+  (mismo criterio que el proyecto ya aplica de no abstraer antes de
+  tiempo) — pero si aparece una tercera entidad con ese shape, ahí sí
+  valdría la pena un CRUD genérico.
 - **Edición de perfil** (`PATCH /perfil`): fuera de alcance;
   `Perfil`/`PerfilRepository` solo cubren lectura (`GET /perfil`).
 - **Diálogo de confirmación antes de logout**: decisión explícita de
@@ -1171,9 +1493,12 @@ Lo que falta por implementar, en el orden en que fue quedando pendiente:
   `proveedores` (Sprint 5) omitió deliberadamente ese campo del
   formulario. Ya no depende de una decisión de arquitectura pendiente —
   `features/catalogos/` (Sprint 6) resolvió dónde vive un catálogo
-  compartido entre features — pero cablear `tipoId` en
-  `ProveedorFormScreen` usando `catalogosProvider` sigue sin hacerse
-  (sería reabrir una feature ya cerrada; sin aprobar todavía).
+  compartido entre features, y Sprint 7 ya demostró el patrón completo
+  con `clientesTipo`/`ClienteFormScreen` — pero cablear `tipoId` en
+  `ProveedorFormScreen` sigue sin hacerse: falta modelar `proveedoresTipo`
+  en `CatalogosDto`/`Catalogos` (confirmado en el contrato real, mismo
+  criterio de Decisión 1) y reabrir `ProveedorFormScreen` (sin aprobar
+  todavía).
 - **Eliminar/desactivar proveedor, búsqueda, filtros, paginación**: no
   documentados para `/proveedores` en el contrato actual, fuera de
   alcance de Sprint 5.
@@ -1183,49 +1508,62 @@ Lo que falta por implementar, en el orden en que fue quedando pendiente:
   `POST /notificaciones/dispositivos`): el propio backend aclara que el
   envío real de push no está conectado del lado servidor todavía; no es
   prioritario.
-- **Forma exacta del JSON de `GET /catalogos` sin confirmar
-  literalmente** (Sprint 6): se asumieron los nombres de clave
-  (camelCase para los grupos, snake_case para `unidad_medida_id`/
-  `msnm_min`/`msnm_max`) por consistencia con el resto de la API, no
-  porque se haya visto el JSON textual completo de ese endpoint. Verificar
-  contra el backend/Swagger real antes de dar el módulo por
-  completamente cerrado; si difiere, es un ajuste de `@JsonKey` en
-  `CatalogosDto`, no un rediseño.
-- **Sin historial/listado de compras** (`GET /compras`, `GET
-  /compras/:id`): no fueron parte del contrato compartido en Sprint 6 —
-  ese Sprint solo cubrió registrar una compra y ver existencias. Agregar
-  cuando se comparta ese contrato.
-- **Sin anular una compra**: el campo `anulada` de `Compra` se mapea de
-  solo lectura; no hay endpoint de anulación en el contrato compartido.
-- **Sin ninguna acción sobre un lote más allá de verlo** (transformar/
-  procesar, mover, ajustar) — corresponde al futuro módulo
-  `procesamiento`/inventario completo, no a Sprint 6.
+- ~~Forma exacta del JSON de `GET /catalogos` sin confirmar
+  literalmente~~ — **resuelto en Sprint 7**: el usuario compartió el
+  documento `CONTEXTO-MOVIL-FLUTTER.md` completo, que confirma el shape
+  real (camelCase para los grupos, snake_case para los campos internos)
+  tal como se había asumido en Sprint 6. No requirió ningún ajuste.
+- **Sin historial/listado de compras ni de ventas** (`GET /compras`, `GET
+  /compras/:id`, `GET /ventas`, `GET /ventas/:id`, `GET /ventas/resumen`,
+  `GET /compras/resumen`): Sprint 6 solo cubrió registrar una compra y ver
+  existencias; Sprint 7 solo cubrió registrar una venta (Decisión 4) — a
+  propósito, para no romper la simetría entre ambos módulos. El propio
+  contrato ya documenta estos endpoints (`CONTEXTO-MOVIL-FLUTTER.md`,
+  sección 7); un futuro sprint de "historial y reportes" puede resolver
+  compras y ventas juntos de una vez.
+- **Sin anular una compra ni una venta**: el campo `anulada` de
+  `Compra`/`Venta` se mapea de solo lectura; `PATCH /compras/:id/anular`
+  y `PATCH /ventas/:id/anular` están documentados en el contrato
+  (este último "siempre revierte saldo") pero fuera de alcance de
+  Sprints 6 y 7.
+- **Sin ninguna acción sobre un lote más allá de verlo/venderlo**
+  (transformar/procesar, mover, ajustar) — corresponde al futuro módulo
+  `procesamiento`/inventario completo.
 - **Sin guards de rol en `compras`/`inventario`**: el contrato compartido
   en Sprint 6 no especificó qué roles pueden llamar `POST /compras` ni
   `GET /lotes/existencias` (a diferencia de la tabla de roles que sí
-  trajo Sprint 5 para `proveedores`). Si se confirman restricciones,
-  agregar con el mismo patrón ya usado en `ProveedoresListScreen`
-  (`perfil.rol == AppRole.x`).
+  trajo Sprint 5 para `proveedores`, y que Sprint 7 confirmó para
+  `clientes`/`ventas`: `admin_bodega`+`empleado` para crear/listar,
+  `admin_bodega` para editar/anular). Si se confirman restricciones para
+  compras/inventario, agregar con el mismo patrón ya usado en
+  `ProveedoresListScreen`/`ClientesListScreen` (`perfil.rol ==
+  AppRole.x`).
 
 ---
 
 ## Próximo Sprint recomendado
 
 **Aún no diseñado.** Con `auth`, `dashboard` (Home), `proveedores`,
-`catalogos`, `compras` e `inventario` (existencias) completos, los
-candidatos naturales son: **`ventas`** (consume directamente las
-existencias que `inventario` ya expone — el próximo paso lógico del
-flujo de negocio), **completar `tipoId` en el formulario de
-Proveedores** ahora que `catalogosProvider` existe (Sprint 6 resolvió esa
-dependencia), o **guards por rol en el router** (ya se puede leer
-`perfilProvider.rol` para distinguir `empleado`/`admin_bodega`/
-`super_admin`). Este alcance no ha sido diseñado ni aprobado — cuando se
-decida, corresponde repetir el mismo proceso de diseño de Sprint
-(desglose en Tasks, revisión antes de implementar).
+`catalogos`, `compras`, `inventario` (existencias), `clientes` y `ventas`
+completos, los candidatos naturales son: **guards por rol en el router**
+(ya se puede leer `perfilProvider.rol` para distinguir `empleado`/
+`admin_bodega`/`super_admin`), **completar `tipoId`/`proveedoresTipo` en
+el formulario de Proveedores** (Sprint 7 ya demostró el patrón completo
+con `clientesTipo`), **historial y reportes de compras/ventas** (`GET
+/compras`, `GET /ventas`, `.../resumen`, anulación de ambas — ver
+"Pendientes"), o un **sprint de limpieza técnica** que resuelva los
+ítems de deuda identificados en la revisión de código de Sprint 7
+(duplicación de manejo de errores hacia `shared/`, infraestructura de
+tests compartida, `estado` en `PATCH` de proveedores/clientes,
+paginación real de existencias). Este alcance no ha sido diseñado ni
+aprobado — cuando se decida, corresponde repetir el mismo proceso de
+diseño de Sprint (investigación → plan con decisiones explícitas →
+revisión → implementación por Tasks).
 
 No perder de vista los pendientes de configuración nativa (Application
 ID, firma de release) — no bloquean el próximo Sprint, pero deben
-resolverse antes de cualquier build de distribución real.
+resolverse antes de cualquier build de distribución real. Tampoco el
+`git push` de Sprint 7 a `origin/main`, todavía sin confirmar.
 
 ---
 
@@ -1251,7 +1589,9 @@ Render) — no hay todavía un ambiente de producción separado.
 ## Próximo Hito
 
 **Sprint 3 (autenticación), Sprint 4 (Home/Dashboard), Sprint 5
-(Proveedores, primer módulo de negocio real) y Sprint 6 (Compras,
-Catálogos e Inventario/existencias) ya se completaron** — ver detalle en
+(Proveedores, primer módulo de negocio real), Sprint 6 (Compras,
+Catálogos e Inventario/existencias) y Sprint 7 (Clientes y Ventas, cierra
+el flujo compra→inventario→venta) ya se completaron** — ver detalle en
 "Sprints completados" y en "Próximo Sprint recomendado" para lo que sigue
-(aún sin diseñar formalmente).
+(aún sin diseñar formalmente). Queda pendiente el `git push` de Sprint 7
+a `origin/main` (ver "Estado del repositorio").
