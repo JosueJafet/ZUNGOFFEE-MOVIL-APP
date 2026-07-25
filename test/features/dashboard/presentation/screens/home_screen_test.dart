@@ -125,6 +125,22 @@ Widget _wrapWithRouter(
         builder: (context, state) =>
             const Scaffold(body: Text('Placeholder de Procesar café')),
       ),
+      GoRoute(
+        path: RoutePaths.historialCompras,
+        builder: (context, state) =>
+            const Scaffold(body: Text('Placeholder de Historial de compras')),
+      ),
+      GoRoute(
+        path: RoutePaths.historialVentas,
+        builder: (context, state) =>
+            const Scaffold(body: Text('Placeholder de Historial de ventas')),
+      ),
+      GoRoute(
+        path: RoutePaths.historialProcesamiento,
+        builder: (context, state) => const Scaffold(
+          body: Text('Placeholder de Historial de procesamiento'),
+        ),
+      ),
     ],
   );
 
@@ -389,6 +405,60 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(find.text('Placeholder de Procesar café'), findsOneWidget);
+        expect(find.byType(HomeScreen), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'tap en "Historial de compras" navega a RoutePaths.historialCompras '
+      '(Sprint 9, Task 4)',
+      (tester) async {
+        final repository = _FakePerfilRepository([() async => _perfilDeEjemplo]);
+
+        await tester.pumpWidget(_wrapWithRouter(repository, authRepository));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('Historial de compras'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Placeholder de Historial de compras'), findsOneWidget);
+        expect(find.byType(HomeScreen), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'tap en "Historial de ventas" navega a RoutePaths.historialVentas '
+      '(Sprint 9, Task 4)',
+      (tester) async {
+        final repository = _FakePerfilRepository([() async => _perfilDeEjemplo]);
+
+        await tester.pumpWidget(_wrapWithRouter(repository, authRepository));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('Historial de ventas'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Placeholder de Historial de ventas'), findsOneWidget);
+        expect(find.byType(HomeScreen), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'tap en "Historial de procesamiento" navega a '
+      'RoutePaths.historialProcesamiento (Sprint 9, Task 4)',
+      (tester) async {
+        final repository = _FakePerfilRepository([() async => _perfilDeEjemplo]);
+
+        await tester.pumpWidget(_wrapWithRouter(repository, authRepository));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('Historial de procesamiento'));
+        await tester.pumpAndSettle();
+
+        expect(
+          find.text('Placeholder de Historial de procesamiento'),
+          findsOneWidget,
+        );
         expect(find.byType(HomeScreen), findsNothing);
       },
     );

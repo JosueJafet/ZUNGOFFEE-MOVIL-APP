@@ -155,6 +155,22 @@ class HomeScreen extends ConsumerWidget {
                   icon: const Icon(Icons.local_fire_department_outlined),
                   label: const Text('Procesar café'),
                 ),
+                FilledButton.tonalIcon(
+                  onPressed: () => context.push(RoutePaths.historialCompras),
+                  icon: const Icon(Icons.history),
+                  label: const Text('Historial de compras'),
+                ),
+                FilledButton.tonalIcon(
+                  onPressed: () => context.push(RoutePaths.historialVentas),
+                  icon: const Icon(Icons.history),
+                  label: const Text('Historial de ventas'),
+                ),
+                FilledButton.tonalIcon(
+                  onPressed: () =>
+                      context.push(RoutePaths.historialProcesamiento),
+                  icon: const Icon(Icons.history),
+                  label: const Text('Historial de procesamiento'),
+                ),
               ],
             ),
           ),

@@ -17,4 +17,7 @@ abstract final class RouteNames {
   static const String clienteFormulario = 'clienteFormulario';
   static const String ventaFormulario = 'ventaFormulario';
   static const String procesamientoFormulario = 'procesamientoFormulario';
+  static const String historialCompras = 'historialCompras';
+  static const String historialVentas = 'historialVentas';
+  static const String historialProcesamiento = 'historialProcesamiento';
 }
