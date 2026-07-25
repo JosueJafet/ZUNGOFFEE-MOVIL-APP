@@ -36,6 +36,7 @@ void main() {
         variedadesCafe: [],
         nivelesAltura: [],
         estadosCafe: [],
+        clientesTipo: [],
       );
       final repository = _FakeCatalogosRepository(expected);
 

@@ -1,5 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import 'cliente_tipo.dart';
 import 'estado_cafe_catalogo.dart';
 import 'metodo_pago.dart';
 import 'nivel_altura.dart';
@@ -16,5 +17,6 @@ class Catalogos with _$Catalogos {
     required List<VariedadCafe> variedadesCafe,
     required List<NivelAltura> nivelesAltura,
     required List<EstadoCafeCatalogo> estadosCafe,
+    required List<ClienteTipo> clientesTipo,
   }) = _Catalogos;
 }

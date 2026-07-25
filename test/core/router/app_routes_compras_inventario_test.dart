@@ -111,6 +111,7 @@ const _catalogosDeEjemplo = Catalogos(
   variedadesCafe: [VariedadCafe(id: 1, nombre: 'Catuai')],
   nivelesAltura: [NivelAltura(id: 1, nombre: 'Estandar')],
   estadosCafe: [EstadoCafeCatalogo(id: 1, nombre: 'uva', unidadMedidaId: 1)],
+  clientesTipo: [],
 );
 
 const _loteDeEjemplo = Lote(

@@ -1,6 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../models/catalogos.dart';
+import '../models/cliente_tipo.dart';
 import '../models/estado_cafe_catalogo.dart';
 import '../models/metodo_pago.dart';
 import '../models/nivel_altura.dart';
@@ -10,12 +11,13 @@ part 'catalogos_dto.freezed.dart';
 part 'catalogos_dto.g.dart';
 
 /// DTO fiel al JSON de `GET /catalogos` (`CONTEXTO-MOVIL-FLUTTER.md`,
-/// confirmado por el usuario: claves `metodosPago`, `variedadesCafe`,
-/// `nivelesAltura`, `estadosCafe`). Los campos internos de cada catálogo
-/// (`msnm_min`/`msnm_max`, `unidad_medida_id`) se asumen snake_case, igual
-/// que el resto de las respuestas de la API (`fecha_creacion`,
-/// `unidad_medida_id` ya visto en `GET /lotes/existencias`, etc.) — ajustar
-/// si el contrato real dice lo contrario.
+/// secciones 6.1 y 8). El contrato real trae 7 grupos; este DTO solo
+/// modela los que tienen un consumidor real hoy (`metodosPago`,
+/// `variedadesCafe`, `nivelesAltura`, `estadosCafe`, `clientesTipo`
+/// agregado en Sprint 7) — `proveedoresTipo`/`unidadesMedida` quedan
+/// pendientes hasta que alguna feature los necesite (Sprint 7, Decisión
+/// 1: disciplina de alcance, mismo criterio que Decisión arquitectónica
+/// #11).
 @freezed
 class CatalogosDto with _$CatalogosDto {
   const CatalogosDto._();
@@ -28,6 +30,8 @@ class CatalogosDto with _$CatalogosDto {
     required List<NivelAlturaDto> nivelesAltura,
     @JsonKey(name: 'estadosCafe')
     required List<EstadoCafeCatalogoDto> estadosCafe,
+    @JsonKey(name: 'clientesTipo')
+    required List<ClienteTipoDto> clientesTipo,
   }) = _CatalogosDto;
 
   factory CatalogosDto.fromJson(Map<String, dynamic> json) =>
@@ -40,6 +44,7 @@ class CatalogosDto with _$CatalogosDto {
       variedadesCafe: variedadesCafe.map((dto) => dto.toDomain()).toList(),
       nivelesAltura: nivelesAltura.map((dto) => dto.toDomain()).toList(),
       estadosCafe: estadosCafe.map((dto) => dto.toDomain()).toList(),
+      clientesTipo: clientesTipo.map((dto) => dto.toDomain()).toList(),
     );
   }
 }
@@ -114,4 +119,18 @@ class EstadoCafeCatalogoDto with _$EstadoCafeCatalogoDto {
     nombre: nombre,
     unidadMedidaId: unidadMedidaId,
   );
+}
+
+/// Entrada del catálogo `clientesTipo` (Sprint 7).
+@freezed
+class ClienteTipoDto with _$ClienteTipoDto {
+  const ClienteTipoDto._();
+
+  const factory ClienteTipoDto({required int id, required String nombre}) =
+      _ClienteTipoDto;
+
+  factory ClienteTipoDto.fromJson(Map<String, dynamic> json) =>
+      _$ClienteTipoDtoFromJson(json);
+
+  ClienteTipo toDomain() => ClienteTipo(id: id, nombre: nombre);
 }

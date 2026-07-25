@@ -4,13 +4,12 @@ import 'package:zungofee_mobile/features/catalogos/data/dtos/catalogos_dto.dart'
 
 void main() {
   group('CatalogosDto', () {
-    // JSON ASUMIDO para GET /catalogos: el usuario confirmó las 4 claves
-    // (metodosPago, variedadesCafe, nivelesAltura, estadosCafe) pero no el
-    // JSON textual completo. Los campos internos (msnm_min/msnm_max,
-    // unidad_medida_id) se asumen snake_case, igual que el resto de las
-    // respuestas de la API (fecha_creacion, unidad_medida_id ya visto en
-    // GET /lotes/existencias). Si el contrato real difiere, este test y
-    // los @JsonKey de CatalogosDto son el único lugar a corregir.
+    // JSON confirmado por `CONTEXTO-MOVIL-FLUTTER.md` (secciones 6.1 y 8):
+    // el contrato real trae 7 grupos; este DTO modela los 5 con consumidor
+    // real hoy (metodosPago, variedadesCafe, nivelesAltura, estadosCafe,
+    // clientesTipo agregado en Sprint 7). Los campos internos
+    // (msnm_min/msnm_max, unidad_medida_id) se asumen snake_case, igual
+    // que el resto de las respuestas de la API.
     final json = {
       'metodosPago': [
         {'id': 1, 'nombre': 'Efectivo'},
@@ -26,9 +25,13 @@ void main() {
         {'id': 1, 'nombre': 'uva', 'unidad_medida_id': 1},
         {'id': 3, 'nombre': 'pergamino_seco', 'unidad_medida_id': 2},
       ],
+      'clientesTipo': [
+        {'id': 1, 'nombre': 'persona_natural'},
+        {'id': 2, 'nombre': 'cafeteria_pequena'},
+      ],
     };
 
-    test('fromJson parsea los 4 catálogos', () {
+    test('fromJson parsea los 5 catálogos', () {
       final dto = CatalogosDto.fromJson(json);
 
       expect(dto.metodosPago, hasLength(2));
@@ -40,6 +43,8 @@ void main() {
       expect(dto.nivelesAltura.first.msnmMax, 1200);
       expect(dto.estadosCafe, hasLength(2));
       expect(dto.estadosCafe.first.unidadMedidaId, 1);
+      expect(dto.clientesTipo, hasLength(2));
+      expect(dto.clientesTipo.first.nombre, 'persona_natural');
     });
 
     test('toDomain mapea al agregado de dominio Catalogos', () {
@@ -54,6 +59,10 @@ void main() {
       expect(catalogos.nivelesAltura.single.msnmMax, 1200);
       expect(catalogos.estadosCafe.map((e) => e.id), [1, 3]);
       expect(catalogos.estadosCafe.first.unidadMedidaId, 1);
+      expect(catalogos.clientesTipo.map((c) => c.nombre), [
+        'persona_natural',
+        'cafeteria_pequena',
+      ]);
     });
 
     test('msnmMin/msnmMax nulos se parsean correctamente', () {

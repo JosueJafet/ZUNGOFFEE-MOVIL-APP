@@ -99,6 +99,7 @@ const _catalogosDeEjemplo = Catalogos(
     // filtrado del selector.
     EstadoCafeCatalogo(id: 4, nombre: 'tostado_alto', unidadMedidaId: 1),
   ],
+  clientesTipo: [],
 );
 
 Widget _wrap({

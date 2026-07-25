@@ -21,6 +21,7 @@ mixin _$Catalogos {
   List<NivelAltura> get nivelesAltura => throw _privateConstructorUsedError;
   List<EstadoCafeCatalogo> get estadosCafe =>
       throw _privateConstructorUsedError;
+  List<ClienteTipo> get clientesTipo => throw _privateConstructorUsedError;
 
   /// Create a copy of Catalogos
   /// with the given fields replaced by the non-null parameter values.
@@ -38,7 +39,8 @@ abstract class $CatalogosCopyWith<$Res> {
       {List<MetodoPago> metodosPago,
       List<VariedadCafe> variedadesCafe,
       List<NivelAltura> nivelesAltura,
-      List<EstadoCafeCatalogo> estadosCafe});
+      List<EstadoCafeCatalogo> estadosCafe,
+      List<ClienteTipo> clientesTipo});
 }
 
 /// @nodoc
@@ -60,6 +62,7 @@ class _$CatalogosCopyWithImpl<$Res, $Val extends Catalogos>
     Object? variedadesCafe = null,
     Object? nivelesAltura = null,
     Object? estadosCafe = null,
+    Object? clientesTipo = null,
   }) {
     return _then(_value.copyWith(
       metodosPago: null == metodosPago
@@ -78,6 +81,10 @@ class _$CatalogosCopyWithImpl<$Res, $Val extends Catalogos>
           ? _value.estadosCafe
           : estadosCafe // ignore: cast_nullable_to_non_nullable
               as List<EstadoCafeCatalogo>,
+      clientesTipo: null == clientesTipo
+          ? _value.clientesTipo
+          : clientesTipo // ignore: cast_nullable_to_non_nullable
+              as List<ClienteTipo>,
     ) as $Val);
   }
 }
@@ -94,7 +101,8 @@ abstract class _$$CatalogosImplCopyWith<$Res>
       {List<MetodoPago> metodosPago,
       List<VariedadCafe> variedadesCafe,
       List<NivelAltura> nivelesAltura,
-      List<EstadoCafeCatalogo> estadosCafe});
+      List<EstadoCafeCatalogo> estadosCafe,
+      List<ClienteTipo> clientesTipo});
 }
 
 /// @nodoc
@@ -114,6 +122,7 @@ class __$$CatalogosImplCopyWithImpl<$Res>
     Object? variedadesCafe = null,
     Object? nivelesAltura = null,
     Object? estadosCafe = null,
+    Object? clientesTipo = null,
   }) {
     return _then(_$CatalogosImpl(
       metodosPago: null == metodosPago
@@ -132,6 +141,10 @@ class __$$CatalogosImplCopyWithImpl<$Res>
           ? _value._estadosCafe
           : estadosCafe // ignore: cast_nullable_to_non_nullable
               as List<EstadoCafeCatalogo>,
+      clientesTipo: null == clientesTipo
+          ? _value._clientesTipo
+          : clientesTipo // ignore: cast_nullable_to_non_nullable
+              as List<ClienteTipo>,
     ));
   }
 }
@@ -143,11 +156,13 @@ class _$CatalogosImpl implements _Catalogos {
       {required final List<MetodoPago> metodosPago,
       required final List<VariedadCafe> variedadesCafe,
       required final List<NivelAltura> nivelesAltura,
-      required final List<EstadoCafeCatalogo> estadosCafe})
+      required final List<EstadoCafeCatalogo> estadosCafe,
+      required final List<ClienteTipo> clientesTipo})
       : _metodosPago = metodosPago,
         _variedadesCafe = variedadesCafe,
         _nivelesAltura = nivelesAltura,
-        _estadosCafe = estadosCafe;
+        _estadosCafe = estadosCafe,
+        _clientesTipo = clientesTipo;
 
   final List<MetodoPago> _metodosPago;
   @override
@@ -181,9 +196,17 @@ class _$CatalogosImpl implements _Catalogos {
     return EqualUnmodifiableListView(_estadosCafe);
   }
 
+  final List<ClienteTipo> _clientesTipo;
+  @override
+  List<ClienteTipo> get clientesTipo {
+    if (_clientesTipo is EqualUnmodifiableListView) return _clientesTipo;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_clientesTipo);
+  }
+
   @override
   String toString() {
-    return 'Catalogos(metodosPago: $metodosPago, variedadesCafe: $variedadesCafe, nivelesAltura: $nivelesAltura, estadosCafe: $estadosCafe)';
+    return 'Catalogos(metodosPago: $metodosPago, variedadesCafe: $variedadesCafe, nivelesAltura: $nivelesAltura, estadosCafe: $estadosCafe, clientesTipo: $clientesTipo)';
   }
 
   @override
@@ -198,7 +221,9 @@ class _$CatalogosImpl implements _Catalogos {
             const DeepCollectionEquality()
                 .equals(other._nivelesAltura, _nivelesAltura) &&
             const DeepCollectionEquality()
-                .equals(other._estadosCafe, _estadosCafe));
+                .equals(other._estadosCafe, _estadosCafe) &&
+            const DeepCollectionEquality()
+                .equals(other._clientesTipo, _clientesTipo));
   }
 
   @override
@@ -207,7 +232,8 @@ class _$CatalogosImpl implements _Catalogos {
       const DeepCollectionEquality().hash(_metodosPago),
       const DeepCollectionEquality().hash(_variedadesCafe),
       const DeepCollectionEquality().hash(_nivelesAltura),
-      const DeepCollectionEquality().hash(_estadosCafe));
+      const DeepCollectionEquality().hash(_estadosCafe),
+      const DeepCollectionEquality().hash(_clientesTipo));
 
   /// Create a copy of Catalogos
   /// with the given fields replaced by the non-null parameter values.
@@ -223,7 +249,8 @@ abstract class _Catalogos implements Catalogos {
       {required final List<MetodoPago> metodosPago,
       required final List<VariedadCafe> variedadesCafe,
       required final List<NivelAltura> nivelesAltura,
-      required final List<EstadoCafeCatalogo> estadosCafe}) = _$CatalogosImpl;
+      required final List<EstadoCafeCatalogo> estadosCafe,
+      required final List<ClienteTipo> clientesTipo}) = _$CatalogosImpl;
 
   @override
   List<MetodoPago> get metodosPago;
@@ -233,6 +260,8 @@ abstract class _Catalogos implements Catalogos {
   List<NivelAltura> get nivelesAltura;
   @override
   List<EstadoCafeCatalogo> get estadosCafe;
+  @override
+  List<ClienteTipo> get clientesTipo;
 
   /// Create a copy of Catalogos
   /// with the given fields replaced by the non-null parameter values.

@@ -20,6 +20,9 @@ _$CatalogosDtoImpl _$$CatalogosDtoImplFromJson(Map<String, dynamic> json) =>
       estadosCafe: (json['estadosCafe'] as List<dynamic>)
           .map((e) => EstadoCafeCatalogoDto.fromJson(e as Map<String, dynamic>))
           .toList(),
+      clientesTipo: (json['clientesTipo'] as List<dynamic>)
+          .map((e) => ClienteTipoDto.fromJson(e as Map<String, dynamic>))
+          .toList(),
     );
 
 Map<String, dynamic> _$$CatalogosDtoImplToJson(_$CatalogosDtoImpl instance) =>
@@ -28,6 +31,7 @@ Map<String, dynamic> _$$CatalogosDtoImplToJson(_$CatalogosDtoImpl instance) =>
       'variedadesCafe': instance.variedadesCafe,
       'nivelesAltura': instance.nivelesAltura,
       'estadosCafe': instance.estadosCafe,
+      'clientesTipo': instance.clientesTipo,
     };
 
 _$MetodoPagoDtoImpl _$$MetodoPagoDtoImplFromJson(Map<String, dynamic> json) =>
@@ -87,4 +91,17 @@ Map<String, dynamic> _$$EstadoCafeCatalogoDtoImplToJson(
       'id': instance.id,
       'nombre': instance.nombre,
       'unidad_medida_id': instance.unidadMedidaId,
+    };
+
+_$ClienteTipoDtoImpl _$$ClienteTipoDtoImplFromJson(Map<String, dynamic> json) =>
+    _$ClienteTipoDtoImpl(
+      id: (json['id'] as num).toInt(),
+      nombre: json['nombre'] as String,
+    );
+
+Map<String, dynamic> _$$ClienteTipoDtoImplToJson(
+        _$ClienteTipoDtoImpl instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'nombre': instance.nombre,
     };

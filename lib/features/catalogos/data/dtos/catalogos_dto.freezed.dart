@@ -30,6 +30,8 @@ mixin _$CatalogosDto {
   @JsonKey(name: 'estadosCafe')
   List<EstadoCafeCatalogoDto> get estadosCafe =>
       throw _privateConstructorUsedError;
+  @JsonKey(name: 'clientesTipo')
+  List<ClienteTipoDto> get clientesTipo => throw _privateConstructorUsedError;
 
   /// Serializes this CatalogosDto to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -51,7 +53,8 @@ abstract class $CatalogosDtoCopyWith<$Res> {
       {@JsonKey(name: 'metodosPago') List<MetodoPagoDto> metodosPago,
       @JsonKey(name: 'variedadesCafe') List<VariedadCafeDto> variedadesCafe,
       @JsonKey(name: 'nivelesAltura') List<NivelAlturaDto> nivelesAltura,
-      @JsonKey(name: 'estadosCafe') List<EstadoCafeCatalogoDto> estadosCafe});
+      @JsonKey(name: 'estadosCafe') List<EstadoCafeCatalogoDto> estadosCafe,
+      @JsonKey(name: 'clientesTipo') List<ClienteTipoDto> clientesTipo});
 }
 
 /// @nodoc
@@ -73,6 +76,7 @@ class _$CatalogosDtoCopyWithImpl<$Res, $Val extends CatalogosDto>
     Object? variedadesCafe = null,
     Object? nivelesAltura = null,
     Object? estadosCafe = null,
+    Object? clientesTipo = null,
   }) {
     return _then(_value.copyWith(
       metodosPago: null == metodosPago
@@ -91,6 +95,10 @@ class _$CatalogosDtoCopyWithImpl<$Res, $Val extends CatalogosDto>
           ? _value.estadosCafe
           : estadosCafe // ignore: cast_nullable_to_non_nullable
               as List<EstadoCafeCatalogoDto>,
+      clientesTipo: null == clientesTipo
+          ? _value.clientesTipo
+          : clientesTipo // ignore: cast_nullable_to_non_nullable
+              as List<ClienteTipoDto>,
     ) as $Val);
   }
 }
@@ -107,7 +115,8 @@ abstract class _$$CatalogosDtoImplCopyWith<$Res>
       {@JsonKey(name: 'metodosPago') List<MetodoPagoDto> metodosPago,
       @JsonKey(name: 'variedadesCafe') List<VariedadCafeDto> variedadesCafe,
       @JsonKey(name: 'nivelesAltura') List<NivelAlturaDto> nivelesAltura,
-      @JsonKey(name: 'estadosCafe') List<EstadoCafeCatalogoDto> estadosCafe});
+      @JsonKey(name: 'estadosCafe') List<EstadoCafeCatalogoDto> estadosCafe,
+      @JsonKey(name: 'clientesTipo') List<ClienteTipoDto> clientesTipo});
 }
 
 /// @nodoc
@@ -127,6 +136,7 @@ class __$$CatalogosDtoImplCopyWithImpl<$Res>
     Object? variedadesCafe = null,
     Object? nivelesAltura = null,
     Object? estadosCafe = null,
+    Object? clientesTipo = null,
   }) {
     return _then(_$CatalogosDtoImpl(
       metodosPago: null == metodosPago
@@ -145,6 +155,10 @@ class __$$CatalogosDtoImplCopyWithImpl<$Res>
           ? _value._estadosCafe
           : estadosCafe // ignore: cast_nullable_to_non_nullable
               as List<EstadoCafeCatalogoDto>,
+      clientesTipo: null == clientesTipo
+          ? _value._clientesTipo
+          : clientesTipo // ignore: cast_nullable_to_non_nullable
+              as List<ClienteTipoDto>,
     ));
   }
 }
@@ -160,11 +174,14 @@ class _$CatalogosDtoImpl extends _CatalogosDto {
       @JsonKey(name: 'nivelesAltura')
       required final List<NivelAlturaDto> nivelesAltura,
       @JsonKey(name: 'estadosCafe')
-      required final List<EstadoCafeCatalogoDto> estadosCafe})
+      required final List<EstadoCafeCatalogoDto> estadosCafe,
+      @JsonKey(name: 'clientesTipo')
+      required final List<ClienteTipoDto> clientesTipo})
       : _metodosPago = metodosPago,
         _variedadesCafe = variedadesCafe,
         _nivelesAltura = nivelesAltura,
         _estadosCafe = estadosCafe,
+        _clientesTipo = clientesTipo,
         super._();
 
   factory _$CatalogosDtoImpl.fromJson(Map<String, dynamic> json) =>
@@ -206,9 +223,18 @@ class _$CatalogosDtoImpl extends _CatalogosDto {
     return EqualUnmodifiableListView(_estadosCafe);
   }
 
+  final List<ClienteTipoDto> _clientesTipo;
+  @override
+  @JsonKey(name: 'clientesTipo')
+  List<ClienteTipoDto> get clientesTipo {
+    if (_clientesTipo is EqualUnmodifiableListView) return _clientesTipo;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_clientesTipo);
+  }
+
   @override
   String toString() {
-    return 'CatalogosDto(metodosPago: $metodosPago, variedadesCafe: $variedadesCafe, nivelesAltura: $nivelesAltura, estadosCafe: $estadosCafe)';
+    return 'CatalogosDto(metodosPago: $metodosPago, variedadesCafe: $variedadesCafe, nivelesAltura: $nivelesAltura, estadosCafe: $estadosCafe, clientesTipo: $clientesTipo)';
   }
 
   @override
@@ -223,7 +249,9 @@ class _$CatalogosDtoImpl extends _CatalogosDto {
             const DeepCollectionEquality()
                 .equals(other._nivelesAltura, _nivelesAltura) &&
             const DeepCollectionEquality()
-                .equals(other._estadosCafe, _estadosCafe));
+                .equals(other._estadosCafe, _estadosCafe) &&
+            const DeepCollectionEquality()
+                .equals(other._clientesTipo, _clientesTipo));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -233,7 +261,8 @@ class _$CatalogosDtoImpl extends _CatalogosDto {
       const DeepCollectionEquality().hash(_metodosPago),
       const DeepCollectionEquality().hash(_variedadesCafe),
       const DeepCollectionEquality().hash(_nivelesAltura),
-      const DeepCollectionEquality().hash(_estadosCafe));
+      const DeepCollectionEquality().hash(_estadosCafe),
+      const DeepCollectionEquality().hash(_clientesTipo));
 
   /// Create a copy of CatalogosDto
   /// with the given fields replaced by the non-null parameter values.
@@ -253,15 +282,16 @@ class _$CatalogosDtoImpl extends _CatalogosDto {
 
 abstract class _CatalogosDto extends CatalogosDto {
   const factory _CatalogosDto(
-          {@JsonKey(name: 'metodosPago')
-          required final List<MetodoPagoDto> metodosPago,
-          @JsonKey(name: 'variedadesCafe')
-          required final List<VariedadCafeDto> variedadesCafe,
-          @JsonKey(name: 'nivelesAltura')
-          required final List<NivelAlturaDto> nivelesAltura,
-          @JsonKey(name: 'estadosCafe')
-          required final List<EstadoCafeCatalogoDto> estadosCafe}) =
-      _$CatalogosDtoImpl;
+      {@JsonKey(name: 'metodosPago')
+      required final List<MetodoPagoDto> metodosPago,
+      @JsonKey(name: 'variedadesCafe')
+      required final List<VariedadCafeDto> variedadesCafe,
+      @JsonKey(name: 'nivelesAltura')
+      required final List<NivelAlturaDto> nivelesAltura,
+      @JsonKey(name: 'estadosCafe')
+      required final List<EstadoCafeCatalogoDto> estadosCafe,
+      @JsonKey(name: 'clientesTipo')
+      required final List<ClienteTipoDto> clientesTipo}) = _$CatalogosDtoImpl;
   const _CatalogosDto._() : super._();
 
   factory _CatalogosDto.fromJson(Map<String, dynamic> json) =
@@ -279,6 +309,9 @@ abstract class _CatalogosDto extends CatalogosDto {
   @override
   @JsonKey(name: 'estadosCafe')
   List<EstadoCafeCatalogoDto> get estadosCafe;
+  @override
+  @JsonKey(name: 'clientesTipo')
+  List<ClienteTipoDto> get clientesTipo;
 
   /// Create a copy of CatalogosDto
   /// with the given fields replaced by the non-null parameter values.
@@ -1052,4 +1085,174 @@ abstract class _EstadoCafeCatalogoDto extends EstadoCafeCatalogoDto {
   @JsonKey(includeFromJson: false, includeToJson: false)
   _$$EstadoCafeCatalogoDtoImplCopyWith<_$EstadoCafeCatalogoDtoImpl>
       get copyWith => throw _privateConstructorUsedError;
+}
+
+ClienteTipoDto _$ClienteTipoDtoFromJson(Map<String, dynamic> json) {
+  return _ClienteTipoDto.fromJson(json);
+}
+
+/// @nodoc
+mixin _$ClienteTipoDto {
+  int get id => throw _privateConstructorUsedError;
+  String get nombre => throw _privateConstructorUsedError;
+
+  /// Serializes this ClienteTipoDto to a JSON map.
+  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
+
+  /// Create a copy of ClienteTipoDto
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  $ClienteTipoDtoCopyWith<ClienteTipoDto> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $ClienteTipoDtoCopyWith<$Res> {
+  factory $ClienteTipoDtoCopyWith(
+          ClienteTipoDto value, $Res Function(ClienteTipoDto) then) =
+      _$ClienteTipoDtoCopyWithImpl<$Res, ClienteTipoDto>;
+  @useResult
+  $Res call({int id, String nombre});
+}
+
+/// @nodoc
+class _$ClienteTipoDtoCopyWithImpl<$Res, $Val extends ClienteTipoDto>
+    implements $ClienteTipoDtoCopyWith<$Res> {
+  _$ClienteTipoDtoCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  /// Create a copy of ClienteTipoDto
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? id = null,
+    Object? nombre = null,
+  }) {
+    return _then(_value.copyWith(
+      id: null == id
+          ? _value.id
+          : id // ignore: cast_nullable_to_non_nullable
+              as int,
+      nombre: null == nombre
+          ? _value.nombre
+          : nombre // ignore: cast_nullable_to_non_nullable
+              as String,
+    ) as $Val);
+  }
+}
+
+/// @nodoc
+abstract class _$$ClienteTipoDtoImplCopyWith<$Res>
+    implements $ClienteTipoDtoCopyWith<$Res> {
+  factory _$$ClienteTipoDtoImplCopyWith(_$ClienteTipoDtoImpl value,
+          $Res Function(_$ClienteTipoDtoImpl) then) =
+      __$$ClienteTipoDtoImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call({int id, String nombre});
+}
+
+/// @nodoc
+class __$$ClienteTipoDtoImplCopyWithImpl<$Res>
+    extends _$ClienteTipoDtoCopyWithImpl<$Res, _$ClienteTipoDtoImpl>
+    implements _$$ClienteTipoDtoImplCopyWith<$Res> {
+  __$$ClienteTipoDtoImplCopyWithImpl(
+      _$ClienteTipoDtoImpl _value, $Res Function(_$ClienteTipoDtoImpl) _then)
+      : super(_value, _then);
+
+  /// Create a copy of ClienteTipoDto
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? id = null,
+    Object? nombre = null,
+  }) {
+    return _then(_$ClienteTipoDtoImpl(
+      id: null == id
+          ? _value.id
+          : id // ignore: cast_nullable_to_non_nullable
+              as int,
+      nombre: null == nombre
+          ? _value.nombre
+          : nombre // ignore: cast_nullable_to_non_nullable
+              as String,
+    ));
+  }
+}
+
+/// @nodoc
+@JsonSerializable()
+class _$ClienteTipoDtoImpl extends _ClienteTipoDto {
+  const _$ClienteTipoDtoImpl({required this.id, required this.nombre})
+      : super._();
+
+  factory _$ClienteTipoDtoImpl.fromJson(Map<String, dynamic> json) =>
+      _$$ClienteTipoDtoImplFromJson(json);
+
+  @override
+  final int id;
+  @override
+  final String nombre;
+
+  @override
+  String toString() {
+    return 'ClienteTipoDto(id: $id, nombre: $nombre)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$ClienteTipoDtoImpl &&
+            (identical(other.id, id) || other.id == id) &&
+            (identical(other.nombre, nombre) || other.nombre == nombre));
+  }
+
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  int get hashCode => Object.hash(runtimeType, id, nombre);
+
+  /// Create a copy of ClienteTipoDto
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$ClienteTipoDtoImplCopyWith<_$ClienteTipoDtoImpl> get copyWith =>
+      __$$ClienteTipoDtoImplCopyWithImpl<_$ClienteTipoDtoImpl>(
+          this, _$identity);
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$ClienteTipoDtoImplToJson(
+      this,
+    );
+  }
+}
+
+abstract class _ClienteTipoDto extends ClienteTipoDto {
+  const factory _ClienteTipoDto(
+      {required final int id,
+      required final String nombre}) = _$ClienteTipoDtoImpl;
+  const _ClienteTipoDto._() : super._();
+
+  factory _ClienteTipoDto.fromJson(Map<String, dynamic> json) =
+      _$ClienteTipoDtoImpl.fromJson;
+
+  @override
+  int get id;
+  @override
+  String get nombre;
+
+  /// Create a copy of ClienteTipoDto
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$ClienteTipoDtoImplCopyWith<_$ClienteTipoDtoImpl> get copyWith =>
+      throw _privateConstructorUsedError;
 }

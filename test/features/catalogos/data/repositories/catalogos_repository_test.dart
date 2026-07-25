@@ -65,6 +65,9 @@ Map<String, dynamic> _catalogosJson() {
     'estadosCafe': [
       {'id': 1, 'nombre': 'uva', 'unidad_medida_id': 1},
     ],
+    'clientesTipo': [
+      {'id': 1, 'nombre': 'persona_natural'},
+    ],
   };
 }
 
