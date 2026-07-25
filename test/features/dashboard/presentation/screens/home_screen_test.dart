@@ -120,6 +120,11 @@ Widget _wrapWithRouter(
         builder: (context, state) =>
             const Scaffold(body: Text('Placeholder de Registrar venta')),
       ),
+      GoRoute(
+        path: RoutePaths.procesamientoFormulario,
+        builder: (context, state) =>
+            const Scaffold(body: Text('Placeholder de Procesar café')),
+      ),
     ],
   );
 
@@ -367,6 +372,23 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(find.text('Placeholder de Registrar venta'), findsOneWidget);
+        expect(find.byType(HomeScreen), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'tap en "Procesar café" navega a RoutePaths.procesamientoFormulario '
+      '(Sprint 8, Task 5)',
+      (tester) async {
+        final repository = _FakePerfilRepository([() async => _perfilDeEjemplo]);
+
+        await tester.pumpWidget(_wrapWithRouter(repository, authRepository));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('Procesar café'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Placeholder de Procesar café'), findsOneWidget);
         expect(find.byType(HomeScreen), findsNothing);
       },
     );

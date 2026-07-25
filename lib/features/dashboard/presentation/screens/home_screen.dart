@@ -149,6 +149,12 @@ class HomeScreen extends ConsumerWidget {
                   icon: const Icon(Icons.point_of_sale_outlined),
                   label: const Text('Registrar venta'),
                 ),
+                FilledButton.tonalIcon(
+                  onPressed: () =>
+                      context.push(RoutePaths.procesamientoFormulario),
+                  icon: const Icon(Icons.local_fire_department_outlined),
+                  label: const Text('Procesar café'),
+                ),
               ],
             ),
           ),

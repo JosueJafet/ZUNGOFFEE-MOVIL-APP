@@ -16,4 +16,5 @@ abstract final class RoutePaths {
   static const String clientes = '/clientes';
   static const String clienteFormulario = '/clientes/formulario';
   static const String ventaFormulario = '/ventas/formulario';
+  static const String procesamientoFormulario = '/procesamiento/formulario';
 }

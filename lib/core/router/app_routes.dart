@@ -9,6 +9,7 @@ import '../../features/dashboard/presentation/screens/home_screen.dart';
 import '../../features/inventario/presentation/screens/existencias_list_screen.dart';
 import '../../features/proveedores/data/models/proveedor.dart';
 import '../../features/proveedores/presentation/screens/proveedor_form_screen.dart';
+import '../../features/procesamiento/presentation/screens/procesamiento_form_screen.dart';
 import '../../features/proveedores/presentation/screens/proveedores_list_screen.dart';
 import '../../features/ventas/presentation/screens/venta_form_screen.dart';
 import 'route_names.dart';
@@ -102,6 +103,12 @@ abstract final class AppRoutes {
       path: RoutePaths.ventaFormulario,
       builder: (context, state) =>
           VentaFormScreen(onGuardado: () => context.pop()),
+    ),
+    GoRoute(
+      name: RouteNames.procesamientoFormulario,
+      path: RoutePaths.procesamientoFormulario,
+      builder: (context, state) =>
+          ProcesamientoFormScreen(onGuardado: () => context.pop()),
     ),
   ];
 }
