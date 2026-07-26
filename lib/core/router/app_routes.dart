@@ -1,6 +1,7 @@
 import 'package:go_router/go_router.dart';
 
 import '../../features/auth/presentation/screens/login_screen.dart';
+import '../../features/auth/presentation/screens/perfil_editar_screen.dart';
 import '../../features/clientes/data/models/cliente.dart';
 import '../../features/clientes/presentation/screens/cliente_form_screen.dart';
 import '../../features/clientes/presentation/screens/clientes_list_screen.dart';
@@ -137,6 +138,12 @@ abstract final class AppRoutes {
       // Solo lectura + marcar-como-leída in-place, sin callbacks — mismo
       // criterio que las pantallas de historial (Sprint 9).
       builder: (context, state) => const NotificacionesListScreen(),
+    ),
+    GoRoute(
+      name: RouteNames.perfilEditar,
+      path: RoutePaths.perfilEditar,
+      builder: (context, state) =>
+          PerfilEditarScreen(onGuardado: () => context.pop()),
     ),
   ];
 }

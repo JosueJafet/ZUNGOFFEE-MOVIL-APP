@@ -178,6 +178,11 @@ class HomeScreen extends ConsumerWidget {
                     icon: const Icon(Icons.notifications_outlined),
                     label: const Text('Notificaciones'),
                   ),
+                  FilledButton.tonalIcon(
+                    onPressed: () => context.push(RoutePaths.perfilEditar),
+                    icon: const Icon(Icons.person_outline),
+                    label: const Text('Editar perfil'),
+                  ),
                 ],
               ),
             ),

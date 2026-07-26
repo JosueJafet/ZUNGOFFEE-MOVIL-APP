@@ -146,6 +146,11 @@ Widget _wrapWithRouter(
         builder: (context, state) =>
             const Scaffold(body: Text('Placeholder de Notificaciones')),
       ),
+      GoRoute(
+        path: RoutePaths.perfilEditar,
+        builder: (context, state) =>
+            const Scaffold(body: Text('Placeholder de Editar perfil')),
+      ),
     ],
   );
 
@@ -481,6 +486,23 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(find.text('Placeholder de Notificaciones'), findsOneWidget);
+        expect(find.byType(HomeScreen), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'tap en "Editar perfil" navega a RoutePaths.perfilEditar '
+      '(Sprint 11, Task 4)',
+      (tester) async {
+        final repository = _FakePerfilRepository([() async => _perfilDeEjemplo]);
+
+        await tester.pumpWidget(_wrapWithRouter(repository, authRepository));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('Editar perfil'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Placeholder de Editar perfil'), findsOneWidget);
         expect(find.byType(HomeScreen), findsNothing);
       },
     );

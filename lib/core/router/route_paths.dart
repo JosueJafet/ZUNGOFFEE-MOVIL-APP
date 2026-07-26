@@ -21,4 +21,5 @@ abstract final class RoutePaths {
   static const String historialVentas = '/ventas/historial';
   static const String historialProcesamiento = '/procesamiento/historial';
   static const String notificaciones = '/notificaciones';
+  static const String perfilEditar = '/perfil/editar';
 }

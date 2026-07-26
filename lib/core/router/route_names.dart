@@ -21,4 +21,5 @@ abstract final class RouteNames {
   static const String historialVentas = 'historialVentas';
   static const String historialProcesamiento = 'historialProcesamiento';
   static const String notificaciones = 'notificaciones';
+  static const String perfilEditar = 'perfilEditar';
 }
