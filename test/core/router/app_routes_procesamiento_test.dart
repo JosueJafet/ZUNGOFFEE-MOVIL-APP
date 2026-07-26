@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:zungofee_mobile/core/api/api_client.dart';
-import 'package:zungofee_mobile/core/api/session_token_provider.dart';
+import '../../support/fake_session_token_provider.dart';
 import 'package:zungofee_mobile/core/errors/api_exception.dart';
 import 'package:zungofee_mobile/core/router/app_routes.dart';
 import 'package:zungofee_mobile/core/router/route_paths.dart';
@@ -30,14 +30,9 @@ import 'package:zungofee_mobile/features/procesamiento/presentation/screens/proc
 /// construido directamente con `AppRoutes.routes` — mismo enfoque que
 /// `app_routes_compras_inventario_test.dart` (Sprint 6) y
 /// `app_routes_clientes_ventas_test.dart` (Sprint 7).
-class _FakeSessionTokenProvider implements SessionTokenProvider {
-  @override
-  String? get accessToken => null;
-}
-
 class _FakeLotesRepository extends LotesRepository {
   _FakeLotesRepository(this._lotes)
-    : super(LotesRemoteDataSource(ApiClient(_FakeSessionTokenProvider())));
+    : super(LotesRemoteDataSource(ApiClient(FakeSessionTokenProvider())));
 
   final List<Lote> _lotes;
 
@@ -48,7 +43,7 @@ class _FakeLotesRepository extends LotesRepository {
 
 class _FakeCatalogosRepository extends CatalogosRepository {
   _FakeCatalogosRepository(this._catalogos)
-    : super(CatalogosRemoteDataSource(ApiClient(_FakeSessionTokenProvider())));
+    : super(CatalogosRemoteDataSource(ApiClient(FakeSessionTokenProvider())));
 
   final Catalogos _catalogos;
 
@@ -59,7 +54,7 @@ class _FakeCatalogosRepository extends CatalogosRepository {
 class _FakeProcesamientoRepository extends ProcesamientoRepository {
   _FakeProcesamientoRepository({this.crearError})
     : super(
-        ProcesamientoRemoteDataSource(ApiClient(_FakeSessionTokenProvider())),
+        ProcesamientoRemoteDataSource(ApiClient(FakeSessionTokenProvider())),
       );
 
   final Object? crearError;

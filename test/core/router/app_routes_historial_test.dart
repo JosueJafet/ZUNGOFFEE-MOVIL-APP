@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:zungofee_mobile/core/api/api_client.dart';
-import 'package:zungofee_mobile/core/api/session_token_provider.dart';
+import '../../support/fake_session_token_provider.dart';
 import 'package:zungofee_mobile/core/constants/app_role.dart';
 import 'package:zungofee_mobile/core/router/app_routes.dart';
 import 'package:zungofee_mobile/core/router/route_paths.dart';
@@ -37,14 +37,9 @@ import 'package:zungofee_mobile/features/ventas/presentation/screens/ventas_hist
 /// Task 4) para las tres rutas de historial, usando un `GoRouter`
 /// construido directamente con `AppRoutes.routes` — mismo enfoque que
 /// `app_routes_procesamiento_test.dart` (Sprint 8).
-class _FakeSessionTokenProvider implements SessionTokenProvider {
-  @override
-  String? get accessToken => null;
-}
-
 class _FakePerfilRepository extends PerfilRepository {
   _FakePerfilRepository(this._perfil)
-    : super(PerfilRemoteDataSource(ApiClient(_FakeSessionTokenProvider())));
+    : super(PerfilRemoteDataSource(ApiClient(FakeSessionTokenProvider())));
 
   final Perfil _perfil;
 
@@ -54,7 +49,7 @@ class _FakePerfilRepository extends PerfilRepository {
 
 class _FakeComprasRepository extends ComprasRepository {
   _FakeComprasRepository(this._compras)
-    : super(ComprasRemoteDataSource(ApiClient(_FakeSessionTokenProvider())));
+    : super(ComprasRemoteDataSource(ApiClient(FakeSessionTokenProvider())));
 
   final List<Compra> _compras;
 
@@ -65,7 +60,7 @@ class _FakeComprasRepository extends ComprasRepository {
 
 class _FakeVentasRepository extends VentasRepository {
   _FakeVentasRepository(this._ventas)
-    : super(VentasRemoteDataSource(ApiClient(_FakeSessionTokenProvider())));
+    : super(VentasRemoteDataSource(ApiClient(FakeSessionTokenProvider())));
 
   final List<Venta> _ventas;
 
@@ -77,7 +72,7 @@ class _FakeVentasRepository extends VentasRepository {
 class _FakeProcesamientoRepository extends ProcesamientoRepository {
   _FakeProcesamientoRepository(this._procesamientos)
     : super(
-        ProcesamientoRemoteDataSource(ApiClient(_FakeSessionTokenProvider())),
+        ProcesamientoRemoteDataSource(ApiClient(FakeSessionTokenProvider())),
       );
 
   final List<Procesamiento> _procesamientos;

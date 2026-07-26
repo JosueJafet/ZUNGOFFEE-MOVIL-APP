@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:zungofee_mobile/core/api/api_client.dart';
-import 'package:zungofee_mobile/core/api/session_token_provider.dart';
+import '../../support/fake_session_token_provider.dart';
 import 'package:zungofee_mobile/core/router/app_routes.dart';
 import 'package:zungofee_mobile/core/router/route_paths.dart';
 import 'package:zungofee_mobile/core/theme/app_theme.dart';
@@ -18,14 +18,9 @@ import 'package:zungofee_mobile/features/dashboard/presentation/screens/home_scr
 /// Ejercita la navegación real de `AppRoutes` (Sprint 11, Task 4) para
 /// `/perfil/editar`, mismo enfoque que `app_routes_notificaciones_test.dart`
 /// (Sprint 10).
-class _FakeSessionTokenProvider implements SessionTokenProvider {
-  @override
-  String? get accessToken => null;
-}
-
 class _FakePerfilRepository extends PerfilRepository {
   _FakePerfilRepository(this._perfil)
-    : super(PerfilRemoteDataSource(ApiClient(_FakeSessionTokenProvider())));
+    : super(PerfilRemoteDataSource(ApiClient(FakeSessionTokenProvider())));
 
   final Perfil _perfil;
 

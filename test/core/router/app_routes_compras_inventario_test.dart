@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:zungofee_mobile/core/api/api_client.dart';
-import 'package:zungofee_mobile/core/api/session_token_provider.dart';
+import '../../support/fake_session_token_provider.dart';
 import 'package:zungofee_mobile/core/errors/api_exception.dart';
 import 'package:zungofee_mobile/core/router/app_routes.dart';
 import 'package:zungofee_mobile/core/router/route_paths.dart';
@@ -38,14 +38,9 @@ import 'package:zungofee_mobile/features/proveedores/presentation/providers/prov
 /// enfoque que `app_routes_proveedores_test.dart` (Sprint 5, Task 6): el
 /// guard de sesión no es responsabilidad de este Task, ya está cubierto
 /// por `auth_redirect_test.dart`.
-class _FakeSessionTokenProvider implements SessionTokenProvider {
-  @override
-  String? get accessToken => null;
-}
-
 class _FakeProveedorRepository extends ProveedorRepository {
   _FakeProveedorRepository(this._proveedores)
-    : super(ProveedorRemoteDataSource(ApiClient(_FakeSessionTokenProvider())));
+    : super(ProveedorRemoteDataSource(ApiClient(FakeSessionTokenProvider())));
 
   final List<Proveedor> _proveedores;
 
@@ -55,7 +50,7 @@ class _FakeProveedorRepository extends ProveedorRepository {
 
 class _FakeCatalogosRepository extends CatalogosRepository {
   _FakeCatalogosRepository(this._catalogos)
-    : super(CatalogosRemoteDataSource(ApiClient(_FakeSessionTokenProvider())));
+    : super(CatalogosRemoteDataSource(ApiClient(FakeSessionTokenProvider())));
 
   final Catalogos _catalogos;
 
@@ -65,7 +60,7 @@ class _FakeCatalogosRepository extends CatalogosRepository {
 
 class _FakeComprasRepository extends ComprasRepository {
   _FakeComprasRepository({this.crearError})
-    : super(ComprasRemoteDataSource(ApiClient(_FakeSessionTokenProvider())));
+    : super(ComprasRemoteDataSource(ApiClient(FakeSessionTokenProvider())));
 
   final Object? crearError;
 
@@ -90,7 +85,7 @@ class _FakeComprasRepository extends ComprasRepository {
 
 class _FakeLotesRepository extends LotesRepository {
   _FakeLotesRepository(this._lotes)
-    : super(LotesRemoteDataSource(ApiClient(_FakeSessionTokenProvider())));
+    : super(LotesRemoteDataSource(ApiClient(FakeSessionTokenProvider())));
 
   final List<Lote> _lotes;
 

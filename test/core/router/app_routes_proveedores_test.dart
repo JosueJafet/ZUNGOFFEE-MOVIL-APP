@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:zungofee_mobile/core/api/api_client.dart';
-import 'package:zungofee_mobile/core/api/session_token_provider.dart';
+import '../../support/fake_session_token_provider.dart';
 import 'package:zungofee_mobile/core/constants/app_role.dart';
 import 'package:zungofee_mobile/core/errors/api_exception.dart';
 import 'package:zungofee_mobile/core/router/app_routes.dart';
@@ -34,14 +34,9 @@ import 'package:zungofee_mobile/features/proveedores/presentation/screens/provee
 /// internas (mismo límite ya documentado en `app_router_test.dart`), y el
 /// guard de sesión no es responsabilidad de este Task — ya está cubierto
 /// por `auth_redirect_test.dart`.
-class _FakeSessionTokenProvider implements SessionTokenProvider {
-  @override
-  String? get accessToken => null;
-}
-
 class _FakePerfilRepository extends PerfilRepository {
   _FakePerfilRepository(this._perfil)
-    : super(PerfilRemoteDataSource(ApiClient(_FakeSessionTokenProvider())));
+    : super(PerfilRemoteDataSource(ApiClient(FakeSessionTokenProvider())));
 
   final Perfil _perfil;
 
@@ -51,7 +46,7 @@ class _FakePerfilRepository extends PerfilRepository {
 
 class _FakeProveedorRepository extends ProveedorRepository {
   _FakeProveedorRepository(this._proveedores, {this.crearError})
-    : super(ProveedorRemoteDataSource(ApiClient(_FakeSessionTokenProvider())));
+    : super(ProveedorRemoteDataSource(ApiClient(FakeSessionTokenProvider())));
 
   final List<Proveedor> _proveedores;
   final Object? crearError;

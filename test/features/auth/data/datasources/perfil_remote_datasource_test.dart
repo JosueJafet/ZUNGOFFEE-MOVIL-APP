@@ -1,63 +1,15 @@
-import 'dart:convert';
-import 'dart:typed_data';
-
-import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:zungofee_mobile/core/api/api_client.dart';
-import 'package:zungofee_mobile/core/api/session_token_provider.dart';
+import '../../../../support/fake_http_client_adapter.dart';
+import '../../../../support/fake_session_token_provider.dart';
 import 'package:zungofee_mobile/features/auth/data/datasources/perfil_remote_datasource.dart';
-
-class _FakeSessionTokenProvider implements SessionTokenProvider {
-  _FakeSessionTokenProvider(this.accessToken);
-
-  @override
-  String? accessToken;
-}
-
-/// Mismo fake de `test/core/api/api_client_test.dart`: nunca toca la red,
-/// responde con lo que indique [_handler].
-class _FakeHttpClientAdapter implements HttpClientAdapter {
-  _FakeHttpClientAdapter(this._handler);
-
-  final ResponseBody Function(RequestOptions options) _handler;
-  RequestOptions? lastRequest;
-
-  @override
-  Future<ResponseBody> fetch(
-    RequestOptions options,
-    Stream<Uint8List>? requestStream,
-    Future<void>? cancelFuture,
-  ) async {
-    lastRequest = options;
-    return _handler(options);
-  }
-
-  @override
-  void close({bool force = false}) {}
-}
-
-Dio _dioWithAdapter(HttpClientAdapter adapter) {
-  final dio = Dio(BaseOptions(baseUrl: 'https://example.test'));
-  dio.httpClientAdapter = adapter;
-  return dio;
-}
-
-ResponseBody _jsonResponse(Object body, int statusCode) {
-  return ResponseBody.fromString(
-    jsonEncode(body),
-    statusCode,
-    headers: {
-      Headers.contentTypeHeader: [Headers.jsonContentType],
-    },
-  );
-}
 
 void main() {
   group('PerfilRemoteDataSource', () {
     test('llama GET /perfil y decodifica la respuesta a PerfilDto', () async {
-      final adapter = _FakeHttpClientAdapter(
-        (options) => _jsonResponse({
+      final adapter = FakeHttpClientAdapter(
+        (options) => jsonResponse({
           'id': 7,
           'nombre': 'Juan Pérez',
           'estado': true,
@@ -67,8 +19,8 @@ void main() {
         }, 200),
       );
       final apiClient = ApiClient(
-        _FakeSessionTokenProvider('token-123'),
-        dio: _dioWithAdapter(adapter),
+        FakeSessionTokenProvider('token-123'),
+        dio: dioWithAdapter(adapter),
       );
       final dataSource = PerfilRemoteDataSource(apiClient);
 
@@ -86,12 +38,12 @@ void main() {
       'actualizar llama PATCH /perfil con { nombre } sin parsear el '
       'cuerpo de la respuesta',
       () async {
-        final adapter = _FakeHttpClientAdapter(
-          (options) => _jsonResponse({'cualquierCosa': true}, 200),
+        final adapter = FakeHttpClientAdapter(
+          (options) => jsonResponse({'cualquierCosa': true}, 200),
         );
         final apiClient = ApiClient(
-          _FakeSessionTokenProvider('token-123'),
-          dio: _dioWithAdapter(adapter),
+          FakeSessionTokenProvider('token-123'),
+          dio: dioWithAdapter(adapter),
         );
         final dataSource = PerfilRemoteDataSource(apiClient);
 
