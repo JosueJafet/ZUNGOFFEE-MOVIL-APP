@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/errors/api_exception.dart';
-import '../../../../core/errors/network_exception.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../shared/extensions/error_message_extension.dart';
+import '../../../../shared/widgets/empty_states/error_retry_view.dart';
 import '../providers/lotes_providers.dart';
 
 /// Lista de existencias actuales (`GET /lotes/existencias`) — primera
@@ -16,16 +16,6 @@ import '../providers/lotes_providers.dart';
 class ExistenciasListScreen extends ConsumerWidget {
   const ExistenciasListScreen({super.key});
 
-  String _errorMessage(Object error) {
-    if (error is ApiException) {
-      return error.message ?? 'No se pudieron cargar las existencias. Intenta de nuevo.';
-    }
-    if (error is NetworkException) {
-      return error.message;
-    }
-    return 'No se pudieron cargar las existencias. Intenta de nuevo.';
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final existenciasAsync = ref.watch(existenciasProvider);
@@ -34,25 +24,11 @@ class ExistenciasListScreen extends ConsumerWidget {
       appBar: AppBar(title: const Text('Existencias')),
       body: existenciasAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stackTrace) => Center(
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.space6),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  _errorMessage(error),
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Theme.of(context).colorScheme.error),
-                ),
-                const SizedBox(height: AppSpacing.space4),
-                FilledButton(
-                  onPressed: () => ref.invalidate(existenciasProvider),
-                  child: const Text('Reintentar'),
-                ),
-              ],
-            ),
+        error: (error, stackTrace) => ErrorRetryView(
+          message: error.errorMessage(
+            fallback: 'No se pudieron cargar las existencias. Intenta de nuevo.',
           ),
+          onRetry: () => ref.invalidate(existenciasProvider),
         ),
         data: (lotes) {
           if (lotes.isEmpty) {

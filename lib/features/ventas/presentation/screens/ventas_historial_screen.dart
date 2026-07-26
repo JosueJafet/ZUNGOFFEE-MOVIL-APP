@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/app_role.dart';
-import '../../../../core/errors/api_exception.dart';
-import '../../../../core/errors/network_exception.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../shared/extensions/error_message_extension.dart';
+import '../../../../shared/widgets/empty_states/error_retry_view.dart';
 import '../../../auth/presentation/providers/perfil_providers.dart';
 import '../../data/models/venta.dart';
 import '../providers/venta_anular_controller.dart';
@@ -17,16 +17,6 @@ import '../providers/ventas_providers.dart';
 /// de listado (`ComprasHistorialScreen`, `ExistenciasListScreen`).
 class VentasHistorialScreen extends ConsumerWidget {
   const VentasHistorialScreen({super.key});
-
-  String _errorMessage(Object error, {required String fallback}) {
-    if (error is ApiException) {
-      return error.message ?? fallback;
-    }
-    if (error is NetworkException) {
-      return error.message;
-    }
-    return fallback;
-  }
 
   Future<void> _confirmarYAnular(
     BuildContext context,
@@ -61,8 +51,7 @@ class VentasHistorialScreen extends ConsumerWidget {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            _errorMessage(
-              anularState.error!,
+            anularState.error!.errorMessage(
               fallback: 'No se pudo anular la venta. Intenta de nuevo.',
             ),
           ),
@@ -82,29 +71,11 @@ class VentasHistorialScreen extends ConsumerWidget {
       appBar: AppBar(title: const Text('Historial de ventas')),
       body: ventasAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stackTrace) => Center(
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.space6),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  _errorMessage(
-                    error,
-                    fallback:
-                        'No se pudo cargar el historial de ventas. Intenta de nuevo.',
-                  ),
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Theme.of(context).colorScheme.error),
-                ),
-                const SizedBox(height: AppSpacing.space4),
-                FilledButton(
-                  onPressed: () => ref.invalidate(ventasHistorialProvider),
-                  child: const Text('Reintentar'),
-                ),
-              ],
-            ),
+        error: (error, stackTrace) => ErrorRetryView(
+          message: error.errorMessage(
+            fallback: 'No se pudo cargar el historial de ventas. Intenta de nuevo.',
           ),
+          onRetry: () => ref.invalidate(ventasHistorialProvider),
         ),
         data: (ventas) {
           if (ventas.isEmpty) {

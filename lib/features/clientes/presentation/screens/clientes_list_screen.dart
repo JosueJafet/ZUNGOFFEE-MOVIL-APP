@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/app_role.dart';
-import '../../../../core/errors/api_exception.dart';
-import '../../../../core/errors/network_exception.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../shared/extensions/error_message_extension.dart';
+import '../../../../shared/widgets/empty_states/error_retry_view.dart';
 import '../../../auth/presentation/providers/perfil_providers.dart';
 import '../../data/models/cliente.dart';
 import '../providers/cliente_providers.dart';
@@ -29,16 +29,6 @@ class ClientesListScreen extends ConsumerWidget {
   /// el perfil actual es `admin_bodega` (ver [_puedeEditar]).
   final void Function(Cliente cliente) onEditar;
 
-  String _errorMessage(Object error) {
-    if (error is ApiException) {
-      return error.message ?? 'No se pudieron cargar los clientes. Intenta de nuevo.';
-    }
-    if (error is NetworkException) {
-      return error.message;
-    }
-    return 'No se pudieron cargar los clientes. Intenta de nuevo.';
-  }
-
   String? _subtitulo(Cliente cliente) {
     final partes = [
       cliente.lugar,
@@ -57,25 +47,11 @@ class ClientesListScreen extends ConsumerWidget {
       appBar: AppBar(title: const Text('Clientes')),
       body: clientesAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stackTrace) => Center(
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.space6),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  _errorMessage(error),
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Theme.of(context).colorScheme.error),
-                ),
-                const SizedBox(height: AppSpacing.space4),
-                FilledButton(
-                  onPressed: () => ref.invalidate(clientesProvider),
-                  child: const Text('Reintentar'),
-                ),
-              ],
-            ),
+        error: (error, stackTrace) => ErrorRetryView(
+          message: error.errorMessage(
+            fallback: 'No se pudieron cargar los clientes. Intenta de nuevo.',
           ),
+          onRetry: () => ref.invalidate(clientesProvider),
         ),
         data: (clientes) {
           if (clientes.isEmpty) {

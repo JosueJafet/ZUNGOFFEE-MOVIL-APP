@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/errors/api_exception.dart';
-import '../../../../core/errors/network_exception.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../shared/extensions/error_message_extension.dart';
 import '../../data/models/proveedor.dart';
 import '../providers/proveedor_form_controller.dart';
 
@@ -105,16 +104,6 @@ class _ProveedorFormScreenState extends ConsumerState<ProveedorFormScreen> {
     }
   }
 
-  String _errorMessage(Object error) {
-    if (error is ApiException) {
-      return error.message ?? 'No se pudo guardar el proveedor. Intenta de nuevo.';
-    }
-    if (error is NetworkException) {
-      return error.message;
-    }
-    return 'No se pudo guardar el proveedor. Intenta de nuevo.';
-  }
-
   @override
   Widget build(BuildContext context) {
     ref.listen<AsyncValue<void>>(proveedorFormControllerProvider, (
@@ -189,7 +178,9 @@ class _ProveedorFormScreenState extends ConsumerState<ProveedorFormScreen> {
                 if (formState.hasError) ...[
                   const SizedBox(height: AppSpacing.space4),
                   Text(
-                    _errorMessage(formState.error!),
+                    formState.error!.errorMessage(
+                      fallback: 'No se pudo guardar el proveedor. Intenta de nuevo.',
+                    ),
                     style: TextStyle(color: Theme.of(context).colorScheme.error),
                   ),
                 ],

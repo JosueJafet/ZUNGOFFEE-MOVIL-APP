@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/errors/api_exception.dart';
-import '../../../../core/errors/network_exception.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../shared/extensions/error_message_extension.dart';
+import '../../../../shared/widgets/empty_states/error_retry_view.dart';
 import '../../data/models/notificacion.dart';
 import '../providers/notificacion_marcar_leida_controller.dart';
 import '../providers/notificaciones_providers.dart';
@@ -21,16 +21,6 @@ import '../providers/notificaciones_providers.dart';
 class NotificacionesListScreen extends ConsumerWidget {
   const NotificacionesListScreen({super.key});
 
-  String _errorMessage(Object error, {required String fallback}) {
-    if (error is ApiException) {
-      return error.message ?? fallback;
-    }
-    if (error is NetworkException) {
-      return error.message;
-    }
-    return fallback;
-  }
-
   Future<void> _marcarLeida(WidgetRef ref, Notificacion notificacion) async {
     if (notificacion.leida) return;
     await ref
@@ -47,8 +37,7 @@ class NotificacionesListScreen extends ConsumerWidget {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              _errorMessage(
-                next.error!,
+              next.error!.errorMessage(
                 fallback: 'No se pudo marcar la notificación como leída.',
               ),
             ),
@@ -61,29 +50,11 @@ class NotificacionesListScreen extends ConsumerWidget {
       appBar: AppBar(title: const Text('Notificaciones')),
       body: notificacionesAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stackTrace) => Center(
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.space6),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  _errorMessage(
-                    error,
-                    fallback:
-                        'No se pudieron cargar las notificaciones. Intenta de nuevo.',
-                  ),
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Theme.of(context).colorScheme.error),
-                ),
-                const SizedBox(height: AppSpacing.space4),
-                FilledButton(
-                  onPressed: () => ref.invalidate(notificacionesProvider),
-                  child: const Text('Reintentar'),
-                ),
-              ],
-            ),
+        error: (error, stackTrace) => ErrorRetryView(
+          message: error.errorMessage(
+            fallback: 'No se pudieron cargar las notificaciones. Intenta de nuevo.',
           ),
+          onRetry: () => ref.invalidate(notificacionesProvider),
         ),
         data: (notificaciones) {
           if (notificaciones.isEmpty) {

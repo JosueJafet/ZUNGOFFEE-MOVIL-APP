@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/errors/api_exception.dart';
-import '../../../../core/errors/network_exception.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../shared/extensions/error_message_extension.dart';
 import '../providers/login_controller.dart';
 
 /// Pantalla de login real. Solo invoca `signIn` y muestra loading/error —
@@ -53,16 +52,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         );
   }
 
-  String _errorMessage(Object error) {
-    if (error is ApiException) {
-      return error.message ?? 'No se pudo iniciar sesión. Intenta de nuevo.';
-    }
-    if (error is NetworkException) {
-      return error.message;
-    }
-    return 'No se pudo iniciar sesión. Intenta de nuevo.';
-  }
-
   @override
   Widget build(BuildContext context) {
     final loginState = ref.watch(loginControllerProvider);
@@ -106,7 +95,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   if (loginState.hasError) ...[
                     const SizedBox(height: AppSpacing.space4),
                     Text(
-                      _errorMessage(loginState.error!),
+                      loginState.error!.errorMessage(
+                        fallback: 'No se pudo iniciar sesión. Intenta de nuevo.',
+                      ),
                       style: TextStyle(color: Theme.of(context).colorScheme.error),
                     ),
                   ],

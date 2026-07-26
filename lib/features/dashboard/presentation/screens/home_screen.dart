@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/errors/api_exception.dart';
-import '../../../../core/errors/network_exception.dart';
 import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/theme_extensions.dart';
+import '../../../../shared/extensions/error_message_extension.dart';
+import '../../../../shared/widgets/empty_states/error_retry_view.dart';
 import '../../../auth/presentation/providers/logout_controller.dart';
 import '../../../auth/presentation/providers/perfil_providers.dart';
 
@@ -20,16 +20,6 @@ import '../../../auth/presentation/providers/perfil_providers.dart';
 /// real del usuario, no por un cambio de estado de sesión.
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
-
-  String _errorMessage(Object error) {
-    if (error is ApiException) {
-      return error.message ?? 'No se pudo cargar tu perfil. Intenta de nuevo.';
-    }
-    if (error is NetworkException) {
-      return error.message;
-    }
-    return 'No se pudo cargar tu perfil. Intenta de nuevo.';
-  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -74,33 +64,27 @@ class HomeScreen extends ConsumerWidget {
               Padding(
                 padding: const EdgeInsets.all(AppSpacing.space4),
                 child: Text(
-                  _errorMessage(logoutAsync.error!),
+                  logoutAsync.error!.errorMessage(
+                    fallback: 'No se pudo cargar tu perfil. Intenta de nuevo.',
+                  ),
                   textAlign: TextAlign.center,
                   style: TextStyle(color: Theme.of(context).colorScheme.error),
                 ),
               ),
-            Padding(
-              padding: const EdgeInsets.all(AppSpacing.space6),
-              child: perfilAsync.when(
-                loading: () => const CircularProgressIndicator(),
-                error: (error, stackTrace) => Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      _errorMessage(error),
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.error,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.space4),
-                    FilledButton(
-                      onPressed: () => ref.invalidate(perfilProvider),
-                      child: const Text('Reintentar'),
-                    ),
-                  ],
+            perfilAsync.when(
+              loading: () => const Padding(
+                padding: EdgeInsets.all(AppSpacing.space6),
+                child: CircularProgressIndicator(),
+              ),
+              error: (error, stackTrace) => ErrorRetryView(
+                message: error.errorMessage(
+                  fallback: 'No se pudo cargar tu perfil. Intenta de nuevo.',
                 ),
-                data: (perfil) => Column(
+                onRetry: () => ref.invalidate(perfilProvider),
+              ),
+              data: (perfil) => Padding(
+                padding: const EdgeInsets.all(AppSpacing.space6),
+                child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
