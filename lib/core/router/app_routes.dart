@@ -8,6 +8,7 @@ import '../../features/compras/presentation/screens/compra_form_screen.dart';
 import '../../features/compras/presentation/screens/compras_historial_screen.dart';
 import '../../features/dashboard/presentation/screens/home_screen.dart';
 import '../../features/inventario/presentation/screens/existencias_list_screen.dart';
+import '../../features/notificaciones/presentation/screens/notificaciones_list_screen.dart';
 import '../../features/proveedores/data/models/proveedor.dart';
 import '../../features/proveedores/presentation/screens/proveedor_form_screen.dart';
 import '../../features/procesamiento/presentation/screens/procesamiento_form_screen.dart';
@@ -129,6 +130,13 @@ abstract final class AppRoutes {
       name: RouteNames.historialProcesamiento,
       path: RoutePaths.historialProcesamiento,
       builder: (context, state) => const ProcesamientoHistorialScreen(),
+    ),
+    GoRoute(
+      name: RouteNames.notificaciones,
+      path: RoutePaths.notificaciones,
+      // Solo lectura + marcar-como-leída in-place, sin callbacks — mismo
+      // criterio que las pantallas de historial (Sprint 9).
+      builder: (context, state) => const NotificacionesListScreen(),
     ),
   ];
 }

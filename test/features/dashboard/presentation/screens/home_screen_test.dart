@@ -141,6 +141,11 @@ Widget _wrapWithRouter(
           body: Text('Placeholder de Historial de procesamiento'),
         ),
       ),
+      GoRoute(
+        path: RoutePaths.notificaciones,
+        builder: (context, state) =>
+            const Scaffold(body: Text('Placeholder de Notificaciones')),
+      ),
     ],
   );
 
@@ -459,6 +464,23 @@ void main() {
           find.text('Placeholder de Historial de procesamiento'),
           findsOneWidget,
         );
+        expect(find.byType(HomeScreen), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'tap en "Notificaciones" navega a RoutePaths.notificaciones '
+      '(Sprint 10, Task 5)',
+      (tester) async {
+        final repository = _FakePerfilRepository([() async => _perfilDeEjemplo]);
+
+        await tester.pumpWidget(_wrapWithRouter(repository, authRepository));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('Notificaciones'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Placeholder de Notificaciones'), findsOneWidget);
         expect(find.byType(HomeScreen), findsNothing);
       },
     );
