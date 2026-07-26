@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/errors/api_exception.dart';
-import '../../../../core/errors/network_exception.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../shared/extensions/async_value_view_extension.dart';
+import '../../../../shared/extensions/error_message_extension.dart';
 import '../../../catalogos/data/models/catalogos.dart';
 import '../../../catalogos/presentation/providers/catalogos_providers.dart';
 import '../../../clientes/data/models/cliente.dart';
@@ -118,35 +118,7 @@ class _VentaFormScreenState extends ConsumerState<VentaFormScreen> {
         .crear(clienteId: _clienteId!, metodoPagoId: _metodoPagoId, lineas: lineas);
   }
 
-  String _errorMessage(Object error) {
-    if (error is ApiException) {
-      return error.message ?? 'No se pudo registrar la venta. Intenta de nuevo.';
-    }
-    if (error is NetworkException) {
-      return error.message;
-    }
-    return 'No se pudo registrar la venta. Intenta de nuevo.';
-  }
-
-  Widget _errorRetry(Object error, VoidCallback onRetry) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.space6),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              _errorMessage(error),
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Theme.of(context).colorScheme.error),
-            ),
-            const SizedBox(height: AppSpacing.space4),
-            FilledButton(onPressed: onRetry, child: const Text('Reintentar')),
-          ],
-        ),
-      ),
-    );
-  }
+  static const _errorFallback = 'No se pudo registrar la venta. Intenta de nuevo.';
 
   String _loteLabel(Lote lote) {
     return '${lote.estadoCafeNombre} · ${lote.variedadNombre} · '
@@ -288,7 +260,7 @@ class _VentaFormScreenState extends ConsumerState<VentaFormScreen> {
             if (formState.hasError) ...[
               const SizedBox(height: AppSpacing.space4),
               Text(
-                _errorMessage(formState.error!),
+                formState.error!.errorMessage(fallback: _errorFallback),
                 style: TextStyle(color: Theme.of(context).colorScheme.error),
               ),
             ],
@@ -329,20 +301,15 @@ class _VentaFormScreenState extends ConsumerState<VentaFormScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('Registrar venta')),
       body: SafeArea(
-        child: clientesAsync.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (error, stackTrace) =>
-              _errorRetry(error, () => ref.invalidate(clientesProvider)),
-          data: (clientes) => catalogosAsync.when(
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (error, stackTrace) =>
-                _errorRetry(error, () => ref.invalidate(catalogosProvider)),
-            data: (catalogos) => existenciasAsync.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, stackTrace) => _errorRetry(
-                error,
-                () => ref.invalidate(existenciasProvider),
-              ),
+        child: clientesAsync.buildOrRetry(
+          errorFallback: _errorFallback,
+          onRetry: () => ref.invalidate(clientesProvider),
+          data: (clientes) => catalogosAsync.buildOrRetry(
+            errorFallback: _errorFallback,
+            onRetry: () => ref.invalidate(catalogosProvider),
+            data: (catalogos) => existenciasAsync.buildOrRetry(
+              errorFallback: _errorFallback,
+              onRetry: () => ref.invalidate(existenciasProvider),
               data: (existencias) => _buildForm(
                 clientes,
                 catalogos,

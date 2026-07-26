@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/estado_cafe.dart';
-import '../../../../core/errors/api_exception.dart';
-import '../../../../core/errors/network_exception.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../shared/extensions/async_value_view_extension.dart';
+import '../../../../shared/extensions/error_message_extension.dart';
 import '../../../catalogos/data/models/estado_cafe_catalogo.dart';
 import '../../../catalogos/presentation/providers/catalogos_providers.dart';
 import '../../../inventario/data/models/lote.dart';
@@ -118,36 +118,8 @@ class _ProcesamientoFormScreenState
         );
   }
 
-  String _errorMessage(Object error) {
-    if (error is ApiException) {
-      return error.message ??
-          'No se pudo registrar el procesamiento. Intenta de nuevo.';
-    }
-    if (error is NetworkException) {
-      return error.message;
-    }
-    return 'No se pudo registrar el procesamiento. Intenta de nuevo.';
-  }
-
-  Widget _errorRetry(Object error, VoidCallback onRetry) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.space6),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              _errorMessage(error),
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Theme.of(context).colorScheme.error),
-            ),
-            const SizedBox(height: AppSpacing.space4),
-            FilledButton(onPressed: onRetry, child: const Text('Reintentar')),
-          ],
-        ),
-      ),
-    );
-  }
+  static const _errorFallback =
+      'No se pudo registrar el procesamiento. Intenta de nuevo.';
 
   String _loteLabel(Lote lote) {
     return '${lote.estadoCafeNombre} · ${lote.variedadNombre} · '
@@ -276,7 +248,7 @@ class _ProcesamientoFormScreenState
             if (formState.hasError) ...[
               const SizedBox(height: AppSpacing.space4),
               Text(
-                _errorMessage(formState.error!),
+                formState.error!.errorMessage(fallback: _errorFallback),
                 style: TextStyle(color: Theme.of(context).colorScheme.error),
               ),
             ],
@@ -316,14 +288,12 @@ class _ProcesamientoFormScreenState
     return Scaffold(
       appBar: AppBar(title: const Text('Procesar café')),
       body: SafeArea(
-        child: existenciasAsync.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (error, stackTrace) =>
-              _errorRetry(error, () => ref.invalidate(existenciasProvider)),
-          data: (existencias) => catalogosAsync.when(
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (error, stackTrace) =>
-                _errorRetry(error, () => ref.invalidate(catalogosProvider)),
+        child: existenciasAsync.buildOrRetry(
+          errorFallback: _errorFallback,
+          onRetry: () => ref.invalidate(existenciasProvider),
+          data: (existencias) => catalogosAsync.buildOrRetry(
+            errorFallback: _errorFallback,
+            onRetry: () => ref.invalidate(catalogosProvider),
             data: (catalogos) => _buildForm(
               existencias,
               catalogos.estadosCafe,
