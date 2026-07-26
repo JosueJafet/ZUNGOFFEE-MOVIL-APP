@@ -13,4 +13,6 @@ class PerfilRepository {
     final dto = await _remoteDataSource.getPerfil();
     return dto.toDomain();
   }
+
+  Future<void> actualizar(String nombre) => _remoteDataSource.actualizar(nombre);
 }

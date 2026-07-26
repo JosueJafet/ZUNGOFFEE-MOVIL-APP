@@ -81,5 +81,26 @@ void main() {
       expect(dto.tenants.id, 3);
       expect(dto.tenants.nombre, 'Bodega Central');
     });
+
+    test(
+      'actualizar llama PATCH /perfil con { nombre } sin parsear el '
+      'cuerpo de la respuesta',
+      () async {
+        final adapter = _FakeHttpClientAdapter(
+          (options) => _jsonResponse({'cualquierCosa': true}, 200),
+        );
+        final apiClient = ApiClient(
+          _FakeSessionTokenProvider('token-123'),
+          dio: _dioWithAdapter(adapter),
+        );
+        final dataSource = PerfilRemoteDataSource(apiClient);
+
+        await dataSource.actualizar('Nuevo Nombre');
+
+        expect(adapter.lastRequest?.method, 'PATCH');
+        expect(adapter.lastRequest?.path, '/perfil');
+        expect(adapter.lastRequest?.data, {'nombre': 'Nuevo Nombre'});
+      },
+    );
   });
 }

@@ -116,5 +116,24 @@ void main() {
         );
       },
     );
+
+    test('actualizar propaga un ApiException tal cual', () async {
+      final repository = _repositoryWithAdapter(
+        _FakeHttpClientAdapter(
+          (options) => _jsonResponse({
+            'statusCode': 400,
+            'message': 'Nombre inválido',
+            'error': 'Bad Request',
+          }, 400),
+        ),
+      );
+
+      await expectLater(
+        repository.actualizar('Nuevo Nombre'),
+        throwsA(
+          isA<ApiException>().having((e) => e.message, 'message', 'Nombre inválido'),
+        ),
+      );
+    });
   });
 }
