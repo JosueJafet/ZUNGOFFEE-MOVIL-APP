@@ -87,5 +87,49 @@ void main() {
         expect(adapter.lastRequest?.path, '/notificaciones/3/leida');
       },
     );
+
+    test(
+      'registrarDispositivo llama POST /notificaciones/dispositivos con '
+      '{ token, plataformaId }',
+      () async {
+        final adapter = FakeHttpClientAdapter(
+          (options) => jsonResponse({}, 201),
+        );
+        final dataSource = NotificacionesRemoteDataSource(
+          ApiClient(FakeSessionTokenProvider('token-123'), dio: dioWithAdapter(adapter)),
+        );
+
+        await dataSource.registrarDispositivo(
+          token: 'fcm-token-abc',
+          plataformaId: 2,
+        );
+
+        expect(adapter.lastRequest?.method, 'POST');
+        expect(adapter.lastRequest?.path, '/notificaciones/dispositivos');
+        expect(adapter.lastRequest?.data, {
+          'token': 'fcm-token-abc',
+          'plataformaId': 2,
+        });
+      },
+    );
+
+    test(
+      'desregistrarDispositivo llama DELETE /notificaciones/dispositivos '
+      'con { token } en el body',
+      () async {
+        final adapter = FakeHttpClientAdapter(
+          (options) => jsonResponse({}, 200),
+        );
+        final dataSource = NotificacionesRemoteDataSource(
+          ApiClient(FakeSessionTokenProvider('token-123'), dio: dioWithAdapter(adapter)),
+        );
+
+        await dataSource.desregistrarDispositivo('fcm-token-abc');
+
+        expect(adapter.lastRequest?.method, 'DELETE');
+        expect(adapter.lastRequest?.path, '/notificaciones/dispositivos');
+        expect(adapter.lastRequest?.data, {'token': 'fcm-token-abc'});
+      },
+    );
   });
 }

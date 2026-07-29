@@ -9,6 +9,7 @@ import 'package:zungofee_mobile/core/theme/app_theme.dart';
 import 'package:zungofee_mobile/features/catalogos/data/datasources/catalogos_remote_datasource.dart';
 import 'package:zungofee_mobile/features/catalogos/data/models/catalogos.dart';
 import 'package:zungofee_mobile/features/catalogos/data/models/estado_cafe_catalogo.dart';
+import 'package:zungofee_mobile/features/catalogos/data/models/unidad_medida.dart';
 import 'package:zungofee_mobile/features/catalogos/data/repositories/catalogos_repository.dart';
 import 'package:zungofee_mobile/features/catalogos/presentation/providers/catalogos_providers.dart';
 import 'package:zungofee_mobile/features/inventario/data/datasources/lotes_remote_datasource.dart';
@@ -28,7 +29,7 @@ class _FakeSessionTokenProvider implements SessionTokenProvider {
 
 class _FakeLotesRepository extends LotesRepository {
   _FakeLotesRepository(this._existencias)
-    : super(LotesRemoteDataSource(ApiClient(_FakeSessionTokenProvider())));
+      : super(LotesRemoteDataSource(ApiClient(_FakeSessionTokenProvider())));
 
   final List<Lote> _existencias;
 
@@ -39,7 +40,8 @@ class _FakeLotesRepository extends LotesRepository {
 
 class _FakeCatalogosRepository extends CatalogosRepository {
   _FakeCatalogosRepository(this._catalogos)
-    : super(CatalogosRemoteDataSource(ApiClient(_FakeSessionTokenProvider())));
+      : super(
+            CatalogosRemoteDataSource(ApiClient(_FakeSessionTokenProvider())));
 
   final Catalogos _catalogos;
 
@@ -49,9 +51,9 @@ class _FakeCatalogosRepository extends CatalogosRepository {
 
 class _FakeProcesamientoRepository extends ProcesamientoRepository {
   _FakeProcesamientoRepository({this.crearError})
-    : super(
-        ProcesamientoRemoteDataSource(ApiClient(_FakeSessionTokenProvider())),
-      );
+      : super(
+          ProcesamientoRemoteDataSource(ApiClient(_FakeSessionTokenProvider())),
+        );
 
   final Object? crearError;
   int crearCallCount = 0;
@@ -127,6 +129,11 @@ const _catalogosDeEjemplo = Catalogos(
     EstadoCafeCatalogo(id: 6, nombre: 'tostado_bajo', unidadMedidaId: 3),
     EstadoCafeCatalogo(id: 7, nombre: 'molido', unidadMedidaId: 3),
   ],
+  unidadesMedida: [
+    UnidadMedida(id: 1, nombre: 'Galones'),
+    UnidadMedida(id: 2, nombre: 'Quintales'),
+    UnidadMedida(id: 3, nombre: 'Libras'),
+  ],
 );
 
 Widget _wrap({
@@ -183,14 +190,15 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        await _tapVisible(tester, find.byKey(const Key('dropdown_lote_origen')));
+        await _tapVisible(
+            tester, find.byKey(const Key('dropdown_lote_origen')));
 
         expect(
-          find.text('pergamino_seco · Catuai · Estandar (saldo: 10.00)'),
+          find.text('Catuai · Estandar (saldo: 10.00)'),
           findsOneWidget,
         );
         expect(
-          find.text('uva · Catuai · Estandar (saldo: 20.00)'),
+          find.text('Catuai · Estandar (saldo: 20.00)'),
           findsNothing,
         );
       },
@@ -210,7 +218,7 @@ void main() {
         await _seleccionarDropdown(
           tester,
           const Key('dropdown_lote_origen'),
-          'pergamino_seco · Catuai · Estandar (saldo: 10.00)',
+          'Catuai · Estandar (saldo: 10.00)',
         );
 
         await _tapVisible(
@@ -220,10 +228,10 @@ void main() {
 
         // pergamino_seco solo puede ir a tostado (alto/medio/bajo), nunca
         // directo a molido.
-        expect(find.text('tostado_alto'), findsOneWidget);
-        expect(find.text('tostado_medio'), findsOneWidget);
-        expect(find.text('tostado_bajo'), findsOneWidget);
-        expect(find.text('molido'), findsNothing);
+        expect(find.text('Tostado alto'), findsOneWidget);
+        expect(find.text('Tostado medio'), findsOneWidget);
+        expect(find.text('Tostado bajo'), findsOneWidget);
+        expect(find.text('Molido'), findsNothing);
       },
     );
 
@@ -245,12 +253,12 @@ void main() {
         await _seleccionarDropdown(
           tester,
           const Key('dropdown_lote_origen'),
-          'pergamino_seco · Catuai · Estandar (saldo: 10.00)',
+          'Catuai · Estandar (saldo: 10.00)',
         );
         await _seleccionarDropdown(
           tester,
           const Key('dropdown_estado_destino'),
-          'tostado_medio',
+          'Tostado medio',
         );
 
         // Cambia el origen a uno cuyos destinos válidos ya NO incluyen
@@ -258,13 +266,13 @@ void main() {
         await _seleccionarDropdown(
           tester,
           const Key('dropdown_lote_origen'),
-          'tostado_alto · Bourbon · Estricta (saldo: 3.00)',
+          'Bourbon · Estricta (saldo: 3.00)',
         );
 
         // Con el dropdown CERRADO: si el valor interno no se hubiera
         // reseteado, seguiría mostrando "tostado_medio" como selección
         // actual aunque ya no esté en items.
-        expect(find.text('tostado_medio'), findsNothing);
+        expect(find.text('Tostado medio'), findsNothing);
 
         // Si el submit pasa sin volver a elegir destino, el valor interno
         // no se reseteó de verdad (solo cambió visualmente la lista).
@@ -289,7 +297,7 @@ void main() {
         await _seleccionarDropdown(
           tester,
           const Key('dropdown_lote_origen'),
-          'tostado_alto · Bourbon · Estricta (saldo: 3.00)',
+          'Bourbon · Estricta (saldo: 3.00)',
         );
 
         await _tapVisible(
@@ -297,8 +305,8 @@ void main() {
           find.byKey(const Key('dropdown_estado_destino')),
         );
 
-        expect(find.text('molido'), findsOneWidget);
-        expect(find.text('tostado_medio'), findsNothing);
+        expect(find.text('Molido'), findsOneWidget);
+        expect(find.text('Tostado medio'), findsNothing);
       },
     );
 
@@ -341,12 +349,12 @@ void main() {
         await _seleccionarDropdown(
           tester,
           const Key('dropdown_lote_origen'),
-          'pergamino_seco · Catuai · Estandar (saldo: 10.00)',
+          'Catuai · Estandar (saldo: 10.00)',
         );
         await _seleccionarDropdown(
           tester,
           const Key('dropdown_estado_destino'),
-          'tostado_alto',
+          'Tostado alto',
         );
         await tester.enterText(find.byKey(const Key('cantidad_entrada')), '5');
         await tester.enterText(find.byKey(const Key('cantidad_salida')), '4');
@@ -359,6 +367,10 @@ void main() {
         expect(repository.ultimaCantidadEntrada, 5);
         expect(repository.ultimaCantidadSalida, 4);
         expect(guardadoCallCount, 1);
+        expect(
+          find.text('Procesamiento registrado con éxito.'),
+          findsOneWidget,
+        );
       },
     );
 
@@ -386,6 +398,51 @@ void main() {
     );
 
     testWidgets(
+      'al elegir origen y destino, las cantidades muestran la unidad real '
+      'de cada uno (pueden diferir) y el saldo disponible',
+      (tester) async {
+        await tester.pumpWidget(
+          _wrap(
+            existencias: const [_lotePergaminoDeEjemplo],
+            procesamientoRepository: _FakeProcesamientoRepository(),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        // Antes de elegir un lote origen, las etiquetas son genéricas
+        // (sin unidad) y no hay texto de saldo disponible.
+        expect(
+          find.text('Cantidad que entra (lote origen)'),
+          findsOneWidget,
+        );
+        expect(find.textContaining('Saldo disponible'), findsNothing);
+
+        await _seleccionarDropdown(
+          tester,
+          const Key('dropdown_lote_origen'),
+          'Catuai · Estandar (saldo: 10.00)',
+        );
+
+        // pergamino_seco (unidadMedidaId 2) → Quintales.
+        expect(find.text('Cantidad de entrada (Quintales)'), findsOneWidget);
+        expect(find.text('Saldo disponible: 10.00 Quintales'), findsOneWidget);
+        // Todavía no hay destino elegido — la etiqueta de salida sigue
+        // genérica.
+        expect(find.text('Cantidad que sale (lote nuevo)'), findsOneWidget);
+
+        await _seleccionarDropdown(
+          tester,
+          const Key('dropdown_estado_destino'),
+          'Tostado alto',
+        );
+
+        // tostado_alto (unidadMedidaId 3) → Libras — distinta de la
+        // unidad de entrada, a propósito.
+        expect(find.text('Cantidad de salida (Libras)'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
       'un error de la API (transición inválida) se muestra inline y no '
       'llama onGuardado',
       (tester) async {
@@ -409,12 +466,12 @@ void main() {
         await _seleccionarDropdown(
           tester,
           const Key('dropdown_lote_origen'),
-          'pergamino_seco · Catuai · Estandar (saldo: 10.00)',
+          'Catuai · Estandar (saldo: 10.00)',
         );
         await _seleccionarDropdown(
           tester,
           const Key('dropdown_estado_destino'),
-          'tostado_alto',
+          'Tostado alto',
         );
         await tester.enterText(find.byKey(const Key('cantidad_entrada')), '5');
         await tester.enterText(find.byKey(const Key('cantidad_salida')), '4');

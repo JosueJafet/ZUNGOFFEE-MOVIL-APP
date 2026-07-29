@@ -16,6 +16,19 @@ Map<String, dynamic> _ventaJson() {
   };
 }
 
+/// Forma real de `GET /ventas` (curl), distinta a la de `POST /ventas`
+/// que usa `_ventaJson()` — sin `tenant_id`/`cliente_id`/`usuario_id`
+/// planos ni `anulada`, con `clientes` anidado, y con `fecha` (que la
+/// respuesta de creación no tiene).
+Map<String, dynamic> _ventaHistorialJson() {
+  return {
+    'id': 30,
+    'fecha': '2026-08-01T00:00:00.000Z',
+    'total': '750.00',
+    'clientes': {'id': 7, 'nombre': 'Cafeteria El Buen Cafe'},
+  };
+}
+
 void main() {
   group('VentasRemoteDataSource', () {
     test(
@@ -89,10 +102,11 @@ void main() {
     });
 
     test(
-      'listar llama GET /ventas?page&pageSize y parsea un array plano',
+      'listar llama GET /ventas?page&pageSize y parsea la forma real de '
+      'la API (clientes anidado, con fecha)',
       () async {
         final adapter = FakeHttpClientAdapter(
-          (options) => jsonResponse([_ventaJson()], 200),
+          (options) => jsonResponse([_ventaHistorialJson()], 200),
         );
         final dataSource = VentasRemoteDataSource(
           ApiClient(FakeSessionTokenProvider('token-123'), dio: dioWithAdapter(adapter)),
@@ -105,6 +119,7 @@ void main() {
         expect(adapter.lastRequest?.queryParameters, {'page': 2, 'pageSize': 10});
         expect(dtos, hasLength(1));
         expect(dtos.single.id, 30);
+        expect(dtos.single.clientes.nombre, 'Cafeteria El Buen Cafe');
       },
     );
 
@@ -115,7 +130,7 @@ void main() {
         final adapter = FakeHttpClientAdapter(
           (options) => jsonResponse({
             'meta': {'page': 1},
-            'algunaClave': [_ventaJson()],
+            'algunaClave': [_ventaHistorialJson()],
           }, 200),
         );
         final dataSource = VentasRemoteDataSource(
@@ -143,6 +158,31 @@ void main() {
 
         expect(adapter.lastRequest?.method, 'PATCH');
         expect(adapter.lastRequest?.path, '/ventas/30/anular');
+      },
+    );
+
+    test(
+      'getResumen llama GET /ventas/resumen y decodifica el groupBy',
+      () async {
+        final adapter = FakeHttpClientAdapter(
+          (options) => jsonResponse([
+            {
+              '_sum': {'total': '5000.00'},
+              'fecha': '2026-07-21T00:00:00.000Z',
+            },
+          ], 200),
+        );
+        final dataSource = VentasRemoteDataSource(
+          ApiClient(FakeSessionTokenProvider('token-123'), dio: dioWithAdapter(adapter)),
+        );
+
+        final dtos = await dataSource.getResumen();
+
+        expect(adapter.lastRequest?.method, 'GET');
+        expect(adapter.lastRequest?.path, '/ventas/resumen');
+        expect(adapter.lastRequest?.queryParameters, isEmpty);
+        expect(dtos, hasLength(1));
+        expect(dtos.single.sum.total, '5000.00');
       },
     );
   });

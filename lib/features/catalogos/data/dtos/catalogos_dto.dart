@@ -5,19 +5,22 @@ import '../models/cliente_tipo.dart';
 import '../models/estado_cafe_catalogo.dart';
 import '../models/metodo_pago.dart';
 import '../models/nivel_altura.dart';
+import '../models/unidad_medida.dart';
 import '../models/variedad_cafe.dart';
 
 part 'catalogos_dto.freezed.dart';
 part 'catalogos_dto.g.dart';
 
 /// DTO fiel al JSON de `GET /catalogos` (`CONTEXTO-MOVIL-FLUTTER.md`,
-/// secciones 6.1 y 8). El contrato real trae 7 grupos; este DTO solo
-/// modela los que tienen un consumidor real hoy (`metodosPago`,
-/// `variedadesCafe`, `nivelesAltura`, `estadosCafe`, `clientesTipo`
-/// agregado en Sprint 7) — `proveedoresTipo`/`unidadesMedida` quedan
-/// pendientes hasta que alguna feature los necesite (Sprint 7, Decisión
-/// 1: disciplina de alcance, mismo criterio que Decisión arquitectónica
-/// #11).
+/// secciones 6.1 y 8; `unidadesMedida` confirmado por
+/// `CONTEXTO-PLATAFORMA-WEB.md`, sección 5). El contrato real trae 7
+/// grupos; este DTO modela los que tienen un consumidor real hoy
+/// (`metodosPago`, `variedadesCafe`, `nivelesAltura`, `estadosCafe`,
+/// `clientesTipo` agregado en Sprint 7, `unidadesMedida` agregado al
+/// mostrar la unidad real en vez de asumir "libras" en Existencias y
+/// Procesamiento) — `proveedoresTipo` queda pendiente hasta que alguna
+/// feature lo necesite (Sprint 7, Decisión 1: disciplina de alcance,
+/// mismo criterio que Decisión arquitectónica #11).
 @freezed
 class CatalogosDto with _$CatalogosDto {
   const CatalogosDto._();
@@ -26,12 +29,12 @@ class CatalogosDto with _$CatalogosDto {
     @JsonKey(name: 'metodosPago') required List<MetodoPagoDto> metodosPago,
     @JsonKey(name: 'variedadesCafe')
     required List<VariedadCafeDto> variedadesCafe,
-    @JsonKey(name: 'nivelesAltura')
-    required List<NivelAlturaDto> nivelesAltura,
+    @JsonKey(name: 'nivelesAltura') required List<NivelAlturaDto> nivelesAltura,
     @JsonKey(name: 'estadosCafe')
     required List<EstadoCafeCatalogoDto> estadosCafe,
-    @JsonKey(name: 'clientesTipo')
-    required List<ClienteTipoDto> clientesTipo,
+    @JsonKey(name: 'clientesTipo') required List<ClienteTipoDto> clientesTipo,
+    @JsonKey(name: 'unidadesMedida')
+    required List<UnidadMedidaDto> unidadesMedida,
   }) = _CatalogosDto;
 
   factory CatalogosDto.fromJson(Map<String, dynamic> json) =>
@@ -45,6 +48,7 @@ class CatalogosDto with _$CatalogosDto {
       nivelesAltura: nivelesAltura.map((dto) => dto.toDomain()).toList(),
       estadosCafe: estadosCafe.map((dto) => dto.toDomain()).toList(),
       clientesTipo: clientesTipo.map((dto) => dto.toDomain()).toList(),
+      unidadesMedida: unidadesMedida.map((dto) => dto.toDomain()).toList(),
     );
   }
 }
@@ -93,11 +97,11 @@ class NivelAlturaDto with _$NivelAlturaDto {
       _$NivelAlturaDtoFromJson(json);
 
   NivelAltura toDomain() => NivelAltura(
-    id: id,
-    nombre: nombre,
-    msnmMin: msnmMin,
-    msnmMax: msnmMax,
-  );
+        id: id,
+        nombre: nombre,
+        msnmMin: msnmMin,
+        msnmMax: msnmMax,
+      );
 }
 
 /// Entrada del catálogo `estadosCafe`.
@@ -115,10 +119,10 @@ class EstadoCafeCatalogoDto with _$EstadoCafeCatalogoDto {
       _$EstadoCafeCatalogoDtoFromJson(json);
 
   EstadoCafeCatalogo toDomain() => EstadoCafeCatalogo(
-    id: id,
-    nombre: nombre,
-    unidadMedidaId: unidadMedidaId,
-  );
+        id: id,
+        nombre: nombre,
+        unidadMedidaId: unidadMedidaId,
+      );
 }
 
 /// Entrada del catálogo `clientesTipo` (Sprint 7).
@@ -133,4 +137,18 @@ class ClienteTipoDto with _$ClienteTipoDto {
       _$ClienteTipoDtoFromJson(json);
 
   ClienteTipo toDomain() => ClienteTipo(id: id, nombre: nombre);
+}
+
+/// Entrada del catálogo `unidadesMedida`.
+@freezed
+class UnidadMedidaDto with _$UnidadMedidaDto {
+  const UnidadMedidaDto._();
+
+  const factory UnidadMedidaDto({required int id, required String nombre}) =
+      _UnidadMedidaDto;
+
+  factory UnidadMedidaDto.fromJson(Map<String, dynamic> json) =>
+      _$UnidadMedidaDtoFromJson(json);
+
+  UnidadMedida toDomain() => UnidadMedida(id: id, nombre: nombre);
 }

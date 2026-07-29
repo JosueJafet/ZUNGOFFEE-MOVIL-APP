@@ -19,8 +19,11 @@ class LoteDto with _$LoteDto {
     required String saldo,
     @JsonKey(name: 'cantidad_inicial') required String cantidadInicial,
     @JsonKey(name: 'estados_cafe') required LoteEstadoCafeDto estadosCafe,
-    @JsonKey(name: 'variedades_cafe') required LoteVariedadDto variedadesCafe,
-    @JsonKey(name: 'niveles_altura') required LoteNivelAlturaDto nivelesAltura,
+    // `null` cuando la compra no registró variedad/altura para este lote
+    // (ambos campos son opcionales al comprar) — confirmado contra la API
+    // real, donde algunos lotes traen estas claves en `null`.
+    @JsonKey(name: 'variedades_cafe') LoteVariedadDto? variedadesCafe,
+    @JsonKey(name: 'niveles_altura') LoteNivelAlturaDto? nivelesAltura,
   }) = _LoteDto;
 
   factory LoteDto.fromJson(Map<String, dynamic> json) =>
@@ -35,8 +38,8 @@ class LoteDto with _$LoteDto {
       cantidadInicial: ApiDecimal.fromJson(cantidadInicial),
       estadoCafeNombre: estadosCafe.nombre,
       unidadMedidaId: estadosCafe.unidadMedidaId,
-      variedadNombre: variedadesCafe.nombre,
-      nivelAlturaNombre: nivelesAltura.nombre,
+      variedadNombre: variedadesCafe?.nombre,
+      nivelAlturaNombre: nivelesAltura?.nombre,
     );
   }
 }

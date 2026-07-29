@@ -5,6 +5,7 @@ import '../../../../core/constants/app_role.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../shared/extensions/error_message_extension.dart';
 import '../../../../shared/widgets/empty_states/error_retry_view.dart';
+import '../../../../shared/widgets/navigation/app_drawer.dart';
 import '../../../auth/presentation/providers/perfil_providers.dart';
 import '../../data/models/proveedor.dart';
 import '../providers/proveedor_providers.dart';
@@ -46,7 +47,19 @@ class ProveedoresListScreen extends ConsumerWidget {
     final puedeEditar = perfilAsync.asData?.value.rol == AppRole.adminBodega;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Proveedores')),
+      endDrawer: const AppDrawer(),
+      appBar: AppBar(
+        title: const Text('Proveedores'),
+        actions: [
+          Builder(
+            builder: (context) => IconButton(
+              icon: const Icon(Icons.menu),
+              tooltip: 'Menú',
+              onPressed: () => Scaffold.of(context).openEndDrawer(),
+            ),
+          ),
+        ],
+      ),
       body: proveedoresAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stackTrace) => ErrorRetryView(

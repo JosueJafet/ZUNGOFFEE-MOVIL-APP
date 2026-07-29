@@ -12,6 +12,7 @@ import 'package:zungofee_mobile/core/theme/app_theme.dart';
 import 'package:zungofee_mobile/features/catalogos/data/datasources/catalogos_remote_datasource.dart';
 import 'package:zungofee_mobile/features/catalogos/data/models/catalogos.dart';
 import 'package:zungofee_mobile/features/catalogos/data/models/estado_cafe_catalogo.dart';
+import 'package:zungofee_mobile/features/catalogos/data/models/unidad_medida.dart';
 import 'package:zungofee_mobile/features/catalogos/data/repositories/catalogos_repository.dart';
 import 'package:zungofee_mobile/features/catalogos/presentation/providers/catalogos_providers.dart';
 import 'package:zungofee_mobile/features/inventario/data/datasources/lotes_remote_datasource.dart';
@@ -32,7 +33,7 @@ import 'package:zungofee_mobile/features/procesamiento/presentation/screens/proc
 /// `app_routes_clientes_ventas_test.dart` (Sprint 7).
 class _FakeLotesRepository extends LotesRepository {
   _FakeLotesRepository(this._lotes)
-    : super(LotesRemoteDataSource(ApiClient(FakeSessionTokenProvider())));
+      : super(LotesRemoteDataSource(ApiClient(FakeSessionTokenProvider())));
 
   final List<Lote> _lotes;
 
@@ -43,7 +44,7 @@ class _FakeLotesRepository extends LotesRepository {
 
 class _FakeCatalogosRepository extends CatalogosRepository {
   _FakeCatalogosRepository(this._catalogos)
-    : super(CatalogosRemoteDataSource(ApiClient(FakeSessionTokenProvider())));
+      : super(CatalogosRemoteDataSource(ApiClient(FakeSessionTokenProvider())));
 
   final Catalogos _catalogos;
 
@@ -53,9 +54,9 @@ class _FakeCatalogosRepository extends CatalogosRepository {
 
 class _FakeProcesamientoRepository extends ProcesamientoRepository {
   _FakeProcesamientoRepository({this.crearError})
-    : super(
-        ProcesamientoRemoteDataSource(ApiClient(FakeSessionTokenProvider())),
-      );
+      : super(
+          ProcesamientoRemoteDataSource(ApiClient(FakeSessionTokenProvider())),
+        );
 
   final Object? crearError;
 
@@ -102,6 +103,11 @@ const _catalogosDeEjemplo = Catalogos(
     EstadoCafeCatalogo(id: 6, nombre: 'tostado_bajo', unidadMedidaId: 3),
     EstadoCafeCatalogo(id: 7, nombre: 'molido', unidadMedidaId: 3),
   ],
+  unidadesMedida: [
+    UnidadMedida(id: 1, nombre: 'Galones'),
+    UnidadMedida(id: 2, nombre: 'Quintales'),
+    UnidadMedida(id: 3, nombre: 'Libras'),
+  ],
 );
 
 Future<void> _tapVisible(WidgetTester tester, Finder finder) async {
@@ -115,10 +121,10 @@ Future<void> _llenarFormularioProcesamiento(WidgetTester tester) async {
   await _tapVisible(tester, find.byKey(const Key('dropdown_lote_origen')));
   await _tapVisible(
     tester,
-    find.text('pergamino_seco · Catuai · Estandar (saldo: 10.00)').last,
+    find.text('Catuai · Estandar (saldo: 10.00)').last,
   );
   await _tapVisible(tester, find.byKey(const Key('dropdown_estado_destino')));
-  await _tapVisible(tester, find.text('tostado_alto').last);
+  await _tapVisible(tester, find.text('Tostado alto').last);
 
   await tester.ensureVisible(find.byKey(const Key('cantidad_entrada')));
   await tester.enterText(find.byKey(const Key('cantidad_entrada')), '5');
@@ -149,7 +155,8 @@ void main() {
               procesamientoRepository,
             ),
           ],
-          child: MaterialApp.router(theme: AppTheme.light, routerConfig: router),
+          child:
+              MaterialApp.router(theme: AppTheme.light, routerConfig: router),
         ),
       );
       await tester.pumpAndSettle();

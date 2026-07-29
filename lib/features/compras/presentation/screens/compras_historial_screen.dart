@@ -5,9 +5,11 @@ import 'package:intl/intl.dart';
 import '../../../../core/constants/app_role.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../shared/extensions/error_message_extension.dart';
+import '../../../../shared/widgets/buttons/soft_destructive_button.dart';
 import '../../../../shared/widgets/empty_states/error_retry_view.dart';
+import '../../../../shared/widgets/navigation/app_drawer.dart';
 import '../../../auth/presentation/providers/perfil_providers.dart';
-import '../../data/models/compra.dart';
+import '../../data/models/compra_historial.dart';
 import '../providers/compra_anular_controller.dart';
 import '../providers/compras_providers.dart';
 
@@ -24,7 +26,7 @@ class ComprasHistorialScreen extends ConsumerWidget {
   Future<void> _confirmarYAnular(
     BuildContext context,
     WidgetRef ref,
-    Compra compra,
+    CompraHistorial compra,
   ) async {
     final confirmado = await showDialog<bool>(
       context: context,
@@ -71,12 +73,25 @@ class ComprasHistorialScreen extends ConsumerWidget {
     final anularEnCurso = ref.watch(comprasAnularControllerProvider).isLoading;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Historial de compras')),
+      endDrawer: const AppDrawer(),
+      appBar: AppBar(
+        title: const Text('Historial de compras'),
+        actions: [
+          Builder(
+            builder: (context) => IconButton(
+              icon: const Icon(Icons.menu),
+              tooltip: 'Menú',
+              onPressed: () => Scaffold.of(context).openEndDrawer(),
+            ),
+          ),
+        ],
+      ),
       body: comprasAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stackTrace) => ErrorRetryView(
           message: error.errorMessage(
-            fallback: 'No se pudo cargar el historial de compras. Intenta de nuevo.',
+            fallback:
+                'No se pudo cargar el historial de compras. Intenta de nuevo.',
           ),
           onRetry: () => ref.invalidate(comprasHistorialProvider),
         ),
@@ -97,25 +112,58 @@ class ComprasHistorialScreen extends ConsumerWidget {
             itemCount: compras.length,
             itemBuilder: (context, index) {
               final compra = compras[index];
-              return ListTile(
-                title: Text('Compra #${compra.id}'),
-                subtitle: Text(
-                  '${_formatoFecha.format(compra.fecha)}'
-                  '${compra.anulada ? ' · Anulada' : ''}',
-                ),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text('L. ${compra.total.toStringAsFixed(2)}'),
-                    if (puedeAnular && !compra.anulada)
-                      TextButton(
-                        onPressed: anularEnCurso
-                            ? null
-                            : () => _confirmarYAnular(context, ref, compra),
-                        child: const Text('Anular'),
+              // El subtitle ahora concatena fecha + proveedor + usuario
+              // (antes solo la fecha) — el botón "Anular" se separa a su
+              // propia fila debajo en vez de compartir `trailing` con el
+              // total, mismo fix que `SolicitudesListScreen`: un
+              // `trailing` ancho junto a un subtitle largo aprieta la
+              // columna de título/subtítulo a un ancho casi nulo en un
+              // celular real.
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  ListTile(
+                    title: Text(
+                      'Compra #${compra.id}',
+                      style: Theme.of(context).textTheme.labelLarge,
+                    ),
+                    subtitle: Text(
+                      '${_formatoFecha.format(compra.fecha)} · '
+                      '${compra.proveedorNombre} · '
+                      'Registrada por ${compra.usuarioNombre}',
+                    ),
+                    isThreeLine: true,
+                    trailing: Text(
+                      'L. ${compra.total.toStringAsFixed(2)}',
+                      style: Theme.of(context).textTheme.labelLarge,
+                    ),
+                  ),
+                  // La API de listado no trae `anulada` (gap reportado al
+                  // backend) — se muestra siempre para admin_bodega; si ya
+                  // estaba anulada, el backend rechaza con 400 y ese error
+                  // ya se maneja igual que cualquier otro.
+                  if (puedeAnular)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSpacing.space4,
+                        0,
+                        AppSpacing.space4,
+                        AppSpacing.space2,
                       ),
-                  ],
-                ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          SoftDestructiveButton(
+                            onPressed: anularEnCurso
+                                ? null
+                                : () => _confirmarYAnular(context, ref, compra),
+                            child: const Text('Anular'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  const Divider(height: 1),
+                ],
               );
             },
           );

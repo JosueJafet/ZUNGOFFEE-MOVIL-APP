@@ -13,8 +13,10 @@ _$PerfilDtoImpl _$$PerfilDtoImplFromJson(Map<String, dynamic> json) =>
       estado: json['estado'] as bool,
       fechaCreacion: json['fecha_creacion'] as String,
       roles: PerfilRolDto.fromJson(json['roles'] as Map<String, dynamic>),
-      tenants:
-          PerfilTenantDto.fromJson(json['tenants'] as Map<String, dynamic>),
+      tenants: json['tenants'] == null
+          ? null
+          : PerfilTenantDto.fromJson(json['tenants'] as Map<String, dynamic>),
+      fotoUrl: json['foto_url'] as String?,
     );
 
 Map<String, dynamic> _$$PerfilDtoImplToJson(_$PerfilDtoImpl instance) =>
@@ -25,6 +27,7 @@ Map<String, dynamic> _$$PerfilDtoImplToJson(_$PerfilDtoImpl instance) =>
       'fecha_creacion': instance.fechaCreacion,
       'roles': instance.roles,
       'tenants': instance.tenants,
+      'foto_url': instance.fotoUrl,
     };
 
 _$PerfilRolDtoImpl _$$PerfilRolDtoImplFromJson(Map<String, dynamic> json) =>

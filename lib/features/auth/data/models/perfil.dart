@@ -15,7 +15,10 @@ class Perfil with _$Perfil {
     required bool activo,
     required DateTime fechaCreacion,
     required String rol,
-    required int tenantId,
-    required String tenantNombre,
+    // `null` para `super_admin` (no pertenece a ninguna bodega).
+    int? tenantId,
+    String? tenantNombre,
+    // `null` hasta que el usuario sube su primera foto de perfil.
+    String? fotoUrl,
   }) = _Perfil;
 }

@@ -22,6 +22,7 @@ mixin _$Catalogos {
   List<EstadoCafeCatalogo> get estadosCafe =>
       throw _privateConstructorUsedError;
   List<ClienteTipo> get clientesTipo => throw _privateConstructorUsedError;
+  List<UnidadMedida> get unidadesMedida => throw _privateConstructorUsedError;
 
   /// Create a copy of Catalogos
   /// with the given fields replaced by the non-null parameter values.
@@ -40,7 +41,8 @@ abstract class $CatalogosCopyWith<$Res> {
       List<VariedadCafe> variedadesCafe,
       List<NivelAltura> nivelesAltura,
       List<EstadoCafeCatalogo> estadosCafe,
-      List<ClienteTipo> clientesTipo});
+      List<ClienteTipo> clientesTipo,
+      List<UnidadMedida> unidadesMedida});
 }
 
 /// @nodoc
@@ -63,6 +65,7 @@ class _$CatalogosCopyWithImpl<$Res, $Val extends Catalogos>
     Object? nivelesAltura = null,
     Object? estadosCafe = null,
     Object? clientesTipo = null,
+    Object? unidadesMedida = null,
   }) {
     return _then(_value.copyWith(
       metodosPago: null == metodosPago
@@ -85,6 +88,10 @@ class _$CatalogosCopyWithImpl<$Res, $Val extends Catalogos>
           ? _value.clientesTipo
           : clientesTipo // ignore: cast_nullable_to_non_nullable
               as List<ClienteTipo>,
+      unidadesMedida: null == unidadesMedida
+          ? _value.unidadesMedida
+          : unidadesMedida // ignore: cast_nullable_to_non_nullable
+              as List<UnidadMedida>,
     ) as $Val);
   }
 }
@@ -102,7 +109,8 @@ abstract class _$$CatalogosImplCopyWith<$Res>
       List<VariedadCafe> variedadesCafe,
       List<NivelAltura> nivelesAltura,
       List<EstadoCafeCatalogo> estadosCafe,
-      List<ClienteTipo> clientesTipo});
+      List<ClienteTipo> clientesTipo,
+      List<UnidadMedida> unidadesMedida});
 }
 
 /// @nodoc
@@ -123,6 +131,7 @@ class __$$CatalogosImplCopyWithImpl<$Res>
     Object? nivelesAltura = null,
     Object? estadosCafe = null,
     Object? clientesTipo = null,
+    Object? unidadesMedida = null,
   }) {
     return _then(_$CatalogosImpl(
       metodosPago: null == metodosPago
@@ -145,6 +154,10 @@ class __$$CatalogosImplCopyWithImpl<$Res>
           ? _value._clientesTipo
           : clientesTipo // ignore: cast_nullable_to_non_nullable
               as List<ClienteTipo>,
+      unidadesMedida: null == unidadesMedida
+          ? _value._unidadesMedida
+          : unidadesMedida // ignore: cast_nullable_to_non_nullable
+              as List<UnidadMedida>,
     ));
   }
 }
@@ -157,12 +170,14 @@ class _$CatalogosImpl implements _Catalogos {
       required final List<VariedadCafe> variedadesCafe,
       required final List<NivelAltura> nivelesAltura,
       required final List<EstadoCafeCatalogo> estadosCafe,
-      required final List<ClienteTipo> clientesTipo})
+      required final List<ClienteTipo> clientesTipo,
+      required final List<UnidadMedida> unidadesMedida})
       : _metodosPago = metodosPago,
         _variedadesCafe = variedadesCafe,
         _nivelesAltura = nivelesAltura,
         _estadosCafe = estadosCafe,
-        _clientesTipo = clientesTipo;
+        _clientesTipo = clientesTipo,
+        _unidadesMedida = unidadesMedida;
 
   final List<MetodoPago> _metodosPago;
   @override
@@ -204,9 +219,17 @@ class _$CatalogosImpl implements _Catalogos {
     return EqualUnmodifiableListView(_clientesTipo);
   }
 
+  final List<UnidadMedida> _unidadesMedida;
+  @override
+  List<UnidadMedida> get unidadesMedida {
+    if (_unidadesMedida is EqualUnmodifiableListView) return _unidadesMedida;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_unidadesMedida);
+  }
+
   @override
   String toString() {
-    return 'Catalogos(metodosPago: $metodosPago, variedadesCafe: $variedadesCafe, nivelesAltura: $nivelesAltura, estadosCafe: $estadosCafe, clientesTipo: $clientesTipo)';
+    return 'Catalogos(metodosPago: $metodosPago, variedadesCafe: $variedadesCafe, nivelesAltura: $nivelesAltura, estadosCafe: $estadosCafe, clientesTipo: $clientesTipo, unidadesMedida: $unidadesMedida)';
   }
 
   @override
@@ -223,7 +246,9 @@ class _$CatalogosImpl implements _Catalogos {
             const DeepCollectionEquality()
                 .equals(other._estadosCafe, _estadosCafe) &&
             const DeepCollectionEquality()
-                .equals(other._clientesTipo, _clientesTipo));
+                .equals(other._clientesTipo, _clientesTipo) &&
+            const DeepCollectionEquality()
+                .equals(other._unidadesMedida, _unidadesMedida));
   }
 
   @override
@@ -233,7 +258,8 @@ class _$CatalogosImpl implements _Catalogos {
       const DeepCollectionEquality().hash(_variedadesCafe),
       const DeepCollectionEquality().hash(_nivelesAltura),
       const DeepCollectionEquality().hash(_estadosCafe),
-      const DeepCollectionEquality().hash(_clientesTipo));
+      const DeepCollectionEquality().hash(_clientesTipo),
+      const DeepCollectionEquality().hash(_unidadesMedida));
 
   /// Create a copy of Catalogos
   /// with the given fields replaced by the non-null parameter values.
@@ -250,7 +276,8 @@ abstract class _Catalogos implements Catalogos {
       required final List<VariedadCafe> variedadesCafe,
       required final List<NivelAltura> nivelesAltura,
       required final List<EstadoCafeCatalogo> estadosCafe,
-      required final List<ClienteTipo> clientesTipo}) = _$CatalogosImpl;
+      required final List<ClienteTipo> clientesTipo,
+      required final List<UnidadMedida> unidadesMedida}) = _$CatalogosImpl;
 
   @override
   List<MetodoPago> get metodosPago;
@@ -262,6 +289,8 @@ abstract class _Catalogos implements Catalogos {
   List<EstadoCafeCatalogo> get estadosCafe;
   @override
   List<ClienteTipo> get clientesTipo;
+  @override
+  List<UnidadMedida> get unidadesMedida;
 
   /// Create a copy of Catalogos
   /// with the given fields replaced by the non-null parameter values.

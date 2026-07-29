@@ -16,7 +16,7 @@ import 'package:zungofee_mobile/features/auth/data/repositories/perfil_repositor
 import 'package:zungofee_mobile/features/auth/presentation/providers/auth_providers.dart';
 import 'package:zungofee_mobile/features/auth/presentation/providers/perfil_providers.dart';
 import 'package:zungofee_mobile/features/compras/data/datasources/compras_remote_datasource.dart';
-import 'package:zungofee_mobile/features/compras/data/models/compra.dart';
+import 'package:zungofee_mobile/features/compras/data/models/compra_historial.dart';
 import 'package:zungofee_mobile/features/compras/data/repositories/compras_repository.dart';
 import 'package:zungofee_mobile/features/compras/presentation/providers/compras_providers.dart';
 import 'package:zungofee_mobile/features/compras/presentation/screens/compras_historial_screen.dart';
@@ -40,13 +40,13 @@ class _FakeComprasRepository extends ComprasRepository {
   _FakeComprasRepository(this._responses)
     : super(ComprasRemoteDataSource(ApiClient(_FakeSessionTokenProvider())));
 
-  final List<Future<List<Compra>> Function()> _responses;
+  final List<Future<List<CompraHistorial>> Function()> _responses;
   int listarCallCount = 0;
   int anularCallCount = 0;
   Object? anularError;
 
   @override
-  Future<List<Compra>> listar({int page = 1, int pageSize = 20}) {
+  Future<List<CompraHistorial>> listar({int page = 1, int pageSize = 20}) {
     final index = listarCallCount < _responses.length
         ? listarCallCount
         : _responses.length - 1;
@@ -71,24 +71,20 @@ Perfil _perfilConRol(String rol) => Perfil(
   tenantNombre: 'Bodega Central',
 );
 
-final _compraActiva = Compra(
+final _compraActiva = CompraHistorial(
   id: 45,
-  tenantId: 5,
-  proveedorId: 12,
-  usuarioId: 3,
   fecha: DateTime.parse('2026-08-01T00:00:00.000Z'),
   total: 1200,
-  anulada: false,
+  proveedorNombre: 'Don Chepe Martinez',
+  usuarioNombre: 'Admin Bodega Uno',
 );
 
-final _compraAnulada = Compra(
+final _compraDos = CompraHistorial(
   id: 46,
-  tenantId: 5,
-  proveedorId: 12,
-  usuarioId: 3,
   fecha: DateTime.parse('2026-08-02T00:00:00.000Z'),
   total: 500,
-  anulada: true,
+  proveedorNombre: 'Don Chepe Martinez',
+  usuarioNombre: 'Admin Bodega Uno',
 );
 
 Widget _wrap({
@@ -122,8 +118,8 @@ void main() {
     tearDown(() => supabaseClient.dispose());
 
     testWidgets(
-      'admin_bodega: una compra activa muestra el botón "Anular", una '
-      'anulada no',
+      'admin_bodega: el botón "Anular" se muestra en todos los ítems (la '
+      'API de listado no trae `anulada` — gap reportado al backend)',
       (tester) async {
         await tester.pumpWidget(
           _wrap(
@@ -131,7 +127,7 @@ void main() {
               _perfilConRol(AppRole.adminBodega),
             ),
             comprasRepository: _FakeComprasRepository([
-              () async => [_compraActiva, _compraAnulada],
+              () async => [_compraActiva, _compraDos],
             ]),
             authRepository: authRepository,
           ),
@@ -140,8 +136,7 @@ void main() {
 
         expect(find.text('Compra #45'), findsOneWidget);
         expect(find.text('Compra #46'), findsOneWidget);
-        expect(find.text('2026-08-02 · Anulada'), findsOneWidget);
-        expect(find.widgetWithText(TextButton, 'Anular'), findsOneWidget);
+        expect(find.widgetWithText(TextButton, 'Anular'), findsNWidgets(2));
       },
     );
 
@@ -184,7 +179,7 @@ void main() {
       (tester) async {
         final repository = _FakeComprasRepository([
           () async => [_compraActiva],
-          () async => [_compraAnulada],
+          () async => [_compraDos],
         ]);
 
         await tester.pumpWidget(

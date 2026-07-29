@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:zungofee_mobile/core/api/api_client.dart';
@@ -30,8 +31,8 @@ void main() {
       expect(dto.id, 7);
       expect(dto.nombre, 'Juan Pérez');
       expect(dto.roles.nombre, 'empleado');
-      expect(dto.tenants.id, 3);
-      expect(dto.tenants.nombre, 'Bodega Central');
+      expect(dto.tenants?.id, 3);
+      expect(dto.tenants?.nombre, 'Bodega Central');
     });
 
     test(
@@ -52,6 +53,75 @@ void main() {
         expect(adapter.lastRequest?.method, 'PATCH');
         expect(adapter.lastRequest?.path, '/perfil');
         expect(adapter.lastRequest?.data, {'nombre': 'Nuevo Nombre'});
+      },
+    );
+
+    test(
+      'subirFoto llama POST /perfil/foto con un multipart de campo '
+      '"foto" y decodifica el PerfilDto con foto_url actualizada',
+      () async {
+        final adapter = FakeHttpClientAdapter(
+          (options) => jsonResponse({
+            'id': 7,
+            'nombre': 'Juan Pérez',
+            'estado': true,
+            'fecha_creacion': '2026-01-15T10:30:00.000Z',
+            'roles': {'nombre': 'empleado'},
+            'tenants': {'id': 3, 'nombre': 'Bodega Central'},
+            'foto_url': 'https://example.test/avatars/7?t=1753660000000',
+          }, 201),
+        );
+        final apiClient = ApiClient(
+          FakeSessionTokenProvider('token-123'),
+          dio: dioWithAdapter(adapter),
+        );
+        final dataSource = PerfilRemoteDataSource(apiClient);
+
+        final dto = await dataSource.subirFoto(
+          bytes: [1, 2, 3],
+          nombreArchivo: 'foto.jpg',
+        );
+
+        expect(adapter.lastRequest?.method, 'POST');
+        expect(adapter.lastRequest?.path, '/perfil/foto');
+        final formData = adapter.lastRequest?.data as FormData;
+        expect(formData.files, hasLength(1));
+        expect(formData.files.single.key, 'foto');
+        expect(formData.files.single.value.filename, 'foto.jpg');
+        expect(
+          formData.files.single.value.contentType.toString(),
+          'image/jpeg',
+        );
+        expect(dto.fotoUrl, 'https://example.test/avatars/7?t=1753660000000');
+      },
+    );
+
+    test(
+      'eliminarFoto llama DELETE /perfil/foto y decodifica el PerfilDto '
+      'con foto_url: null',
+      () async {
+        final adapter = FakeHttpClientAdapter(
+          (options) => jsonResponse({
+            'id': 7,
+            'nombre': 'Juan Pérez',
+            'estado': true,
+            'fecha_creacion': '2026-01-15T10:30:00.000Z',
+            'roles': {'nombre': 'empleado'},
+            'tenants': {'id': 3, 'nombre': 'Bodega Central'},
+            'foto_url': null,
+          }, 200),
+        );
+        final apiClient = ApiClient(
+          FakeSessionTokenProvider('token-123'),
+          dio: dioWithAdapter(adapter),
+        );
+        final dataSource = PerfilRemoteDataSource(apiClient);
+
+        final dto = await dataSource.eliminarFoto();
+
+        expect(adapter.lastRequest?.method, 'DELETE');
+        expect(adapter.lastRequest?.path, '/perfil/foto');
+        expect(dto.fotoUrl, isNull);
       },
     );
   });

@@ -11,6 +11,7 @@ import 'package:zungofee_mobile/features/catalogos/data/models/catalogos.dart';
 import 'package:zungofee_mobile/features/catalogos/data/models/estado_cafe_catalogo.dart';
 import 'package:zungofee_mobile/features/catalogos/data/models/metodo_pago.dart';
 import 'package:zungofee_mobile/features/catalogos/data/models/nivel_altura.dart';
+import 'package:zungofee_mobile/features/catalogos/data/models/unidad_medida.dart';
 import 'package:zungofee_mobile/features/catalogos/data/models/variedad_cafe.dart';
 import 'package:zungofee_mobile/features/catalogos/data/repositories/catalogos_repository.dart';
 import 'package:zungofee_mobile/features/catalogos/presentation/providers/catalogos_providers.dart';
@@ -31,7 +32,8 @@ class _FakeSessionTokenProvider implements SessionTokenProvider {
 
 class _FakeProveedorRepository extends ProveedorRepository {
   _FakeProveedorRepository(this._proveedores)
-    : super(ProveedorRemoteDataSource(ApiClient(_FakeSessionTokenProvider())));
+      : super(
+            ProveedorRemoteDataSource(ApiClient(_FakeSessionTokenProvider())));
 
   final List<Proveedor> _proveedores;
 
@@ -41,7 +43,8 @@ class _FakeProveedorRepository extends ProveedorRepository {
 
 class _FakeCatalogosRepository extends CatalogosRepository {
   _FakeCatalogosRepository(this._catalogos)
-    : super(CatalogosRemoteDataSource(ApiClient(_FakeSessionTokenProvider())));
+      : super(
+            CatalogosRemoteDataSource(ApiClient(_FakeSessionTokenProvider())));
 
   final Catalogos _catalogos;
 
@@ -51,7 +54,7 @@ class _FakeCatalogosRepository extends CatalogosRepository {
 
 class _FakeComprasRepository extends ComprasRepository {
   _FakeComprasRepository({this.crearError})
-    : super(ComprasRemoteDataSource(ApiClient(_FakeSessionTokenProvider())));
+      : super(ComprasRemoteDataSource(ApiClient(_FakeSessionTokenProvider())));
 
   final Object? crearError;
   int crearCallCount = 0;
@@ -92,7 +95,7 @@ const _proveedorDeEjemplo = Proveedor(
 const _catalogosDeEjemplo = Catalogos(
   metodosPago: [MetodoPago(id: 1, nombre: 'Efectivo')],
   variedadesCafe: [VariedadCafe(id: 1, nombre: 'Catuai')],
-  nivelesAltura: [NivelAltura(id: 1, nombre: 'Estandar')],
+  nivelesAltura: [NivelAltura(id: 1, nombre: 'Estandar', msnmMax: 1200)],
   estadosCafe: [
     EstadoCafeCatalogo(id: 1, nombre: 'uva', unidadMedidaId: 1),
     // No comprable (no está en EstadoCafeId.compraValidos) — debe quedar
@@ -100,6 +103,7 @@ const _catalogosDeEjemplo = Catalogos(
     EstadoCafeCatalogo(id: 4, nombre: 'tostado_alto', unidadMedidaId: 1),
   ],
   clientesTipo: [],
+  unidadesMedida: [UnidadMedida(id: 1, nombre: 'Galones')],
 );
 
 Widget _wrap({
@@ -145,9 +149,13 @@ Future<void> _seleccionarDropdown(
 }
 
 Future<void> _llenarPrimeraLinea(WidgetTester tester) async {
-  await _seleccionarDropdown(tester, const Key('linea_0_estado'), 'uva');
+  await _seleccionarDropdown(tester, const Key('linea_0_estado'), 'Uva');
   await _seleccionarDropdown(tester, const Key('linea_0_variedad'), 'Catuai');
-  await _seleccionarDropdown(tester, const Key('linea_0_altura'), 'Estandar');
+  await _seleccionarDropdown(
+    tester,
+    const Key('linea_0_altura'),
+    'Estandar (debajo de 1200 msnm)',
+  );
   await tester.ensureVisible(find.byKey(const Key('linea_0_humedad')));
   await tester.enterText(find.byKey(const Key('linea_0_humedad')), '11.5');
   await tester.ensureVisible(find.byKey(const Key('linea_0_cantidad')));
@@ -202,6 +210,56 @@ void main() {
         expect(repository.ultimasLineas!.first.cantidad, 10);
         expect(repository.ultimasLineas!.first.costoUnitario, 120);
         expect(guardadoCallCount, 1);
+        expect(find.text('Compra registrada con éxito.'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'uva sin humedad pasa la validación y se envía humedad: null',
+      (tester) async {
+        final repository = _FakeComprasRepository();
+
+        await tester.pumpWidget(
+          _wrap(
+            proveedores: const [_proveedorDeEjemplo],
+            catalogos: _catalogosDeEjemplo,
+            comprasRepository: repository,
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        await _seleccionarDropdown(
+          tester,
+          const Key('dropdown_proveedor'),
+          'Don Chepe Martinez',
+        );
+        await _seleccionarDropdown(tester, const Key('linea_0_estado'), 'Uva');
+        await _seleccionarDropdown(
+          tester,
+          const Key('linea_0_variedad'),
+          'Catuai',
+        );
+        await _seleccionarDropdown(
+          tester,
+          const Key('linea_0_altura'),
+          'Estandar (debajo de 1200 msnm)',
+        );
+        // Humedad se deja vacío a propósito — solo es obligatoria a partir
+        // de pergamino seco, no en uva.
+        await tester.ensureVisible(find.byKey(const Key('linea_0_cantidad')));
+        await tester.enterText(find.byKey(const Key('linea_0_cantidad')), '10');
+        await tester.ensureVisible(
+          find.byKey(const Key('linea_0_costoUnitario')),
+        );
+        await tester.enterText(
+          find.byKey(const Key('linea_0_costoUnitario')),
+          '120',
+        );
+
+        await _tapVisible(tester, find.widgetWithText(FilledButton, 'Guardar'));
+
+        expect(repository.crearCallCount, 1);
+        expect(repository.ultimasLineas!.first.humedad, isNull);
       },
     );
 
@@ -219,8 +277,36 @@ void main() {
 
         await _tapVisible(tester, find.byKey(const Key('linea_0_estado')));
 
-        expect(find.text('uva'), findsOneWidget);
-        expect(find.text('tostado_alto'), findsNothing);
+        expect(find.text('Uva'), findsOneWidget);
+        expect(find.text('Tostado alto'), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'el selector de altura muestra el rango en msnm junto al nombre, y '
+      'elegir un estado actualiza la unidad de Cantidad',
+      (tester) async {
+        await tester.pumpWidget(
+          _wrap(
+            proveedores: const [_proveedorDeEjemplo],
+            catalogos: _catalogosDeEjemplo,
+            comprasRepository: _FakeComprasRepository(),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('Cantidad'), findsOneWidget);
+
+        await _tapVisible(tester, find.byKey(const Key('linea_0_altura')));
+        expect(find.text('Estandar (debajo de 1200 msnm)'), findsWidgets);
+        await _tapVisible(
+          tester,
+          find.text('Estandar (debajo de 1200 msnm)').last,
+        );
+
+        await _seleccionarDropdown(tester, const Key('linea_0_estado'), 'Uva');
+
+        expect(find.text('Cantidad (Galones)'), findsOneWidget);
       },
     );
 

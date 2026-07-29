@@ -21,6 +21,7 @@ import 'package:zungofee_mobile/features/auth/presentation/providers/perfil_prov
 import 'package:zungofee_mobile/features/catalogos/data/datasources/catalogos_remote_datasource.dart';
 import 'package:zungofee_mobile/features/catalogos/data/models/catalogos.dart';
 import 'package:zungofee_mobile/features/catalogos/data/models/metodo_pago.dart';
+import 'package:zungofee_mobile/features/catalogos/data/models/unidad_medida.dart';
 import 'package:zungofee_mobile/features/catalogos/data/repositories/catalogos_repository.dart';
 import 'package:zungofee_mobile/features/catalogos/presentation/providers/catalogos_providers.dart';
 import 'package:zungofee_mobile/features/clientes/data/datasources/cliente_remote_datasource.dart';
@@ -49,7 +50,7 @@ import 'package:zungofee_mobile/features/ventas/presentation/screens/venta_form_
 /// `auth_redirect_test.dart`.
 class _FakePerfilRepository extends PerfilRepository {
   _FakePerfilRepository(this._perfil)
-    : super(PerfilRemoteDataSource(ApiClient(FakeSessionTokenProvider())));
+      : super(PerfilRemoteDataSource(ApiClient(FakeSessionTokenProvider())));
 
   final Perfil _perfil;
 
@@ -59,7 +60,7 @@ class _FakePerfilRepository extends PerfilRepository {
 
 class _FakeClienteRepository extends ClienteRepository {
   _FakeClienteRepository(this._clientes, {this.crearError})
-    : super(ClienteRemoteDataSource(ApiClient(FakeSessionTokenProvider())));
+      : super(ClienteRemoteDataSource(ApiClient(FakeSessionTokenProvider())));
 
   final List<Cliente> _clientes;
   final Object? crearError;
@@ -91,7 +92,7 @@ class _FakeClienteRepository extends ClienteRepository {
 
 class _FakeCatalogosRepository extends CatalogosRepository {
   _FakeCatalogosRepository(this._catalogos)
-    : super(CatalogosRemoteDataSource(ApiClient(FakeSessionTokenProvider())));
+      : super(CatalogosRemoteDataSource(ApiClient(FakeSessionTokenProvider())));
 
   final Catalogos _catalogos;
 
@@ -101,7 +102,7 @@ class _FakeCatalogosRepository extends CatalogosRepository {
 
 class _FakeLotesRepository extends LotesRepository {
   _FakeLotesRepository(this._lotes)
-    : super(LotesRemoteDataSource(ApiClient(FakeSessionTokenProvider())));
+      : super(LotesRemoteDataSource(ApiClient(FakeSessionTokenProvider())));
 
   final List<Lote> _lotes;
 
@@ -112,7 +113,7 @@ class _FakeLotesRepository extends LotesRepository {
 
 class _FakeVentasRepository extends VentasRepository {
   _FakeVentasRepository({this.crearError})
-    : super(VentasRemoteDataSource(ApiClient(FakeSessionTokenProvider())));
+      : super(VentasRemoteDataSource(ApiClient(FakeSessionTokenProvider())));
 
   final Object? crearError;
 
@@ -135,14 +136,14 @@ class _FakeVentasRepository extends VentasRepository {
 }
 
 Perfil _perfilConRol(String rol) => Perfil(
-  id: 7,
-  nombre: 'Juan Pérez',
-  activo: true,
-  fechaCreacion: DateTime.parse('2026-01-15T10:30:00.000Z'),
-  rol: rol,
-  tenantId: 3,
-  tenantNombre: 'Bodega Central',
-);
+      id: 7,
+      nombre: 'Juan Pérez',
+      activo: true,
+      fechaCreacion: DateTime.parse('2026-01-15T10:30:00.000Z'),
+      rol: rol,
+      tenantId: 3,
+      tenantNombre: 'Bodega Central',
+    );
 
 const _clienteExistente = Cliente(
   id: 12,
@@ -159,6 +160,7 @@ const _catalogosDeEjemplo = Catalogos(
   nivelesAltura: [],
   estadosCafe: [],
   clientesTipo: [],
+  unidadesMedida: [UnidadMedida(id: 2, nombre: 'Quintales')],
 );
 
 const _loteDeEjemplo = Lote(
@@ -211,7 +213,8 @@ void main() {
               _FakeCatalogosRepository(_catalogosDeEjemplo),
             ),
           ],
-          child: MaterialApp.router(theme: AppTheme.light, routerConfig: router),
+          child:
+              MaterialApp.router(theme: AppTheme.light, routerConfig: router),
         ),
       );
       await tester.pumpAndSettle();
@@ -374,7 +377,8 @@ void main() {
             ),
             ventasRepositoryProvider.overrideWithValue(ventasRepository),
           ],
-          child: MaterialApp.router(theme: AppTheme.light, routerConfig: router),
+          child:
+              MaterialApp.router(theme: AppTheme.light, routerConfig: router),
         ),
       );
       await tester.pumpAndSettle();
@@ -415,7 +419,7 @@ void main() {
         await _tapVisible(tester, find.byKey(const Key('linea_0_lote')));
         await _tapVisible(
           tester,
-          find.text('pergamino_seco · Catuai · Estandar (saldo: 10.00)').last,
+          find.text('Catuai · Estandar (saldo: 10.00 Quintales)').last,
         );
         await tester.enterText(find.byKey(const Key('linea_0_cantidad')), '5');
         await tester.enterText(
@@ -455,7 +459,7 @@ void main() {
         await _tapVisible(tester, find.byKey(const Key('linea_0_lote')));
         await _tapVisible(
           tester,
-          find.text('pergamino_seco · Catuai · Estandar (saldo: 10.00)').last,
+          find.text('Catuai · Estandar (saldo: 10.00 Quintales)').last,
         );
         await tester.enterText(find.byKey(const Key('linea_0_cantidad')), '5');
         await tester.enterText(

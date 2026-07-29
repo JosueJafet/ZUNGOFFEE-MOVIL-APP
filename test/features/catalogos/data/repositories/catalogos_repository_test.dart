@@ -68,6 +68,9 @@ Map<String, dynamic> _catalogosJson() {
     'clientesTipo': [
       {'id': 1, 'nombre': 'persona_natural'},
     ],
+    'unidadesMedida': [
+      {'id': 1, 'nombre': 'Galones'},
+    ],
   };
 }
 
@@ -83,7 +86,8 @@ void main() {
   group('CatalogosRepository', () {
     test('getCatalogos mapea un 200 a Catalogos', () async {
       final repository = _repositoryWithAdapter(
-        _FakeHttpClientAdapter((options) => _jsonResponse(_catalogosJson(), 200)),
+        _FakeHttpClientAdapter(
+            (options) => _jsonResponse(_catalogosJson(), 200)),
       );
 
       final catalogos = await repository.getCatalogos();

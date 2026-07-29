@@ -15,7 +15,9 @@ class Lote with _$Lote {
     required double cantidadInicial,
     required String estadoCafeNombre,
     required int unidadMedidaId,
-    required String variedadNombre,
-    required String nivelAlturaNombre,
+    // `null` cuando el lote no tiene variedad/altura registrada (ambos
+    // campos son opcionales al comprar) — ver `LoteDto.toDomain`.
+    String? variedadNombre,
+    String? nivelAlturaNombre,
   }) = _Lote;
 }

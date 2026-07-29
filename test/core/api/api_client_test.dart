@@ -83,6 +83,21 @@ void main() {
       );
     });
 
+    test('delete manda el verbo DELETE al path indicado', () async {
+      final adapter = FakeHttpClientAdapter(
+        (options) => jsonResponse({'foto_url': null}, 200),
+      );
+      final client = ApiClient(
+        FakeSessionTokenProvider('token-123'),
+        dio: dioWithAdapter(adapter),
+      );
+
+      await client.delete('/perfil/foto');
+
+      expect(adapter.lastRequest?.method, 'DELETE');
+      expect(adapter.lastRequest?.path, '/perfil/foto');
+    });
+
     test('traduce una falla de conexión a NetworkException', () async {
       final adapter = FakeHttpClientAdapter((options) {
         throw Exception('simulated connection failure');

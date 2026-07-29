@@ -32,6 +32,9 @@ mixin _$CatalogosDto {
       throw _privateConstructorUsedError;
   @JsonKey(name: 'clientesTipo')
   List<ClienteTipoDto> get clientesTipo => throw _privateConstructorUsedError;
+  @JsonKey(name: 'unidadesMedida')
+  List<UnidadMedidaDto> get unidadesMedida =>
+      throw _privateConstructorUsedError;
 
   /// Serializes this CatalogosDto to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -54,7 +57,8 @@ abstract class $CatalogosDtoCopyWith<$Res> {
       @JsonKey(name: 'variedadesCafe') List<VariedadCafeDto> variedadesCafe,
       @JsonKey(name: 'nivelesAltura') List<NivelAlturaDto> nivelesAltura,
       @JsonKey(name: 'estadosCafe') List<EstadoCafeCatalogoDto> estadosCafe,
-      @JsonKey(name: 'clientesTipo') List<ClienteTipoDto> clientesTipo});
+      @JsonKey(name: 'clientesTipo') List<ClienteTipoDto> clientesTipo,
+      @JsonKey(name: 'unidadesMedida') List<UnidadMedidaDto> unidadesMedida});
 }
 
 /// @nodoc
@@ -77,6 +81,7 @@ class _$CatalogosDtoCopyWithImpl<$Res, $Val extends CatalogosDto>
     Object? nivelesAltura = null,
     Object? estadosCafe = null,
     Object? clientesTipo = null,
+    Object? unidadesMedida = null,
   }) {
     return _then(_value.copyWith(
       metodosPago: null == metodosPago
@@ -99,6 +104,10 @@ class _$CatalogosDtoCopyWithImpl<$Res, $Val extends CatalogosDto>
           ? _value.clientesTipo
           : clientesTipo // ignore: cast_nullable_to_non_nullable
               as List<ClienteTipoDto>,
+      unidadesMedida: null == unidadesMedida
+          ? _value.unidadesMedida
+          : unidadesMedida // ignore: cast_nullable_to_non_nullable
+              as List<UnidadMedidaDto>,
     ) as $Val);
   }
 }
@@ -116,7 +125,8 @@ abstract class _$$CatalogosDtoImplCopyWith<$Res>
       @JsonKey(name: 'variedadesCafe') List<VariedadCafeDto> variedadesCafe,
       @JsonKey(name: 'nivelesAltura') List<NivelAlturaDto> nivelesAltura,
       @JsonKey(name: 'estadosCafe') List<EstadoCafeCatalogoDto> estadosCafe,
-      @JsonKey(name: 'clientesTipo') List<ClienteTipoDto> clientesTipo});
+      @JsonKey(name: 'clientesTipo') List<ClienteTipoDto> clientesTipo,
+      @JsonKey(name: 'unidadesMedida') List<UnidadMedidaDto> unidadesMedida});
 }
 
 /// @nodoc
@@ -137,6 +147,7 @@ class __$$CatalogosDtoImplCopyWithImpl<$Res>
     Object? nivelesAltura = null,
     Object? estadosCafe = null,
     Object? clientesTipo = null,
+    Object? unidadesMedida = null,
   }) {
     return _then(_$CatalogosDtoImpl(
       metodosPago: null == metodosPago
@@ -159,6 +170,10 @@ class __$$CatalogosDtoImplCopyWithImpl<$Res>
           ? _value._clientesTipo
           : clientesTipo // ignore: cast_nullable_to_non_nullable
               as List<ClienteTipoDto>,
+      unidadesMedida: null == unidadesMedida
+          ? _value._unidadesMedida
+          : unidadesMedida // ignore: cast_nullable_to_non_nullable
+              as List<UnidadMedidaDto>,
     ));
   }
 }
@@ -176,12 +191,15 @@ class _$CatalogosDtoImpl extends _CatalogosDto {
       @JsonKey(name: 'estadosCafe')
       required final List<EstadoCafeCatalogoDto> estadosCafe,
       @JsonKey(name: 'clientesTipo')
-      required final List<ClienteTipoDto> clientesTipo})
+      required final List<ClienteTipoDto> clientesTipo,
+      @JsonKey(name: 'unidadesMedida')
+      required final List<UnidadMedidaDto> unidadesMedida})
       : _metodosPago = metodosPago,
         _variedadesCafe = variedadesCafe,
         _nivelesAltura = nivelesAltura,
         _estadosCafe = estadosCafe,
         _clientesTipo = clientesTipo,
+        _unidadesMedida = unidadesMedida,
         super._();
 
   factory _$CatalogosDtoImpl.fromJson(Map<String, dynamic> json) =>
@@ -232,9 +250,18 @@ class _$CatalogosDtoImpl extends _CatalogosDto {
     return EqualUnmodifiableListView(_clientesTipo);
   }
 
+  final List<UnidadMedidaDto> _unidadesMedida;
+  @override
+  @JsonKey(name: 'unidadesMedida')
+  List<UnidadMedidaDto> get unidadesMedida {
+    if (_unidadesMedida is EqualUnmodifiableListView) return _unidadesMedida;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_unidadesMedida);
+  }
+
   @override
   String toString() {
-    return 'CatalogosDto(metodosPago: $metodosPago, variedadesCafe: $variedadesCafe, nivelesAltura: $nivelesAltura, estadosCafe: $estadosCafe, clientesTipo: $clientesTipo)';
+    return 'CatalogosDto(metodosPago: $metodosPago, variedadesCafe: $variedadesCafe, nivelesAltura: $nivelesAltura, estadosCafe: $estadosCafe, clientesTipo: $clientesTipo, unidadesMedida: $unidadesMedida)';
   }
 
   @override
@@ -251,7 +278,9 @@ class _$CatalogosDtoImpl extends _CatalogosDto {
             const DeepCollectionEquality()
                 .equals(other._estadosCafe, _estadosCafe) &&
             const DeepCollectionEquality()
-                .equals(other._clientesTipo, _clientesTipo));
+                .equals(other._clientesTipo, _clientesTipo) &&
+            const DeepCollectionEquality()
+                .equals(other._unidadesMedida, _unidadesMedida));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -262,7 +291,8 @@ class _$CatalogosDtoImpl extends _CatalogosDto {
       const DeepCollectionEquality().hash(_variedadesCafe),
       const DeepCollectionEquality().hash(_nivelesAltura),
       const DeepCollectionEquality().hash(_estadosCafe),
-      const DeepCollectionEquality().hash(_clientesTipo));
+      const DeepCollectionEquality().hash(_clientesTipo),
+      const DeepCollectionEquality().hash(_unidadesMedida));
 
   /// Create a copy of CatalogosDto
   /// with the given fields replaced by the non-null parameter values.
@@ -282,16 +312,19 @@ class _$CatalogosDtoImpl extends _CatalogosDto {
 
 abstract class _CatalogosDto extends CatalogosDto {
   const factory _CatalogosDto(
-      {@JsonKey(name: 'metodosPago')
-      required final List<MetodoPagoDto> metodosPago,
-      @JsonKey(name: 'variedadesCafe')
-      required final List<VariedadCafeDto> variedadesCafe,
-      @JsonKey(name: 'nivelesAltura')
-      required final List<NivelAlturaDto> nivelesAltura,
-      @JsonKey(name: 'estadosCafe')
-      required final List<EstadoCafeCatalogoDto> estadosCafe,
-      @JsonKey(name: 'clientesTipo')
-      required final List<ClienteTipoDto> clientesTipo}) = _$CatalogosDtoImpl;
+          {@JsonKey(name: 'metodosPago')
+          required final List<MetodoPagoDto> metodosPago,
+          @JsonKey(name: 'variedadesCafe')
+          required final List<VariedadCafeDto> variedadesCafe,
+          @JsonKey(name: 'nivelesAltura')
+          required final List<NivelAlturaDto> nivelesAltura,
+          @JsonKey(name: 'estadosCafe')
+          required final List<EstadoCafeCatalogoDto> estadosCafe,
+          @JsonKey(name: 'clientesTipo')
+          required final List<ClienteTipoDto> clientesTipo,
+          @JsonKey(name: 'unidadesMedida')
+          required final List<UnidadMedidaDto> unidadesMedida}) =
+      _$CatalogosDtoImpl;
   const _CatalogosDto._() : super._();
 
   factory _CatalogosDto.fromJson(Map<String, dynamic> json) =
@@ -312,6 +345,9 @@ abstract class _CatalogosDto extends CatalogosDto {
   @override
   @JsonKey(name: 'clientesTipo')
   List<ClienteTipoDto> get clientesTipo;
+  @override
+  @JsonKey(name: 'unidadesMedida')
+  List<UnidadMedidaDto> get unidadesMedida;
 
   /// Create a copy of CatalogosDto
   /// with the given fields replaced by the non-null parameter values.
@@ -1254,5 +1290,175 @@ abstract class _ClienteTipoDto extends ClienteTipoDto {
   @override
   @JsonKey(includeFromJson: false, includeToJson: false)
   _$$ClienteTipoDtoImplCopyWith<_$ClienteTipoDtoImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+UnidadMedidaDto _$UnidadMedidaDtoFromJson(Map<String, dynamic> json) {
+  return _UnidadMedidaDto.fromJson(json);
+}
+
+/// @nodoc
+mixin _$UnidadMedidaDto {
+  int get id => throw _privateConstructorUsedError;
+  String get nombre => throw _privateConstructorUsedError;
+
+  /// Serializes this UnidadMedidaDto to a JSON map.
+  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
+
+  /// Create a copy of UnidadMedidaDto
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  $UnidadMedidaDtoCopyWith<UnidadMedidaDto> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $UnidadMedidaDtoCopyWith<$Res> {
+  factory $UnidadMedidaDtoCopyWith(
+          UnidadMedidaDto value, $Res Function(UnidadMedidaDto) then) =
+      _$UnidadMedidaDtoCopyWithImpl<$Res, UnidadMedidaDto>;
+  @useResult
+  $Res call({int id, String nombre});
+}
+
+/// @nodoc
+class _$UnidadMedidaDtoCopyWithImpl<$Res, $Val extends UnidadMedidaDto>
+    implements $UnidadMedidaDtoCopyWith<$Res> {
+  _$UnidadMedidaDtoCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  /// Create a copy of UnidadMedidaDto
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? id = null,
+    Object? nombre = null,
+  }) {
+    return _then(_value.copyWith(
+      id: null == id
+          ? _value.id
+          : id // ignore: cast_nullable_to_non_nullable
+              as int,
+      nombre: null == nombre
+          ? _value.nombre
+          : nombre // ignore: cast_nullable_to_non_nullable
+              as String,
+    ) as $Val);
+  }
+}
+
+/// @nodoc
+abstract class _$$UnidadMedidaDtoImplCopyWith<$Res>
+    implements $UnidadMedidaDtoCopyWith<$Res> {
+  factory _$$UnidadMedidaDtoImplCopyWith(_$UnidadMedidaDtoImpl value,
+          $Res Function(_$UnidadMedidaDtoImpl) then) =
+      __$$UnidadMedidaDtoImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call({int id, String nombre});
+}
+
+/// @nodoc
+class __$$UnidadMedidaDtoImplCopyWithImpl<$Res>
+    extends _$UnidadMedidaDtoCopyWithImpl<$Res, _$UnidadMedidaDtoImpl>
+    implements _$$UnidadMedidaDtoImplCopyWith<$Res> {
+  __$$UnidadMedidaDtoImplCopyWithImpl(
+      _$UnidadMedidaDtoImpl _value, $Res Function(_$UnidadMedidaDtoImpl) _then)
+      : super(_value, _then);
+
+  /// Create a copy of UnidadMedidaDto
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? id = null,
+    Object? nombre = null,
+  }) {
+    return _then(_$UnidadMedidaDtoImpl(
+      id: null == id
+          ? _value.id
+          : id // ignore: cast_nullable_to_non_nullable
+              as int,
+      nombre: null == nombre
+          ? _value.nombre
+          : nombre // ignore: cast_nullable_to_non_nullable
+              as String,
+    ));
+  }
+}
+
+/// @nodoc
+@JsonSerializable()
+class _$UnidadMedidaDtoImpl extends _UnidadMedidaDto {
+  const _$UnidadMedidaDtoImpl({required this.id, required this.nombre})
+      : super._();
+
+  factory _$UnidadMedidaDtoImpl.fromJson(Map<String, dynamic> json) =>
+      _$$UnidadMedidaDtoImplFromJson(json);
+
+  @override
+  final int id;
+  @override
+  final String nombre;
+
+  @override
+  String toString() {
+    return 'UnidadMedidaDto(id: $id, nombre: $nombre)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$UnidadMedidaDtoImpl &&
+            (identical(other.id, id) || other.id == id) &&
+            (identical(other.nombre, nombre) || other.nombre == nombre));
+  }
+
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  int get hashCode => Object.hash(runtimeType, id, nombre);
+
+  /// Create a copy of UnidadMedidaDto
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$UnidadMedidaDtoImplCopyWith<_$UnidadMedidaDtoImpl> get copyWith =>
+      __$$UnidadMedidaDtoImplCopyWithImpl<_$UnidadMedidaDtoImpl>(
+          this, _$identity);
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$UnidadMedidaDtoImplToJson(
+      this,
+    );
+  }
+}
+
+abstract class _UnidadMedidaDto extends UnidadMedidaDto {
+  const factory _UnidadMedidaDto(
+      {required final int id,
+      required final String nombre}) = _$UnidadMedidaDtoImpl;
+  const _UnidadMedidaDto._() : super._();
+
+  factory _UnidadMedidaDto.fromJson(Map<String, dynamic> json) =
+      _$UnidadMedidaDtoImpl.fromJson;
+
+  @override
+  int get id;
+  @override
+  String get nombre;
+
+  /// Create a copy of UnidadMedidaDto
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$UnidadMedidaDtoImplCopyWith<_$UnidadMedidaDtoImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

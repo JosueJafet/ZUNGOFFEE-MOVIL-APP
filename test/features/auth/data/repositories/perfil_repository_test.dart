@@ -92,6 +92,31 @@ void main() {
     });
 
     test(
+      'super_admin: un 200 con tenants nulo se mapea sin lanzar, con '
+      'tenantId/tenantNombre nulos',
+      () async {
+        final repository = _repositoryWithAdapter(
+          _FakeHttpClientAdapter(
+            (options) => _jsonResponse({
+              'id': 1,
+              'nombre': 'Ana Torres',
+              'estado': true,
+              'fecha_creacion': '2026-02-01T08:00:00.000Z',
+              'roles': {'nombre': 'super_admin'},
+              'tenants': null,
+            }, 200),
+          ),
+        );
+
+        final perfil = await repository.getPerfil();
+
+        expect(perfil.rol, 'super_admin');
+        expect(perfil.tenantId, isNull);
+        expect(perfil.tenantNombre, isNull);
+      },
+    );
+
+    test(
       'un error de la API se relanza como ApiException sin envolver ni '
       'perder información',
       () async {
@@ -132,6 +157,97 @@ void main() {
         repository.actualizar('Nuevo Nombre'),
         throwsA(
           isA<ApiException>().having((e) => e.message, 'message', 'Nombre inválido'),
+        ),
+      );
+    });
+
+    test('subirFoto mapea el PerfilDto actualizado a Perfil', () async {
+      final repository = _repositoryWithAdapter(
+        _FakeHttpClientAdapter(
+          (options) => _jsonResponse({
+            'id': 7,
+            'nombre': 'Juan Pérez',
+            'estado': true,
+            'fecha_creacion': '2026-01-15T10:30:00.000Z',
+            'roles': {'nombre': 'empleado'},
+            'tenants': {'id': 3, 'nombre': 'Bodega Central'},
+            'foto_url': 'https://example.test/avatars/7?t=1753660000000',
+          }, 201),
+        ),
+      );
+
+      final perfil = await repository.subirFoto(
+        bytes: [1, 2, 3],
+        nombreArchivo: 'foto.jpg',
+      );
+
+      expect(perfil.id, 7);
+      expect(perfil.fotoUrl, 'https://example.test/avatars/7?t=1753660000000');
+    });
+
+    test('subirFoto propaga un ApiException tal cual', () async {
+      final repository = _repositoryWithAdapter(
+        _FakeHttpClientAdapter(
+          (options) => _jsonResponse({
+            'statusCode': 400,
+            'message': 'Formato de imagen no soportado',
+            'error': 'Bad Request',
+          }, 400),
+        ),
+      );
+
+      await expectLater(
+        repository.subirFoto(bytes: [1, 2, 3], nombreArchivo: 'foto.gif'),
+        throwsA(
+          isA<ApiException>().having(
+            (e) => e.message,
+            'message',
+            'Formato de imagen no soportado',
+          ),
+        ),
+      );
+    });
+
+    test('eliminarFoto mapea el PerfilDto con foto_url: null a Perfil', () async {
+      final repository = _repositoryWithAdapter(
+        _FakeHttpClientAdapter(
+          (options) => _jsonResponse({
+            'id': 7,
+            'nombre': 'Juan Pérez',
+            'estado': true,
+            'fecha_creacion': '2026-01-15T10:30:00.000Z',
+            'roles': {'nombre': 'empleado'},
+            'tenants': {'id': 3, 'nombre': 'Bodega Central'},
+            'foto_url': null,
+          }, 200),
+        ),
+      );
+
+      final perfil = await repository.eliminarFoto();
+
+      expect(perfil.id, 7);
+      expect(perfil.fotoUrl, isNull);
+    });
+
+    test('eliminarFoto propaga un ApiException tal cual', () async {
+      final repository = _repositoryWithAdapter(
+        _FakeHttpClientAdapter(
+          (options) => _jsonResponse({
+            'statusCode': 401,
+            'message': 'Unauthorized',
+            'error': 'Unauthorized',
+          }, 401),
+        ),
+      );
+
+      await expectLater(
+        repository.eliminarFoto(),
+        throwsA(
+          isA<ApiException>().having(
+            (e) => e.isUnauthorized,
+            'isUnauthorized',
+            isTrue,
+          ),
         ),
       );
     });

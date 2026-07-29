@@ -34,6 +34,31 @@ dependencies:
   # Autenticación (Supabase Auth) — CONTEXTO-MOVIL-FLUTTER.md, sección 4
   supabase_flutter: ^2.16.0
 
+  # Tipografía de marca (Poppins/Inter/JetBrains Mono) — Guia de Marca
+  # Zungoffee, Sprint 13. La propia guía recomienda Google Fonts en móvil.
+  google_fonts: ^6.2.1
+
+  # Isotipo oficial de Zungoffee (SVG) — rediseño visual de Home/Login.
+  flutter_svg: ^2.0.10
+
+  # Selección de foto de perfil desde galería/cámara (funciona en mobile
+  # y en Flutter Web) — `POST /perfil/foto`.
+  image_picker: ^1.1.2
+
+  # Recorte de la foto de perfil antes de subirla (estilo WhatsApp:
+  # círculo fijo, 1:1) — Android/iOS/Web, no Windows Desktop.
+  image_cropper: ^12.2.1
+
+  # Notificaciones push — CONTEXTO-PUSH-FCM-MOVIL.md. Solo Android por
+  # ahora.
+  firebase_core: ^4.12.1
+  firebase_messaging: ^16.4.3
+
+  # FCM no muestra la notificación nativa sola cuando la app está en
+  # foreground — hay que mostrarla a mano (recomendación de la propia
+  # doc de FCM).
+  flutter_local_notifications: ^20.1.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -44,5 +69,26 @@ dev_dependencies:
 
   flutter_lints: ^4.0.0
 
+  # Simula las respuestas de `NetworkImage` en widget tests (p. ej. el
+  # avatar de foto de perfil) — sin esto, `flutter_test` no permite
+  # tráfico de red real y la carga de la imagen lanza una excepción no
+  # capturada que rompe el test.
+  network_image_mock: ^2.1.1
+
+  # Genera los íconos de lanzador de Android desde `assets/icon/app_icon.png`
+  # — reemplaza el ícono default de Flutter. Procesa el archivo de imagen
+  # directamente (no pasa por el harness de `flutter test`), así que no
+  # tiene el riesgo de colgarse que sí tuvo el intento anterior de
+  # rasterizar el SVG dentro de un widget test.
+  flutter_launcher_icons: ^0.14.3
+
 flutter:
   uses-material-design: true
+
+  assets:
+    - assets/brand/
+
+flutter_launcher_icons:
+  android: "ic_launcher"
+  image_path: "assets/icon/app_icon.png"
+  min_sdk_android: 24

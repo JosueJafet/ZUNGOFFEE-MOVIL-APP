@@ -9,6 +9,7 @@ import 'package:zungofee_mobile/core/theme/app_theme.dart';
 import 'package:zungofee_mobile/features/catalogos/data/datasources/catalogos_remote_datasource.dart';
 import 'package:zungofee_mobile/features/catalogos/data/models/catalogos.dart';
 import 'package:zungofee_mobile/features/catalogos/data/models/metodo_pago.dart';
+import 'package:zungofee_mobile/features/catalogos/data/models/unidad_medida.dart';
 import 'package:zungofee_mobile/features/catalogos/data/repositories/catalogos_repository.dart';
 import 'package:zungofee_mobile/features/catalogos/presentation/providers/catalogos_providers.dart';
 import 'package:zungofee_mobile/features/clientes/data/datasources/cliente_remote_datasource.dart';
@@ -32,7 +33,7 @@ class _FakeSessionTokenProvider implements SessionTokenProvider {
 
 class _FakeClienteRepository extends ClienteRepository {
   _FakeClienteRepository(this._clientes)
-    : super(ClienteRemoteDataSource(ApiClient(_FakeSessionTokenProvider())));
+      : super(ClienteRemoteDataSource(ApiClient(_FakeSessionTokenProvider())));
 
   final List<Cliente> _clientes;
 
@@ -42,7 +43,8 @@ class _FakeClienteRepository extends ClienteRepository {
 
 class _FakeCatalogosRepository extends CatalogosRepository {
   _FakeCatalogosRepository(this._catalogos)
-    : super(CatalogosRemoteDataSource(ApiClient(_FakeSessionTokenProvider())));
+      : super(
+            CatalogosRemoteDataSource(ApiClient(_FakeSessionTokenProvider())));
 
   final Catalogos _catalogos;
 
@@ -52,7 +54,7 @@ class _FakeCatalogosRepository extends CatalogosRepository {
 
 class _FakeLotesRepository extends LotesRepository {
   _FakeLotesRepository(this._existencias)
-    : super(LotesRemoteDataSource(ApiClient(_FakeSessionTokenProvider())));
+      : super(LotesRemoteDataSource(ApiClient(_FakeSessionTokenProvider())));
 
   final List<Lote> _existencias;
 
@@ -63,7 +65,7 @@ class _FakeLotesRepository extends LotesRepository {
 
 class _FakeVentasRepository extends VentasRepository {
   _FakeVentasRepository({this.crearError})
-    : super(VentasRemoteDataSource(ApiClient(_FakeSessionTokenProvider())));
+      : super(VentasRemoteDataSource(ApiClient(_FakeSessionTokenProvider())));
 
   final Object? crearError;
   int crearCallCount = 0;
@@ -106,6 +108,7 @@ const _catalogosDeEjemplo = Catalogos(
   nivelesAltura: [],
   estadosCafe: [],
   clientesTipo: [],
+  unidadesMedida: [UnidadMedida(id: 2, nombre: 'Quintales')],
 );
 
 const _loteDeEjemplo = Lote(
@@ -169,7 +172,7 @@ Future<void> _llenarPrimeraLinea(WidgetTester tester) async {
   await _seleccionarDropdown(
     tester,
     const Key('linea_0_lote'),
-    'pergamino_seco · Catuai · Estandar (saldo: 10.00)',
+    'Catuai · Estandar (saldo: 10.00 Quintales)',
   );
   await tester.ensureVisible(find.byKey(const Key('linea_0_cantidad')));
   await tester.enterText(find.byKey(const Key('linea_0_cantidad')), '5');
@@ -221,6 +224,33 @@ void main() {
         expect(repository.ultimasLineas!.first.cantidad, 5);
         expect(repository.ultimasLineas!.first.precioUnitario, 150);
         expect(guardadoCallCount, 1);
+        expect(find.text('Venta registrada con éxito.'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'al elegir un lote, la etiqueta de Cantidad muestra la unidad real '
+      'de ese lote',
+      (tester) async {
+        await tester.pumpWidget(
+          _wrap(
+            clientes: const [_clienteDeEjemplo],
+            catalogos: _catalogosDeEjemplo,
+            existencias: const [_loteDeEjemplo],
+            ventasRepository: _FakeVentasRepository(),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('Cantidad'), findsOneWidget);
+
+        await _seleccionarDropdown(
+          tester,
+          const Key('linea_0_lote'),
+          'Catuai · Estandar (saldo: 10.00 Quintales)',
+        );
+
+        expect(find.text('Cantidad (Quintales)'), findsOneWidget);
       },
     );
 

@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../shared/extensions/error_message_extension.dart';
+import '../../../../shared/widgets/navigation/app_drawer.dart';
+import '../../../../shared/widgets/snackbars/success_snackbar.dart';
 import '../../data/models/proveedor.dart';
 import '../providers/proveedor_form_controller.dart';
 
@@ -115,6 +117,11 @@ class _ProveedorFormScreenState extends ConsumerState<ProveedorFormScreen> {
       // parpadeo"), así que sigue en `true` incluso tras un error. Lo único
       // que distingue un envío exitoso es la ausencia de error.
       if ((previous?.isLoading ?? false) && !next.hasError) {
+        context.showSuccessSnackBar(
+          _esEdicion
+              ? 'Proveedor actualizado con éxito.'
+              : 'Proveedor registrado con éxito.',
+        );
         widget.onGuardado();
       }
     });
@@ -123,8 +130,18 @@ class _ProveedorFormScreenState extends ConsumerState<ProveedorFormScreen> {
     final isLoading = formState.isLoading;
 
     return Scaffold(
+      endDrawer: const AppDrawer(),
       appBar: AppBar(
         title: Text(_esEdicion ? 'Editar proveedor' : 'Agregar proveedor'),
+        actions: [
+          Builder(
+            builder: (context) => IconButton(
+              icon: const Icon(Icons.menu),
+              tooltip: 'Menú',
+              onPressed: () => Scaffold.of(context).openEndDrawer(),
+            ),
+          ),
+        ],
       ),
       body: SafeArea(
         child: SingleChildScrollView(

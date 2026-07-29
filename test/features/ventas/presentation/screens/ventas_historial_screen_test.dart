@@ -16,7 +16,7 @@ import 'package:zungofee_mobile/features/auth/data/repositories/perfil_repositor
 import 'package:zungofee_mobile/features/auth/presentation/providers/auth_providers.dart';
 import 'package:zungofee_mobile/features/auth/presentation/providers/perfil_providers.dart';
 import 'package:zungofee_mobile/features/ventas/data/datasources/ventas_remote_datasource.dart';
-import 'package:zungofee_mobile/features/ventas/data/models/venta.dart';
+import 'package:zungofee_mobile/features/ventas/data/models/venta_historial.dart';
 import 'package:zungofee_mobile/features/ventas/data/repositories/ventas_repository.dart';
 import 'package:zungofee_mobile/features/ventas/presentation/providers/ventas_providers.dart';
 import 'package:zungofee_mobile/features/ventas/presentation/screens/ventas_historial_screen.dart';
@@ -28,7 +28,7 @@ class _FakeSessionTokenProvider implements SessionTokenProvider {
 
 class _FakePerfilRepository extends PerfilRepository {
   _FakePerfilRepository(this._perfil)
-    : super(PerfilRemoteDataSource(ApiClient(_FakeSessionTokenProvider())));
+      : super(PerfilRemoteDataSource(ApiClient(_FakeSessionTokenProvider())));
 
   final Perfil _perfil;
 
@@ -38,15 +38,15 @@ class _FakePerfilRepository extends PerfilRepository {
 
 class _FakeVentasRepository extends VentasRepository {
   _FakeVentasRepository(this._responses)
-    : super(VentasRemoteDataSource(ApiClient(_FakeSessionTokenProvider())));
+      : super(VentasRemoteDataSource(ApiClient(_FakeSessionTokenProvider())));
 
-  final List<Future<List<Venta>> Function()> _responses;
+  final List<Future<List<VentaHistorial>> Function()> _responses;
   int listarCallCount = 0;
   int anularCallCount = 0;
   Object? anularError;
 
   @override
-  Future<List<Venta>> listar({int page = 1, int pageSize = 20}) {
+  Future<List<VentaHistorial>> listar({int page = 1, int pageSize = 20}) {
     final index = listarCallCount < _responses.length
         ? listarCallCount
         : _responses.length - 1;
@@ -62,31 +62,27 @@ class _FakeVentasRepository extends VentasRepository {
 }
 
 Perfil _perfilConRol(String rol) => Perfil(
-  id: 7,
-  nombre: 'Juan Pérez',
-  activo: true,
-  fechaCreacion: DateTime.parse('2026-01-15T10:30:00.000Z'),
-  rol: rol,
-  tenantId: 3,
-  tenantNombre: 'Bodega Central',
-);
+      id: 7,
+      nombre: 'Juan Pérez',
+      activo: true,
+      fechaCreacion: DateTime.parse('2026-01-15T10:30:00.000Z'),
+      rol: rol,
+      tenantId: 3,
+      tenantNombre: 'Bodega Central',
+    );
 
-const _ventaActiva = Venta(
+final _ventaActiva = VentaHistorial(
   id: 30,
-  tenantId: 5,
-  clienteId: 7,
-  usuarioId: 3,
+  fecha: DateTime.parse('2026-08-01T00:00:00.000Z'),
   total: 750,
-  anulada: false,
+  clienteNombre: 'Cafeteria El Buen Cafe',
 );
 
-const _ventaAnulada = Venta(
+final _ventaDos = VentaHistorial(
   id: 31,
-  tenantId: 5,
-  clienteId: 7,
-  usuarioId: 3,
+  fecha: DateTime.parse('2026-08-02T00:00:00.000Z'),
   total: 300,
-  anulada: true,
+  clienteNombre: 'Cafeteria El Buen Cafe',
 );
 
 Widget _wrap({
@@ -120,8 +116,9 @@ void main() {
     tearDown(() => supabaseClient.dispose());
 
     testWidgets(
-      'admin_bodega: una venta activa muestra el botón "Anular", una '
-      'anulada no',
+      'admin_bodega: el botón "Anular" se muestra en todos los ítems (la '
+      'API de listado no trae `anulada` — gap reportado al backend), y se '
+      'muestran la fecha y el cliente',
       (tester) async {
         await tester.pumpWidget(
           _wrap(
@@ -129,7 +126,7 @@ void main() {
               _perfilConRol(AppRole.adminBodega),
             ),
             ventasRepository: _FakeVentasRepository([
-              () async => [_ventaActiva, _ventaAnulada],
+              () async => [_ventaActiva, _ventaDos],
             ]),
             authRepository: authRepository,
           ),
@@ -138,8 +135,15 @@ void main() {
 
         expect(find.text('Venta #30'), findsOneWidget);
         expect(find.text('Venta #31'), findsOneWidget);
-        expect(find.text('Anulada'), findsOneWidget);
-        expect(find.widgetWithText(TextButton, 'Anular'), findsOneWidget);
+        expect(
+          find.text('2026-08-01 · Cafeteria El Buen Cafe'),
+          findsOneWidget,
+        );
+        expect(
+          find.text('2026-08-02 · Cafeteria El Buen Cafe'),
+          findsOneWidget,
+        );
+        expect(find.widgetWithText(TextButton, 'Anular'), findsNWidgets(2));
       },
     );
 
@@ -182,7 +186,7 @@ void main() {
       (tester) async {
         final repository = _FakeVentasRepository([
           () async => [_ventaActiva],
-          () async => [_ventaAnulada],
+          () async => [_ventaDos],
         ]);
 
         await tester.pumpWidget(
@@ -239,10 +243,11 @@ void main() {
       (tester) async {
         final repository = _FakeVentasRepository([
           () async => [_ventaActiva],
-        ])..anularError = const ApiException(
-          statusCode: 400,
-          message: 'La venta ya estaba anulada',
-        );
+        ])
+          ..anularError = const ApiException(
+            statusCode: 400,
+            message: 'La venta ya estaba anulada',
+          );
 
         await tester.pumpWidget(
           _wrap(
@@ -270,7 +275,8 @@ void main() {
       (tester) async {
         final repository = _FakeVentasRepository([
           () async => [_ventaActiva],
-        ])..anularError = const ApiException(statusCode: 400);
+        ])
+          ..anularError = const ApiException(statusCode: 400);
 
         await tester.pumpWidget(
           _wrap(
@@ -293,7 +299,8 @@ void main() {
           findsOneWidget,
         );
         expect(
-          find.text('No se pudo cargar el historial de ventas. Intenta de nuevo.'),
+          find.text(
+              'No se pudo cargar el historial de ventas. Intenta de nuevo.'),
           findsNothing,
         );
       },
@@ -309,9 +316,9 @@ void main() {
           ),
           ventasRepository: _FakeVentasRepository([
             () async => throw const ApiException(
-              statusCode: 500,
-              message: 'Error del servidor',
-            ),
+                  statusCode: 500,
+                  message: 'Error del servidor',
+                ),
           ]),
           authRepository: authRepository,
         ),

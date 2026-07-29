@@ -23,8 +23,8 @@ void main() {
       expect(dto.cantidadInicial, '10.00');
       expect(dto.estadosCafe.nombre, 'pergamino_seco');
       expect(dto.estadosCafe.unidadMedidaId, 2);
-      expect(dto.variedadesCafe.nombre, 'Catuai');
-      expect(dto.nivelesAltura.nombre, 'Estandar');
+      expect(dto.variedadesCafe?.nombre, 'Catuai');
+      expect(dto.nivelesAltura?.nombre, 'Estandar');
     });
 
     test('toDomain mapea al modelo de dominio Lote, aplanado', () {
@@ -38,5 +38,25 @@ void main() {
       expect(lote.variedadNombre, 'Catuai');
       expect(lote.nivelAlturaNombre, 'Estandar');
     });
+
+    test(
+      'un lote sin variedad ni nivel de altura registrados (ambos `null` '
+      'en la API) se parsea sin reventar',
+      () {
+        final jsonSinVariedadNiAltura = {
+          'id': '13',
+          'saldo': '8',
+          'cantidad_inicial': '8',
+          'estados_cafe': {'nombre': 'pergamino_seco', 'unidad_medida_id': 2},
+          'variedades_cafe': null,
+          'niveles_altura': null,
+        };
+
+        final lote = LoteDto.fromJson(jsonSinVariedadNiAltura).toDomain();
+
+        expect(lote.variedadNombre, isNull);
+        expect(lote.nivelAlturaNombre, isNull);
+      },
+    );
   });
 }

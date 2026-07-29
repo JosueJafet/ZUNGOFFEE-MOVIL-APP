@@ -5,9 +5,13 @@ import '../../../../core/constants/estado_cafe.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../shared/extensions/async_value_view_extension.dart';
 import '../../../../shared/extensions/error_message_extension.dart';
+import '../../../../shared/widgets/chips/estado_cafe_chip.dart';
+import '../../../../shared/widgets/navigation/app_drawer.dart';
+import '../../../../shared/widgets/snackbars/success_snackbar.dart';
 import '../../../catalogos/data/models/catalogos.dart';
 import '../../../catalogos/data/models/estado_cafe_catalogo.dart';
 import '../../../catalogos/data/models/nivel_altura.dart';
+import '../../../catalogos/data/models/unidad_medida.dart';
 import '../../../catalogos/data/models/variedad_cafe.dart';
 import '../../../catalogos/presentation/providers/catalogos_providers.dart';
 import '../../../proveedores/data/models/proveedor.dart';
@@ -28,8 +32,7 @@ class _LineaFormData {
   int? alturaId;
   final TextEditingController humedadController = TextEditingController();
   final TextEditingController cantidadController = TextEditingController();
-  final TextEditingController costoUnitarioController =
-      TextEditingController();
+  final TextEditingController costoUnitarioController = TextEditingController();
 
   void dispose() {
     humedadController.dispose();
@@ -99,39 +102,73 @@ class _CompraFormScreenState extends ConsumerState<CompraFormScreen> {
     return null;
   }
 
+  /// La humedad solo es obligatoria a partir de pergamino seco — un lote
+  /// recién cosechado (`uva`) todavía no tiene nada que medir. Si el
+  /// usuario igual escribe algo para `uva`, se sigue validando el formato.
+  String? _validarHumedad(String? value, _LineaFormData linea) {
+    if (linea.estadoCafeId == EstadoCafeId.uva &&
+        (value == null || value.trim().isEmpty)) {
+      return null;
+    }
+    return _validarNumeroPositivo(value);
+  }
+
   Future<void> _submit() async {
     if (_lineas.isEmpty) return;
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
     final lineas = _lineas.map((linea) {
+      final humedadTexto = linea.humedadController.text.trim();
       return LineaCompraInput(
         estadoCafeId: linea.estadoCafeId!,
         variedadId: linea.variedadId!,
         alturaId: linea.alturaId!,
-        humedad: double.parse(linea.humedadController.text),
+        humedad: humedadTexto.isEmpty ? null : double.parse(humedadTexto),
         cantidad: double.parse(linea.cantidadController.text),
         costoUnitario: double.parse(linea.costoUnitarioController.text),
       );
     }).toList();
 
-    await ref
-        .read(compraFormControllerProvider.notifier)
-        .crear(
+    await ref.read(compraFormControllerProvider.notifier).crear(
           proveedorId: _proveedorId!,
           metodoPagoId: _metodoPagoId,
           lineas: lineas,
         );
   }
 
-  static const _errorFallback = 'No se pudo registrar la compra. Intenta de nuevo.';
+  static const _errorFallback =
+      'No se pudo registrar la compra. Intenta de nuevo.';
+
+  /// Nombre del nivel más su rango en msnm entre paréntesis (`"Estándar
+  /// (debajo de 1200 msnm)"`) — mismo dato que muestra la plataforma web
+  /// (`CONTEXTO-PLATAFORMA-WEB.md`, sección 8.4). Cae al nombre solo si
+  /// el catálogo no trae el rango (nunca debería pasar contra la API
+  /// real, pero evita reventar si algún nivel viniera incompleto).
+  String _etiquetaNivelAltura(NivelAltura nivel) {
+    final min = nivel.msnmMin;
+    final max = nivel.msnmMax;
+    if (min != null && max != null) {
+      return '${nivel.nombre} (entre $min y $max msnm)';
+    }
+    if (max != null) return '${nivel.nombre} (debajo de $max msnm)';
+    if (min != null) return '${nivel.nombre} (arriba de $min msnm)';
+    return nivel.nombre;
+  }
 
   Widget _buildLinea(
     _LineaFormData linea,
     List<EstadoCafeCatalogo> estadosCafe,
     List<VariedadCafe> variedadesCafe,
     List<NivelAltura> nivelesAltura,
+    List<UnidadMedida> unidadesMedida,
     bool isLoading,
   ) {
+    final estadoSeleccionado = linea.estadoCafeId == null
+        ? null
+        : estadosCafe.firstWhere((e) => e.id == linea.estadoCafeId);
+    final unidadNombre = estadoSeleccionado == null
+        ? null
+        : unidadesMedida.nombreDe(estadoSeleccionado.unidadMedidaId);
     return Card(
       key: ValueKey('linea_${linea.id}'),
       margin: const EdgeInsets.only(bottom: AppSpacing.space4),
@@ -146,7 +183,10 @@ class _CompraFormScreenState extends ConsumerState<CompraFormScreen> {
               decoration: const InputDecoration(labelText: 'Estado del café'),
               items: estadosCafe
                   .map(
-                    (e) => DropdownMenuItem(value: e.id, child: Text(e.nombre)),
+                    (e) => DropdownMenuItem(
+                      value: e.id,
+                      child: Text(EstadoCafeChip.etiquetaDe(e.nombre)),
+                    ),
                   )
                   .toList(),
               validator: _requerido,
@@ -176,7 +216,10 @@ class _CompraFormScreenState extends ConsumerState<CompraFormScreen> {
               decoration: const InputDecoration(labelText: 'Nivel de altura'),
               items: nivelesAltura
                   .map(
-                    (n) => DropdownMenuItem(value: n.id, child: Text(n.nombre)),
+                    (n) => DropdownMenuItem(
+                      value: n.id,
+                      child: Text(_etiquetaNivelAltura(n)),
+                    ),
                   )
                   .toList(),
               validator: _requerido,
@@ -188,17 +231,28 @@ class _CompraFormScreenState extends ConsumerState<CompraFormScreen> {
             TextFormField(
               key: Key('linea_${linea.id}_humedad'),
               controller: linea.humedadController,
-              decoration: const InputDecoration(labelText: 'Humedad (%)'),
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              validator: _validarNumeroPositivo,
+              decoration: InputDecoration(
+                labelText: 'Humedad (%)',
+                helperText: linea.estadoCafeId == EstadoCafeId.uva
+                    ? 'Opcional para uva'
+                    : null,
+              ),
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
+              validator: (value) => _validarHumedad(value, linea),
               enabled: !isLoading,
             ),
             const SizedBox(height: AppSpacing.space4),
             TextFormField(
               key: Key('linea_${linea.id}_cantidad'),
               controller: linea.cantidadController,
-              decoration: const InputDecoration(labelText: 'Cantidad'),
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              decoration: InputDecoration(
+                labelText: unidadNombre == null
+                    ? 'Cantidad'
+                    : 'Cantidad ($unidadNombre)',
+              ),
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
               validator: _validarNumeroPositivo,
               enabled: !isLoading,
             ),
@@ -207,7 +261,8 @@ class _CompraFormScreenState extends ConsumerState<CompraFormScreen> {
               key: Key('linea_${linea.id}_costoUnitario'),
               controller: linea.costoUnitarioController,
               decoration: const InputDecoration(labelText: 'Costo unitario'),
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
               validator: _validarNumeroPositivo,
               enabled: !isLoading,
             ),
@@ -292,6 +347,7 @@ class _CompraFormScreenState extends ConsumerState<CompraFormScreen> {
                 estadosCafeValidos,
                 catalogos.variedadesCafe,
                 catalogos.nivelesAltura,
+                catalogos.unidadesMedida,
                 isLoading,
               ),
             OutlinedButton.icon(
@@ -331,6 +387,7 @@ class _CompraFormScreenState extends ConsumerState<CompraFormScreen> {
       next,
     ) {
       if ((previous?.isLoading ?? false) && !next.hasError) {
+        context.showSuccessSnackBar('Compra registrada con éxito.');
         widget.onGuardado();
       }
     });
@@ -341,7 +398,19 @@ class _CompraFormScreenState extends ConsumerState<CompraFormScreen> {
     final isLoading = formState.isLoading;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Registrar compra')),
+      endDrawer: const AppDrawer(),
+      appBar: AppBar(
+        title: const Text('Registrar compra'),
+        actions: [
+          Builder(
+            builder: (context) => IconButton(
+              icon: const Icon(Icons.menu),
+              tooltip: 'Menú',
+              onPressed: () => Scaffold.of(context).openEndDrawer(),
+            ),
+          ),
+        ],
+      ),
       body: SafeArea(
         child: proveedoresAsync.buildOrRetry(
           errorFallback: _errorFallback,

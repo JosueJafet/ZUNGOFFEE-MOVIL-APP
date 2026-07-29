@@ -25,11 +25,14 @@ mixin _$LoteDto {
   @JsonKey(name: 'cantidad_inicial')
   String get cantidadInicial => throw _privateConstructorUsedError;
   @JsonKey(name: 'estados_cafe')
-  LoteEstadoCafeDto get estadosCafe => throw _privateConstructorUsedError;
+  LoteEstadoCafeDto get estadosCafe =>
+      throw _privateConstructorUsedError; // `null` cuando la compra no registró variedad/altura para este lote
+// (ambos campos son opcionales al comprar) — confirmado contra la API
+// real, donde algunos lotes traen estas claves en `null`.
   @JsonKey(name: 'variedades_cafe')
-  LoteVariedadDto get variedadesCafe => throw _privateConstructorUsedError;
+  LoteVariedadDto? get variedadesCafe => throw _privateConstructorUsedError;
   @JsonKey(name: 'niveles_altura')
-  LoteNivelAlturaDto get nivelesAltura => throw _privateConstructorUsedError;
+  LoteNivelAlturaDto? get nivelesAltura => throw _privateConstructorUsedError;
 
   /// Serializes this LoteDto to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -50,12 +53,12 @@ abstract class $LoteDtoCopyWith<$Res> {
       String saldo,
       @JsonKey(name: 'cantidad_inicial') String cantidadInicial,
       @JsonKey(name: 'estados_cafe') LoteEstadoCafeDto estadosCafe,
-      @JsonKey(name: 'variedades_cafe') LoteVariedadDto variedadesCafe,
-      @JsonKey(name: 'niveles_altura') LoteNivelAlturaDto nivelesAltura});
+      @JsonKey(name: 'variedades_cafe') LoteVariedadDto? variedadesCafe,
+      @JsonKey(name: 'niveles_altura') LoteNivelAlturaDto? nivelesAltura});
 
   $LoteEstadoCafeDtoCopyWith<$Res> get estadosCafe;
-  $LoteVariedadDtoCopyWith<$Res> get variedadesCafe;
-  $LoteNivelAlturaDtoCopyWith<$Res> get nivelesAltura;
+  $LoteVariedadDtoCopyWith<$Res>? get variedadesCafe;
+  $LoteNivelAlturaDtoCopyWith<$Res>? get nivelesAltura;
 }
 
 /// @nodoc
@@ -77,8 +80,8 @@ class _$LoteDtoCopyWithImpl<$Res, $Val extends LoteDto>
     Object? saldo = null,
     Object? cantidadInicial = null,
     Object? estadosCafe = null,
-    Object? variedadesCafe = null,
-    Object? nivelesAltura = null,
+    Object? variedadesCafe = freezed,
+    Object? nivelesAltura = freezed,
   }) {
     return _then(_value.copyWith(
       id: null == id
@@ -97,14 +100,14 @@ class _$LoteDtoCopyWithImpl<$Res, $Val extends LoteDto>
           ? _value.estadosCafe
           : estadosCafe // ignore: cast_nullable_to_non_nullable
               as LoteEstadoCafeDto,
-      variedadesCafe: null == variedadesCafe
+      variedadesCafe: freezed == variedadesCafe
           ? _value.variedadesCafe
           : variedadesCafe // ignore: cast_nullable_to_non_nullable
-              as LoteVariedadDto,
-      nivelesAltura: null == nivelesAltura
+              as LoteVariedadDto?,
+      nivelesAltura: freezed == nivelesAltura
           ? _value.nivelesAltura
           : nivelesAltura // ignore: cast_nullable_to_non_nullable
-              as LoteNivelAlturaDto,
+              as LoteNivelAlturaDto?,
     ) as $Val);
   }
 
@@ -122,8 +125,12 @@ class _$LoteDtoCopyWithImpl<$Res, $Val extends LoteDto>
   /// with the given fields replaced by the non-null parameter values.
   @override
   @pragma('vm:prefer-inline')
-  $LoteVariedadDtoCopyWith<$Res> get variedadesCafe {
-    return $LoteVariedadDtoCopyWith<$Res>(_value.variedadesCafe, (value) {
+  $LoteVariedadDtoCopyWith<$Res>? get variedadesCafe {
+    if (_value.variedadesCafe == null) {
+      return null;
+    }
+
+    return $LoteVariedadDtoCopyWith<$Res>(_value.variedadesCafe!, (value) {
       return _then(_value.copyWith(variedadesCafe: value) as $Val);
     });
   }
@@ -132,8 +139,12 @@ class _$LoteDtoCopyWithImpl<$Res, $Val extends LoteDto>
   /// with the given fields replaced by the non-null parameter values.
   @override
   @pragma('vm:prefer-inline')
-  $LoteNivelAlturaDtoCopyWith<$Res> get nivelesAltura {
-    return $LoteNivelAlturaDtoCopyWith<$Res>(_value.nivelesAltura, (value) {
+  $LoteNivelAlturaDtoCopyWith<$Res>? get nivelesAltura {
+    if (_value.nivelesAltura == null) {
+      return null;
+    }
+
+    return $LoteNivelAlturaDtoCopyWith<$Res>(_value.nivelesAltura!, (value) {
       return _then(_value.copyWith(nivelesAltura: value) as $Val);
     });
   }
@@ -151,15 +162,15 @@ abstract class _$$LoteDtoImplCopyWith<$Res> implements $LoteDtoCopyWith<$Res> {
       String saldo,
       @JsonKey(name: 'cantidad_inicial') String cantidadInicial,
       @JsonKey(name: 'estados_cafe') LoteEstadoCafeDto estadosCafe,
-      @JsonKey(name: 'variedades_cafe') LoteVariedadDto variedadesCafe,
-      @JsonKey(name: 'niveles_altura') LoteNivelAlturaDto nivelesAltura});
+      @JsonKey(name: 'variedades_cafe') LoteVariedadDto? variedadesCafe,
+      @JsonKey(name: 'niveles_altura') LoteNivelAlturaDto? nivelesAltura});
 
   @override
   $LoteEstadoCafeDtoCopyWith<$Res> get estadosCafe;
   @override
-  $LoteVariedadDtoCopyWith<$Res> get variedadesCafe;
+  $LoteVariedadDtoCopyWith<$Res>? get variedadesCafe;
   @override
-  $LoteNivelAlturaDtoCopyWith<$Res> get nivelesAltura;
+  $LoteNivelAlturaDtoCopyWith<$Res>? get nivelesAltura;
 }
 
 /// @nodoc
@@ -179,8 +190,8 @@ class __$$LoteDtoImplCopyWithImpl<$Res>
     Object? saldo = null,
     Object? cantidadInicial = null,
     Object? estadosCafe = null,
-    Object? variedadesCafe = null,
-    Object? nivelesAltura = null,
+    Object? variedadesCafe = freezed,
+    Object? nivelesAltura = freezed,
   }) {
     return _then(_$LoteDtoImpl(
       id: null == id
@@ -199,14 +210,14 @@ class __$$LoteDtoImplCopyWithImpl<$Res>
           ? _value.estadosCafe
           : estadosCafe // ignore: cast_nullable_to_non_nullable
               as LoteEstadoCafeDto,
-      variedadesCafe: null == variedadesCafe
+      variedadesCafe: freezed == variedadesCafe
           ? _value.variedadesCafe
           : variedadesCafe // ignore: cast_nullable_to_non_nullable
-              as LoteVariedadDto,
-      nivelesAltura: null == nivelesAltura
+              as LoteVariedadDto?,
+      nivelesAltura: freezed == nivelesAltura
           ? _value.nivelesAltura
           : nivelesAltura // ignore: cast_nullable_to_non_nullable
-              as LoteNivelAlturaDto,
+              as LoteNivelAlturaDto?,
     ));
   }
 }
@@ -219,8 +230,8 @@ class _$LoteDtoImpl extends _LoteDto {
       required this.saldo,
       @JsonKey(name: 'cantidad_inicial') required this.cantidadInicial,
       @JsonKey(name: 'estados_cafe') required this.estadosCafe,
-      @JsonKey(name: 'variedades_cafe') required this.variedadesCafe,
-      @JsonKey(name: 'niveles_altura') required this.nivelesAltura})
+      @JsonKey(name: 'variedades_cafe') this.variedadesCafe,
+      @JsonKey(name: 'niveles_altura') this.nivelesAltura})
       : super._();
 
   factory _$LoteDtoImpl.fromJson(Map<String, dynamic> json) =>
@@ -236,12 +247,15 @@ class _$LoteDtoImpl extends _LoteDto {
   @override
   @JsonKey(name: 'estados_cafe')
   final LoteEstadoCafeDto estadosCafe;
+// `null` cuando la compra no registró variedad/altura para este lote
+// (ambos campos son opcionales al comprar) — confirmado contra la API
+// real, donde algunos lotes traen estas claves en `null`.
   @override
   @JsonKey(name: 'variedades_cafe')
-  final LoteVariedadDto variedadesCafe;
+  final LoteVariedadDto? variedadesCafe;
   @override
   @JsonKey(name: 'niveles_altura')
-  final LoteNivelAlturaDto nivelesAltura;
+  final LoteNivelAlturaDto? nivelesAltura;
 
   @override
   String toString() {
@@ -293,10 +307,9 @@ abstract class _LoteDto extends LoteDto {
       @JsonKey(name: 'cantidad_inicial') required final String cantidadInicial,
       @JsonKey(name: 'estados_cafe')
       required final LoteEstadoCafeDto estadosCafe,
-      @JsonKey(name: 'variedades_cafe')
-      required final LoteVariedadDto variedadesCafe,
+      @JsonKey(name: 'variedades_cafe') final LoteVariedadDto? variedadesCafe,
       @JsonKey(name: 'niveles_altura')
-      required final LoteNivelAlturaDto nivelesAltura}) = _$LoteDtoImpl;
+      final LoteNivelAlturaDto? nivelesAltura}) = _$LoteDtoImpl;
   const _LoteDto._() : super._();
 
   factory _LoteDto.fromJson(Map<String, dynamic> json) = _$LoteDtoImpl.fromJson;
@@ -310,13 +323,16 @@ abstract class _LoteDto extends LoteDto {
   String get cantidadInicial;
   @override
   @JsonKey(name: 'estados_cafe')
-  LoteEstadoCafeDto get estadosCafe;
+  LoteEstadoCafeDto
+      get estadosCafe; // `null` cuando la compra no registró variedad/altura para este lote
+// (ambos campos son opcionales al comprar) — confirmado contra la API
+// real, donde algunos lotes traen estas claves en `null`.
   @override
   @JsonKey(name: 'variedades_cafe')
-  LoteVariedadDto get variedadesCafe;
+  LoteVariedadDto? get variedadesCafe;
   @override
   @JsonKey(name: 'niveles_altura')
-  LoteNivelAlturaDto get nivelesAltura;
+  LoteNivelAlturaDto? get nivelesAltura;
 
   /// Create a copy of LoteDto
   /// with the given fields replaced by the non-null parameter values.

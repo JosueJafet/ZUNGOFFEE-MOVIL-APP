@@ -22,4 +22,10 @@ abstract final class RoutePaths {
   static const String historialProcesamiento = '/procesamiento/historial';
   static const String notificaciones = '/notificaciones';
   static const String perfilEditar = '/perfil/editar';
+  static const String bodegas = '/bodegas';
+  static const String bodegaFormulario = '/bodegas/formulario';
+  static const String solicitudes = '/solicitudes';
+  static const String pagos = '/pagos';
+  static const String pagoHistorial = '/pagos/historial';
+  static const String pagoFormulario = '/pagos/formulario';
 }

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../shared/extensions/error_message_extension.dart';
 import '../../../../shared/widgets/empty_states/error_retry_view.dart';
+import '../../../../shared/widgets/navigation/app_drawer.dart';
 import '../../data/models/notificacion.dart';
 import '../providers/notificacion_marcar_leida_controller.dart';
 import '../providers/notificaciones_providers.dart';
@@ -47,7 +48,19 @@ class NotificacionesListScreen extends ConsumerWidget {
     });
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Notificaciones')),
+      endDrawer: const AppDrawer(),
+      appBar: AppBar(
+        title: const Text('Notificaciones'),
+        actions: [
+          Builder(
+            builder: (context) => IconButton(
+              icon: const Icon(Icons.menu),
+              tooltip: 'Menú',
+              onPressed: () => Scaffold.of(context).openEndDrawer(),
+            ),
+          ),
+        ],
+      ),
       body: notificacionesAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stackTrace) => ErrorRetryView(

@@ -1,7 +1,10 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/services/fcm_providers.dart';
+import '../../../notificaciones/presentation/providers/notificaciones_providers.dart';
 import 'auth_providers.dart';
 
 /// Controla el cierre de sesión. Expone loading/error/success como
@@ -23,9 +26,26 @@ class LogoutController extends AsyncNotifier<void> {
     if (state.isLoading) return;
 
     state = const AsyncLoading();
-    state = await AsyncValue.guard(() {
-      return ref.read(authRepositoryProvider).signOut();
+    state = await AsyncValue.guard(() async {
+      // Antes de cerrar sesión, no después: `DELETE
+      // /notificaciones/dispositivos` tiene scope al propio usuario y
+      // necesita el JWT vigente.
+      await _desregistrarDispositivo();
+      await ref.read(authRepositoryProvider).signOut();
     });
+  }
+
+  /// Best-effort, mismo criterio que `LoginController._registrarDispositivo`
+  /// — un fallo acá no debe bloquear el logout.
+  Future<void> _desregistrarDispositivo() async {
+    try {
+      final token = await ref.read(fcmServiceProvider).obtenerToken();
+      if (token == null) return;
+
+      await ref.read(notificacionesRepositoryProvider).desregistrarDispositivo(token);
+    } catch (e) {
+      debugPrint('No se pudo desregistrar el token FCM: $e');
+    }
   }
 }
 

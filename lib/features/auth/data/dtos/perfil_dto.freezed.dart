@@ -25,8 +25,17 @@ mixin _$PerfilDto {
   bool get estado => throw _privateConstructorUsedError;
   @JsonKey(name: 'fecha_creacion')
   String get fechaCreacion => throw _privateConstructorUsedError;
-  PerfilRolDto get roles => throw _privateConstructorUsedError;
-  PerfilTenantDto get tenants => throw _privateConstructorUsedError;
+  PerfilRolDto get roles =>
+      throw _privateConstructorUsedError; // `super_admin` no pertenece a ninguna bodega (`tenant_id` nulo en la
+// base de datos, `CONTEXTO-PLATAFORMA-WEB.md` sección 2) — la API
+// devuelve `tenants: null` para ese rol.
+  PerfilTenantDto? get tenants =>
+      throw _privateConstructorUsedError; // `null` hasta que el usuario sube su primera foto
+// (`CONTEXTO-FOTO-PERFIL-MOVIL.md`). Trae `?t=<timestamp>` al final
+// para cache-busting — no se debe cachear este valor más allá de la
+// sesión, siempre usar el de la última respuesta.
+  @JsonKey(name: 'foto_url')
+  String? get fotoUrl => throw _privateConstructorUsedError;
 
   /// Serializes this PerfilDto to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -49,10 +58,11 @@ abstract class $PerfilDtoCopyWith<$Res> {
       bool estado,
       @JsonKey(name: 'fecha_creacion') String fechaCreacion,
       PerfilRolDto roles,
-      PerfilTenantDto tenants});
+      PerfilTenantDto? tenants,
+      @JsonKey(name: 'foto_url') String? fotoUrl});
 
   $PerfilRolDtoCopyWith<$Res> get roles;
-  $PerfilTenantDtoCopyWith<$Res> get tenants;
+  $PerfilTenantDtoCopyWith<$Res>? get tenants;
 }
 
 /// @nodoc
@@ -75,7 +85,8 @@ class _$PerfilDtoCopyWithImpl<$Res, $Val extends PerfilDto>
     Object? estado = null,
     Object? fechaCreacion = null,
     Object? roles = null,
-    Object? tenants = null,
+    Object? tenants = freezed,
+    Object? fotoUrl = freezed,
   }) {
     return _then(_value.copyWith(
       id: null == id
@@ -98,10 +109,14 @@ class _$PerfilDtoCopyWithImpl<$Res, $Val extends PerfilDto>
           ? _value.roles
           : roles // ignore: cast_nullable_to_non_nullable
               as PerfilRolDto,
-      tenants: null == tenants
+      tenants: freezed == tenants
           ? _value.tenants
           : tenants // ignore: cast_nullable_to_non_nullable
-              as PerfilTenantDto,
+              as PerfilTenantDto?,
+      fotoUrl: freezed == fotoUrl
+          ? _value.fotoUrl
+          : fotoUrl // ignore: cast_nullable_to_non_nullable
+              as String?,
     ) as $Val);
   }
 
@@ -119,8 +134,12 @@ class _$PerfilDtoCopyWithImpl<$Res, $Val extends PerfilDto>
   /// with the given fields replaced by the non-null parameter values.
   @override
   @pragma('vm:prefer-inline')
-  $PerfilTenantDtoCopyWith<$Res> get tenants {
-    return $PerfilTenantDtoCopyWith<$Res>(_value.tenants, (value) {
+  $PerfilTenantDtoCopyWith<$Res>? get tenants {
+    if (_value.tenants == null) {
+      return null;
+    }
+
+    return $PerfilTenantDtoCopyWith<$Res>(_value.tenants!, (value) {
       return _then(_value.copyWith(tenants: value) as $Val);
     });
   }
@@ -140,12 +159,13 @@ abstract class _$$PerfilDtoImplCopyWith<$Res>
       bool estado,
       @JsonKey(name: 'fecha_creacion') String fechaCreacion,
       PerfilRolDto roles,
-      PerfilTenantDto tenants});
+      PerfilTenantDto? tenants,
+      @JsonKey(name: 'foto_url') String? fotoUrl});
 
   @override
   $PerfilRolDtoCopyWith<$Res> get roles;
   @override
-  $PerfilTenantDtoCopyWith<$Res> get tenants;
+  $PerfilTenantDtoCopyWith<$Res>? get tenants;
 }
 
 /// @nodoc
@@ -166,7 +186,8 @@ class __$$PerfilDtoImplCopyWithImpl<$Res>
     Object? estado = null,
     Object? fechaCreacion = null,
     Object? roles = null,
-    Object? tenants = null,
+    Object? tenants = freezed,
+    Object? fotoUrl = freezed,
   }) {
     return _then(_$PerfilDtoImpl(
       id: null == id
@@ -189,10 +210,14 @@ class __$$PerfilDtoImplCopyWithImpl<$Res>
           ? _value.roles
           : roles // ignore: cast_nullable_to_non_nullable
               as PerfilRolDto,
-      tenants: null == tenants
+      tenants: freezed == tenants
           ? _value.tenants
           : tenants // ignore: cast_nullable_to_non_nullable
-              as PerfilTenantDto,
+              as PerfilTenantDto?,
+      fotoUrl: freezed == fotoUrl
+          ? _value.fotoUrl
+          : fotoUrl // ignore: cast_nullable_to_non_nullable
+              as String?,
     ));
   }
 }
@@ -206,7 +231,8 @@ class _$PerfilDtoImpl extends _PerfilDto {
       required this.estado,
       @JsonKey(name: 'fecha_creacion') required this.fechaCreacion,
       required this.roles,
-      required this.tenants})
+      this.tenants,
+      @JsonKey(name: 'foto_url') this.fotoUrl})
       : super._();
 
   factory _$PerfilDtoImpl.fromJson(Map<String, dynamic> json) =>
@@ -223,12 +249,22 @@ class _$PerfilDtoImpl extends _PerfilDto {
   final String fechaCreacion;
   @override
   final PerfilRolDto roles;
+// `super_admin` no pertenece a ninguna bodega (`tenant_id` nulo en la
+// base de datos, `CONTEXTO-PLATAFORMA-WEB.md` sección 2) — la API
+// devuelve `tenants: null` para ese rol.
   @override
-  final PerfilTenantDto tenants;
+  final PerfilTenantDto? tenants;
+// `null` hasta que el usuario sube su primera foto
+// (`CONTEXTO-FOTO-PERFIL-MOVIL.md`). Trae `?t=<timestamp>` al final
+// para cache-busting — no se debe cachear este valor más allá de la
+// sesión, siempre usar el de la última respuesta.
+  @override
+  @JsonKey(name: 'foto_url')
+  final String? fotoUrl;
 
   @override
   String toString() {
-    return 'PerfilDto(id: $id, nombre: $nombre, estado: $estado, fechaCreacion: $fechaCreacion, roles: $roles, tenants: $tenants)';
+    return 'PerfilDto(id: $id, nombre: $nombre, estado: $estado, fechaCreacion: $fechaCreacion, roles: $roles, tenants: $tenants, fotoUrl: $fotoUrl)';
   }
 
   @override
@@ -242,13 +278,14 @@ class _$PerfilDtoImpl extends _PerfilDto {
             (identical(other.fechaCreacion, fechaCreacion) ||
                 other.fechaCreacion == fechaCreacion) &&
             (identical(other.roles, roles) || other.roles == roles) &&
-            (identical(other.tenants, tenants) || other.tenants == tenants));
+            (identical(other.tenants, tenants) || other.tenants == tenants) &&
+            (identical(other.fotoUrl, fotoUrl) || other.fotoUrl == fotoUrl));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hash(
-      runtimeType, id, nombre, estado, fechaCreacion, roles, tenants);
+      runtimeType, id, nombre, estado, fechaCreacion, roles, tenants, fotoUrl);
 
   /// Create a copy of PerfilDto
   /// with the given fields replaced by the non-null parameter values.
@@ -273,7 +310,8 @@ abstract class _PerfilDto extends PerfilDto {
       required final bool estado,
       @JsonKey(name: 'fecha_creacion') required final String fechaCreacion,
       required final PerfilRolDto roles,
-      required final PerfilTenantDto tenants}) = _$PerfilDtoImpl;
+      final PerfilTenantDto? tenants,
+      @JsonKey(name: 'foto_url') final String? fotoUrl}) = _$PerfilDtoImpl;
   const _PerfilDto._() : super._();
 
   factory _PerfilDto.fromJson(Map<String, dynamic> json) =
@@ -289,9 +327,19 @@ abstract class _PerfilDto extends PerfilDto {
   @JsonKey(name: 'fecha_creacion')
   String get fechaCreacion;
   @override
-  PerfilRolDto get roles;
+  PerfilRolDto
+      get roles; // `super_admin` no pertenece a ninguna bodega (`tenant_id` nulo en la
+// base de datos, `CONTEXTO-PLATAFORMA-WEB.md` sección 2) — la API
+// devuelve `tenants: null` para ese rol.
   @override
-  PerfilTenantDto get tenants;
+  PerfilTenantDto?
+      get tenants; // `null` hasta que el usuario sube su primera foto
+// (`CONTEXTO-FOTO-PERFIL-MOVIL.md`). Trae `?t=<timestamp>` al final
+// para cache-busting — no se debe cachear este valor más allá de la
+// sesión, siempre usar el de la última respuesta.
+  @override
+  @JsonKey(name: 'foto_url')
+  String? get fotoUrl;
 
   /// Create a copy of PerfilDto
   /// with the given fields replaced by the non-null parameter values.

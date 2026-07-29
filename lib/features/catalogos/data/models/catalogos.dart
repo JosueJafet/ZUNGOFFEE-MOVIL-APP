@@ -4,6 +4,7 @@ import 'cliente_tipo.dart';
 import 'estado_cafe_catalogo.dart';
 import 'metodo_pago.dart';
 import 'nivel_altura.dart';
+import 'unidad_medida.dart';
 import 'variedad_cafe.dart';
 
 part 'catalogos.freezed.dart';
@@ -18,5 +19,6 @@ class Catalogos with _$Catalogos {
     required List<NivelAltura> nivelesAltura,
     required List<EstadoCafeCatalogo> estadosCafe,
     required List<ClienteTipo> clientesTipo,
+    required List<UnidadMedida> unidadesMedida,
   }) = _Catalogos;
 }

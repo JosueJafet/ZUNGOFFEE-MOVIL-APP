@@ -4,7 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_role.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../shared/extensions/error_message_extension.dart';
+import '../../../../shared/widgets/buttons/soft_destructive_button.dart';
 import '../../../../shared/widgets/empty_states/error_retry_view.dart';
+import '../../../../shared/widgets/navigation/app_drawer.dart';
 import '../../../auth/presentation/providers/perfil_providers.dart';
 import '../../data/models/procesamiento.dart';
 import '../providers/procesamiento_anular_controller.dart';
@@ -79,7 +81,19 @@ class ProcesamientoHistorialScreen extends ConsumerWidget {
         .isLoading;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Historial de procesamiento')),
+      endDrawer: const AppDrawer(),
+      appBar: AppBar(
+        title: const Text('Historial de procesamiento'),
+        actions: [
+          Builder(
+            builder: (context) => IconButton(
+              icon: const Icon(Icons.menu),
+              tooltip: 'Menú',
+              onPressed: () => Scaffold.of(context).openEndDrawer(),
+            ),
+          ),
+        ],
+      ),
       body: procesamientosAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stackTrace) => ErrorRetryView(
@@ -107,15 +121,19 @@ class ProcesamientoHistorialScreen extends ConsumerWidget {
             itemBuilder: (context, index) {
               final procesamiento = procesamientos[index];
               return ListTile(
-                title: Text('Procesamiento #${procesamiento.id}'),
+                title: Text(
+                  'Procesamiento #${procesamiento.id}',
+                  style: Theme.of(context).textTheme.labelLarge,
+                ),
                 subtitle: Text(
                   'Lote ${procesamiento.loteOrigenId} → '
                   '${procesamiento.loteDestinoId} · '
                   '${procesamiento.cantidadEntrada.toStringAsFixed(2)} → '
                   '${procesamiento.cantidadSalida.toStringAsFixed(2)}',
+                  style: Theme.of(context).textTheme.labelLarge,
                 ),
                 trailing: puedeAnular
-                    ? TextButton(
+                    ? SoftDestructiveButton(
                         onPressed: anularEnCurso
                             ? null
                             : () =>

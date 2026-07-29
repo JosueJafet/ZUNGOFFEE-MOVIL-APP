@@ -5,7 +5,11 @@ import '../../../../core/constants/estado_cafe.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../shared/extensions/async_value_view_extension.dart';
 import '../../../../shared/extensions/error_message_extension.dart';
+import '../../../../shared/widgets/chips/estado_cafe_chip.dart';
+import '../../../../shared/widgets/navigation/app_drawer.dart';
+import '../../../../shared/widgets/snackbars/success_snackbar.dart';
 import '../../../catalogos/data/models/estado_cafe_catalogo.dart';
+import '../../../catalogos/data/models/unidad_medida.dart';
 import '../../../catalogos/presentation/providers/catalogos_providers.dart';
 import '../../../inventario/data/models/lote.dart';
 import '../../../inventario/presentation/providers/lotes_providers.dart';
@@ -16,7 +20,10 @@ import '../providers/procesamiento_form_controller.dart';
 /// solo para calcular, por cada estado de origen, cuáles de estos son
 /// destinos válidos vía `EstadoCafeTransiciones.esValida` — sin tocar
 /// `core/constants/estado_cafe.dart` (Sprint 2, ya cerrado).
-const _todosLosDestinosPosibles = [...EstadoCafeId.tostado, EstadoCafeId.molido];
+const _todosLosDestinosPosibles = [
+  ...EstadoCafeId.tostado,
+  EstadoCafeId.molido
+];
 
 /// Formulario para registrar un procesamiento (tostar/moler) — una
 /// transformación de **un lote origen a un lote destino**, sin líneas
@@ -84,11 +91,10 @@ class _ProcesamientoFormScreenState
   List<int> _destinosValidosPara(int origenId) {
     return _todosLosDestinosPosibles
         .where(
-          (destinoId) =>
-              EstadoCafeTransiciones.esValida(
-                origenId: origenId,
-                destinoId: destinoId,
-              ),
+          (destinoId) => EstadoCafeTransiciones.esValida(
+            origenId: origenId,
+            destinoId: destinoId,
+          ),
         )
         .toList();
   }
@@ -108,9 +114,7 @@ class _ProcesamientoFormScreenState
   Future<void> _submit() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
-    await ref
-        .read(procesamientoFormControllerProvider.notifier)
-        .crear(
+    await ref.read(procesamientoFormControllerProvider.notifier).crear(
           loteOrigenId: _loteOrigenId!,
           estadoDestinoId: _estadoDestinoId!,
           cantidadEntrada: double.parse(_cantidadEntradaController.text),
@@ -121,9 +125,12 @@ class _ProcesamientoFormScreenState
   static const _errorFallback =
       'No se pudo registrar el procesamiento. Intenta de nuevo.';
 
-  String _loteLabel(Lote lote) {
-    return '${lote.estadoCafeNombre} · ${lote.variedadNombre} · '
-        '${lote.nivelAlturaNombre} (saldo: ${lote.saldo.toStringAsFixed(2)})';
+  /// Detalle de [lote] sin el estado del café — el estado se muestra
+  /// aparte con [EstadoCafeChip], no como texto plano.
+  String _loteDetalle(Lote lote) {
+    return '${lote.variedadNombre ?? "Sin variedad"} · '
+        '${lote.nivelAlturaNombre ?? "Sin nivel"} '
+        '(saldo: ${lote.saldo.toStringAsFixed(2)})';
   }
 
   /// `null` si no hay suficiente información para calcular un porcentaje
@@ -139,6 +146,7 @@ class _ProcesamientoFormScreenState
   Widget _buildForm(
     List<Lote> existencias,
     List<EstadoCafeCatalogo> estadosCafe,
+    List<UnidadMedida> unidadesMedida,
     bool isLoading,
     AsyncValue<void> formState,
   ) {
@@ -149,9 +157,9 @@ class _ProcesamientoFormScreenState
 
     final origenSeleccionado = _loteOrigenId == null
         ? null
-        : lotesOrigenValidos
-              .cast<Lote?>()
-              .firstWhere((lote) => lote?.id == _loteOrigenId, orElse: () => null);
+        : lotesOrigenValidos.cast<Lote?>().firstWhere(
+            (lote) => lote?.id == _loteOrigenId,
+            orElse: () => null);
     final origenEstadoId = origenSeleccionado == null
         ? null
         : _estadoIdDeLote(origenSeleccionado, estadosCafe);
@@ -160,6 +168,20 @@ class _ProcesamientoFormScreenState
         : _destinosValidosPara(origenEstadoId);
 
     final rendimiento = _rendimientoPorcentaje;
+    // La unidad de "entrada" es la del lote origen; la de "salida" es la
+    // del estado destino elegido — pueden diferir de verdad (ej. tueste:
+    // pergamino seco en quintales entra, tostado en libras sale), no es
+    // solo la misma unidad repetida dos veces.
+    final unidadEntradaNombre = origenSeleccionado == null
+        ? null
+        : unidadesMedida.nombreDe(origenSeleccionado.unidadMedidaId);
+    final unidadSalidaNombre = _estadoDestinoId == null
+        ? null
+        : unidadesMedida.nombreDe(
+            estadosCafe
+                .firstWhere((estado) => estado.id == _estadoDestinoId)
+                .unidadMedidaId,
+          );
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(AppSpacing.space6),
@@ -177,9 +199,19 @@ class _ProcesamientoFormScreenState
                   .map(
                     (lote) => DropdownMenuItem(
                       value: lote.id,
-                      child: Text(
-                        _loteLabel(lote),
-                        overflow: TextOverflow.ellipsis,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          EstadoCafeChip(slug: lote.estadoCafeNombre),
+                          const SizedBox(width: AppSpacing.space2),
+                          Flexible(
+                            child: Text(
+                              _loteDetalle(lote),
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(context).textTheme.labelLarge,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   )
@@ -188,11 +220,11 @@ class _ProcesamientoFormScreenState
               onChanged: isLoading
                   ? null
                   : (value) => setState(() {
-                      _loteOrigenId = value;
-                      // Los destinos válidos dependen del origen — un
-                      // destino ya elegido puede dejar de ser válido.
-                      _estadoDestinoId = null;
-                    }),
+                        _loteOrigenId = value;
+                        // Los destinos válidos dependen del origen — un
+                        // destino ya elegido puede dejar de ser válido.
+                        _estadoDestinoId = null;
+                      }),
             ),
             const SizedBox(height: AppSpacing.space4),
             DropdownButtonFormField<int>(
@@ -204,9 +236,11 @@ class _ProcesamientoFormScreenState
                     (id) => DropdownMenuItem(
                       value: id,
                       child: Text(
-                        estadosCafe
-                            .firstWhere((estado) => estado.id == id)
-                            .nombre,
+                        EstadoCafeChip.etiquetaDe(
+                          estadosCafe
+                              .firstWhere((estado) => estado.id == id)
+                              .nombre,
+                        ),
                       ),
                     ),
                   )
@@ -220,10 +254,22 @@ class _ProcesamientoFormScreenState
             TextFormField(
               key: const Key('cantidad_entrada'),
               controller: _cantidadEntradaController,
-              decoration: const InputDecoration(
-                labelText: 'Cantidad que entra (lote origen)',
+              decoration: InputDecoration(
+                // Apenas se elige el lote origen, la etiqueta y el texto
+                // de ayuda pasan a mostrar la unidad real (resuelta
+                // contra `catalogos.unidadesMedida`) y el saldo
+                // disponible, igual que la plataforma web.
+                labelText: unidadEntradaNombre == null
+                    ? 'Cantidad que entra (lote origen)'
+                    : 'Cantidad de entrada ($unidadEntradaNombre)',
+                helperText: origenSeleccionado == null
+                    ? null
+                    : 'Saldo disponible: '
+                        '${origenSeleccionado.saldo.toStringAsFixed(2)} '
+                        '$unidadEntradaNombre',
               ),
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
               validator: _validarNumeroPositivo,
               enabled: !isLoading,
             ),
@@ -231,10 +277,13 @@ class _ProcesamientoFormScreenState
             TextFormField(
               key: const Key('cantidad_salida'),
               controller: _cantidadSalidaController,
-              decoration: const InputDecoration(
-                labelText: 'Cantidad que sale (lote nuevo)',
+              decoration: InputDecoration(
+                labelText: unidadSalidaNombre == null
+                    ? 'Cantidad que sale (lote nuevo)'
+                    : 'Cantidad de salida ($unidadSalidaNombre)',
               ),
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
               validator: _validarNumeroPositivo,
               enabled: !isLoading,
             ),
@@ -276,6 +325,7 @@ class _ProcesamientoFormScreenState
       next,
     ) {
       if ((previous?.isLoading ?? false) && !next.hasError) {
+        context.showSuccessSnackBar('Procesamiento registrado con éxito.');
         widget.onGuardado();
       }
     });
@@ -286,7 +336,19 @@ class _ProcesamientoFormScreenState
     final isLoading = formState.isLoading;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Procesar café')),
+      endDrawer: const AppDrawer(),
+      appBar: AppBar(
+        title: const Text('Procesar café'),
+        actions: [
+          Builder(
+            builder: (context) => IconButton(
+              icon: const Icon(Icons.menu),
+              tooltip: 'Menú',
+              onPressed: () => Scaffold.of(context).openEndDrawer(),
+            ),
+          ),
+        ],
+      ),
       body: SafeArea(
         child: existenciasAsync.buildOrRetry(
           errorFallback: _errorFallback,
@@ -297,6 +359,7 @@ class _ProcesamientoFormScreenState
             data: (catalogos) => _buildForm(
               existencias,
               catalogos.estadosCafe,
+              catalogos.unidadesMedida,
               isLoading,
               formState,
             ),

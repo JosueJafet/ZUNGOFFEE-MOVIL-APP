@@ -15,4 +15,15 @@ class NotificacionesRepository {
   }
 
   Future<void> marcarLeida(String id) => _remoteDataSource.marcarLeida(id);
+
+  Future<void> registrarDispositivo({
+    required String token,
+    required int plataformaId,
+  }) => _remoteDataSource.registrarDispositivo(
+    token: token,
+    plataformaId: plataformaId,
+  );
+
+  Future<void> desregistrarDispositivo(String token) =>
+      _remoteDataSource.desregistrarDispositivo(token);
 }

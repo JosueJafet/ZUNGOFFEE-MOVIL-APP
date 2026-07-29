@@ -1,6 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Notificaciones push (FCM) — requerido en Android 13+ para poder
+         pedir el permiso en tiempo de ejecución. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <application
-        android:label="zungofee_mobile"
+        android:label="Zungoffee"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
@@ -30,6 +33,12 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+        <!-- Requerida por `image_cropper` para el recorte de la foto de
+             perfil (Sprint 15). -->
+        <activity
+            android:name="com.yalantis.ucrop.UCropActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar"/>
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and

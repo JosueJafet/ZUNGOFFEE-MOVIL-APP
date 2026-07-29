@@ -34,4 +34,26 @@ class NotificacionesRemoteDataSource {
   Future<void> marcarLeida(String id) async {
     await _apiClient.patch('/notificaciones/$id/leida');
   }
+
+  /// `POST /notificaciones/dispositivos` (`CONTEXTO-PUSH-FCM-MOVIL.md`,
+  /// sección 6) — registra/actualiza el token FCM del dispositivo.
+  /// Upsert por `token` (no por usuario): reintentarlo no genera
+  /// duplicados. No se parsea el cuerpo de la respuesta — la doc no da
+  /// ejemplo de JSON de respuesta, mismo criterio que `marcarLeida`.
+  Future<void> registrarDispositivo({
+    required String token,
+    required int plataformaId,
+  }) async {
+    await _apiClient.post(
+      '/notificaciones/dispositivos',
+      data: {'token': token, 'plataformaId': plataformaId},
+    );
+  }
+
+  /// `DELETE /notificaciones/dispositivos` — marca el token como
+  /// `activo: false` (no borra la fila). Idempotente y con scope al
+  /// propio usuario.
+  Future<void> desregistrarDispositivo(String token) async {
+    await _apiClient.delete('/notificaciones/dispositivos', data: {'token': token});
+  }
 }

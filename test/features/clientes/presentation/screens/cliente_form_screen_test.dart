@@ -24,7 +24,8 @@ class _FakeSessionTokenProvider implements SessionTokenProvider {
 
 class _FakeCatalogosRepository extends CatalogosRepository {
   _FakeCatalogosRepository(this._catalogos)
-    : super(CatalogosRemoteDataSource(ApiClient(_FakeSessionTokenProvider())));
+      : super(
+            CatalogosRemoteDataSource(ApiClient(_FakeSessionTokenProvider())));
 
   final Catalogos _catalogos;
 
@@ -41,11 +42,12 @@ const _catalogosDeEjemplo = Catalogos(
     ClienteTipo(id: 1, nombre: 'persona_natural'),
     ClienteTipo(id: 2, nombre: 'cafeteria_pequena'),
   ],
+  unidadesMedida: [],
 );
 
 class _FakeClienteRepository extends ClienteRepository {
   _FakeClienteRepository({this.crearError, this.actualizarError})
-    : super(ClienteRemoteDataSource(ApiClient(_FakeSessionTokenProvider())));
+      : super(ClienteRemoteDataSource(ApiClient(_FakeSessionTokenProvider())));
 
   final Object? crearError;
   final Object? actualizarError;
@@ -182,6 +184,7 @@ void main() {
         expect(repository.ultimoCrear?['lugar'], 'Tegucigalpa');
         expect(repository.ultimoCrear?['tipoId'], isNull);
         expect(guardadoCallCount, 1);
+        expect(find.text('Cliente registrado con éxito.'), findsOneWidget);
       },
     );
 
@@ -197,7 +200,8 @@ void main() {
         find.widgetWithText(TextFormField, 'Nombre'),
         'Cafeteria El Buen Cafe',
       );
-      await tester.tap(find.widgetWithText(DropdownButtonFormField<int?>, 'Sin especificar'));
+      await tester.tap(find.widgetWithText(
+          DropdownButtonFormField<int?>, 'Sin especificar'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('cafeteria_pequena').last);
       await tester.pumpAndSettle();
@@ -249,6 +253,7 @@ void main() {
         expect(repository.ultimoActualizar?['id'], 1);
         expect(repository.ultimoActualizar?['nombre'], 'Nombre Editado');
         expect(guardadoCallCount, 1);
+        expect(find.text('Cliente actualizado con éxito.'), findsOneWidget);
       },
     );
 

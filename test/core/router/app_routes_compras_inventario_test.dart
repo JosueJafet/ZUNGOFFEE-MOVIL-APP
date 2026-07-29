@@ -14,6 +14,7 @@ import 'package:zungofee_mobile/features/catalogos/data/models/catalogos.dart';
 import 'package:zungofee_mobile/features/catalogos/data/models/estado_cafe_catalogo.dart';
 import 'package:zungofee_mobile/features/catalogos/data/models/metodo_pago.dart';
 import 'package:zungofee_mobile/features/catalogos/data/models/nivel_altura.dart';
+import 'package:zungofee_mobile/features/catalogos/data/models/unidad_medida.dart';
 import 'package:zungofee_mobile/features/catalogos/data/models/variedad_cafe.dart';
 import 'package:zungofee_mobile/features/catalogos/data/repositories/catalogos_repository.dart';
 import 'package:zungofee_mobile/features/catalogos/presentation/providers/catalogos_providers.dart';
@@ -40,7 +41,7 @@ import 'package:zungofee_mobile/features/proveedores/presentation/providers/prov
 /// por `auth_redirect_test.dart`.
 class _FakeProveedorRepository extends ProveedorRepository {
   _FakeProveedorRepository(this._proveedores)
-    : super(ProveedorRemoteDataSource(ApiClient(FakeSessionTokenProvider())));
+      : super(ProveedorRemoteDataSource(ApiClient(FakeSessionTokenProvider())));
 
   final List<Proveedor> _proveedores;
 
@@ -50,7 +51,7 @@ class _FakeProveedorRepository extends ProveedorRepository {
 
 class _FakeCatalogosRepository extends CatalogosRepository {
   _FakeCatalogosRepository(this._catalogos)
-    : super(CatalogosRemoteDataSource(ApiClient(FakeSessionTokenProvider())));
+      : super(CatalogosRemoteDataSource(ApiClient(FakeSessionTokenProvider())));
 
   final Catalogos _catalogos;
 
@@ -60,7 +61,7 @@ class _FakeCatalogosRepository extends CatalogosRepository {
 
 class _FakeComprasRepository extends ComprasRepository {
   _FakeComprasRepository({this.crearError})
-    : super(ComprasRemoteDataSource(ApiClient(FakeSessionTokenProvider())));
+      : super(ComprasRemoteDataSource(ApiClient(FakeSessionTokenProvider())));
 
   final Object? crearError;
 
@@ -85,7 +86,7 @@ class _FakeComprasRepository extends ComprasRepository {
 
 class _FakeLotesRepository extends LotesRepository {
   _FakeLotesRepository(this._lotes)
-    : super(LotesRemoteDataSource(ApiClient(FakeSessionTokenProvider())));
+      : super(LotesRemoteDataSource(ApiClient(FakeSessionTokenProvider())));
 
   final List<Lote> _lotes;
 
@@ -107,6 +108,7 @@ const _catalogosDeEjemplo = Catalogos(
   nivelesAltura: [NivelAltura(id: 1, nombre: 'Estandar')],
   estadosCafe: [EstadoCafeCatalogo(id: 1, nombre: 'uva', unidadMedidaId: 1)],
   clientesTipo: [],
+  unidadesMedida: [UnidadMedida(id: 1, nombre: 'Galones')],
 );
 
 const _loteDeEjemplo = Lote(
@@ -131,7 +133,7 @@ Future<void> _llenarFormularioCompra(WidgetTester tester) async {
   await _tapVisible(tester, find.text('Don Chepe Martinez').last);
 
   await _tapVisible(tester, find.byKey(const Key('linea_0_estado')));
-  await _tapVisible(tester, find.text('uva').last);
+  await _tapVisible(tester, find.text('Uva').last);
   await _tapVisible(tester, find.byKey(const Key('linea_0_variedad')));
   await _tapVisible(tester, find.text('Catuai').last);
   await _tapVisible(tester, find.byKey(const Key('linea_0_altura')));
@@ -171,7 +173,8 @@ void main() {
             comprasRepositoryProvider.overrideWithValue(comprasRepository),
             lotesRepositoryProvider.overrideWithValue(lotesRepository),
           ],
-          child: MaterialApp.router(theme: AppTheme.light, routerConfig: router),
+          child:
+              MaterialApp.router(theme: AppTheme.light, routerConfig: router),
         ),
       );
       await tester.pumpAndSettle();
@@ -189,7 +192,8 @@ void main() {
       expect(find.byType(CompraFormScreen), findsOneWidget);
     });
 
-    testWidgets('/inventario/existencias muestra ExistenciasListScreen con datos', (
+    testWidgets(
+        '/inventario/existencias muestra ExistenciasListScreen con datos', (
       tester,
     ) async {
       await pumpRouter(

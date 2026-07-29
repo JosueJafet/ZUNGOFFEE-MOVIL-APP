@@ -20,9 +20,11 @@ mixin _$Lote {
   double get saldo => throw _privateConstructorUsedError;
   double get cantidadInicial => throw _privateConstructorUsedError;
   String get estadoCafeNombre => throw _privateConstructorUsedError;
-  int get unidadMedidaId => throw _privateConstructorUsedError;
-  String get variedadNombre => throw _privateConstructorUsedError;
-  String get nivelAlturaNombre => throw _privateConstructorUsedError;
+  int get unidadMedidaId =>
+      throw _privateConstructorUsedError; // `null` cuando el lote no tiene variedad/altura registrada (ambos
+// campos son opcionales al comprar) — ver `LoteDto.toDomain`.
+  String? get variedadNombre => throw _privateConstructorUsedError;
+  String? get nivelAlturaNombre => throw _privateConstructorUsedError;
 
   /// Create a copy of Lote
   /// with the given fields replaced by the non-null parameter values.
@@ -41,8 +43,8 @@ abstract class $LoteCopyWith<$Res> {
       double cantidadInicial,
       String estadoCafeNombre,
       int unidadMedidaId,
-      String variedadNombre,
-      String nivelAlturaNombre});
+      String? variedadNombre,
+      String? nivelAlturaNombre});
 }
 
 /// @nodoc
@@ -65,8 +67,8 @@ class _$LoteCopyWithImpl<$Res, $Val extends Lote>
     Object? cantidadInicial = null,
     Object? estadoCafeNombre = null,
     Object? unidadMedidaId = null,
-    Object? variedadNombre = null,
-    Object? nivelAlturaNombre = null,
+    Object? variedadNombre = freezed,
+    Object? nivelAlturaNombre = freezed,
   }) {
     return _then(_value.copyWith(
       id: null == id
@@ -89,14 +91,14 @@ class _$LoteCopyWithImpl<$Res, $Val extends Lote>
           ? _value.unidadMedidaId
           : unidadMedidaId // ignore: cast_nullable_to_non_nullable
               as int,
-      variedadNombre: null == variedadNombre
+      variedadNombre: freezed == variedadNombre
           ? _value.variedadNombre
           : variedadNombre // ignore: cast_nullable_to_non_nullable
-              as String,
-      nivelAlturaNombre: null == nivelAlturaNombre
+              as String?,
+      nivelAlturaNombre: freezed == nivelAlturaNombre
           ? _value.nivelAlturaNombre
           : nivelAlturaNombre // ignore: cast_nullable_to_non_nullable
-              as String,
+              as String?,
     ) as $Val);
   }
 }
@@ -114,8 +116,8 @@ abstract class _$$LoteImplCopyWith<$Res> implements $LoteCopyWith<$Res> {
       double cantidadInicial,
       String estadoCafeNombre,
       int unidadMedidaId,
-      String variedadNombre,
-      String nivelAlturaNombre});
+      String? variedadNombre,
+      String? nivelAlturaNombre});
 }
 
 /// @nodoc
@@ -135,8 +137,8 @@ class __$$LoteImplCopyWithImpl<$Res>
     Object? cantidadInicial = null,
     Object? estadoCafeNombre = null,
     Object? unidadMedidaId = null,
-    Object? variedadNombre = null,
-    Object? nivelAlturaNombre = null,
+    Object? variedadNombre = freezed,
+    Object? nivelAlturaNombre = freezed,
   }) {
     return _then(_$LoteImpl(
       id: null == id
@@ -159,14 +161,14 @@ class __$$LoteImplCopyWithImpl<$Res>
           ? _value.unidadMedidaId
           : unidadMedidaId // ignore: cast_nullable_to_non_nullable
               as int,
-      variedadNombre: null == variedadNombre
+      variedadNombre: freezed == variedadNombre
           ? _value.variedadNombre
           : variedadNombre // ignore: cast_nullable_to_non_nullable
-              as String,
-      nivelAlturaNombre: null == nivelAlturaNombre
+              as String?,
+      nivelAlturaNombre: freezed == nivelAlturaNombre
           ? _value.nivelAlturaNombre
           : nivelAlturaNombre // ignore: cast_nullable_to_non_nullable
-              as String,
+              as String?,
     ));
   }
 }
@@ -180,8 +182,8 @@ class _$LoteImpl implements _Lote {
       required this.cantidadInicial,
       required this.estadoCafeNombre,
       required this.unidadMedidaId,
-      required this.variedadNombre,
-      required this.nivelAlturaNombre});
+      this.variedadNombre,
+      this.nivelAlturaNombre});
 
   @override
   final String id;
@@ -193,10 +195,12 @@ class _$LoteImpl implements _Lote {
   final String estadoCafeNombre;
   @override
   final int unidadMedidaId;
+// `null` cuando el lote no tiene variedad/altura registrada (ambos
+// campos son opcionales al comprar) — ver `LoteDto.toDomain`.
   @override
-  final String variedadNombre;
+  final String? variedadNombre;
   @override
-  final String nivelAlturaNombre;
+  final String? nivelAlturaNombre;
 
   @override
   String toString() {
@@ -242,8 +246,8 @@ abstract class _Lote implements Lote {
       required final double cantidadInicial,
       required final String estadoCafeNombre,
       required final int unidadMedidaId,
-      required final String variedadNombre,
-      required final String nivelAlturaNombre}) = _$LoteImpl;
+      final String? variedadNombre,
+      final String? nivelAlturaNombre}) = _$LoteImpl;
 
   @override
   String get id;
@@ -254,11 +258,12 @@ abstract class _Lote implements Lote {
   @override
   String get estadoCafeNombre;
   @override
-  int get unidadMedidaId;
+  int get unidadMedidaId; // `null` cuando el lote no tiene variedad/altura registrada (ambos
+// campos son opcionales al comprar) — ver `LoteDto.toDomain`.
   @override
-  String get variedadNombre;
+  String? get variedadNombre;
   @override
-  String get nivelAlturaNombre;
+  String? get nivelAlturaNombre;
 
   /// Create a copy of Lote
   /// with the given fields replaced by the non-null parameter values.

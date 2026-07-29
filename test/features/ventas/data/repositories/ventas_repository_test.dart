@@ -62,6 +62,15 @@ Map<String, dynamic> _ventaJson() {
   };
 }
 
+Map<String, dynamic> _ventaHistorialJson() {
+  return {
+    'id': 30,
+    'fecha': '2026-08-01T00:00:00.000Z',
+    'total': '750.00',
+    'clientes': {'id': 7, 'nombre': 'Cafeteria El Buen Cafe'},
+  };
+}
+
 const _lineaDeEjemplo = LineaVentaInput(
   loteId: '78',
   cantidad: 5,
@@ -125,16 +134,18 @@ void main() {
       },
     );
 
-    test('listar mapea el array de la API a List<Venta>', () async {
+    test('listar mapea el array de la API a List<VentaHistorial>', () async {
       final repository = _repositoryWithAdapter(
-        _FakeHttpClientAdapter((options) => _jsonResponse([_ventaJson()], 200)),
+        _FakeHttpClientAdapter(
+          (options) => _jsonResponse([_ventaHistorialJson()], 200),
+        ),
       );
 
       final ventas = await repository.listar();
 
       expect(ventas, hasLength(1));
       expect(ventas.single.id, 30);
-      expect(ventas.single.anulada, isFalse);
+      expect(ventas.single.clienteNombre, 'Cafeteria El Buen Cafe');
     });
 
     test('anular propaga un ApiException tal cual', () async {
@@ -158,6 +169,24 @@ void main() {
           ),
         ),
       );
+    });
+
+    test('getResumen mapea el groupBy de la API a List<ResumenDiario>', () async {
+      final repository = _repositoryWithAdapter(
+        _FakeHttpClientAdapter(
+          (options) => _jsonResponse([
+            {
+              '_sum': {'total': '5000.00'},
+              'fecha': '2026-07-21T00:00:00.000Z',
+            },
+          ], 200),
+        ),
+      );
+
+      final resumen = await repository.getResumen();
+
+      expect(resumen, hasLength(1));
+      expect(resumen.single.total, 5000.00);
     });
   });
 }

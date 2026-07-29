@@ -54,7 +54,7 @@ void main() {
         'user@zungocoffee.com',
       );
       await tester.enterText(find.byType(TextFormField).last, 'secret123');
-      await tester.tap(find.widgetWithText(FilledButton, 'Entrar'));
+      await tester.tap(find.widgetWithText(FilledButton, 'Iniciar sesión'));
       await tester.pumpAndSettle();
 
       expect(authRepository.signInCallCount, 1);
@@ -80,7 +80,7 @@ void main() {
           'user@zungocoffee.com',
         );
         await tester.enterText(find.byType(TextFormField).last, 'wrong');
-        await tester.tap(find.widgetWithText(FilledButton, 'Entrar'));
+        await tester.tap(find.widgetWithText(FilledButton, 'Iniciar sesión'));
         await tester.pumpAndSettle();
 
         expect(find.text('Credenciales inválidas'), findsOneWidget);
@@ -96,7 +96,7 @@ void main() {
 
       await tester.pumpWidget(_wrap(authRepository));
 
-      await tester.tap(find.widgetWithText(FilledButton, 'Entrar'));
+      await tester.tap(find.widgetWithText(FilledButton, 'Iniciar sesión'));
       await tester.pumpAndSettle();
 
       expect(authRepository.signInCallCount, 0);

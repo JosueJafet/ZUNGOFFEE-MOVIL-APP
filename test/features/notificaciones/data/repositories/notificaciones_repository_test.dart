@@ -102,5 +102,33 @@ void main() {
         ),
       );
     });
+
+    test('registrarDispositivo llama al datasource sin lanzar', () async {
+      final repository = _repositoryWithAdapter(
+        _FakeHttpClientAdapter((options) => _jsonResponse({}, 201)),
+      );
+
+      await repository.registrarDispositivo(
+        token: 'fcm-token-abc',
+        plataformaId: 2,
+      );
+    });
+
+    test('desregistrarDispositivo propaga un ApiException tal cual', () async {
+      final repository = _repositoryWithAdapter(
+        _FakeHttpClientAdapter(
+          (options) => _jsonResponse({
+            'statusCode': 401,
+            'message': 'Unauthorized',
+            'error': 'Unauthorized',
+          }, 401),
+        ),
+      );
+
+      await expectLater(
+        repository.desregistrarDispositivo('fcm-token-abc'),
+        throwsA(isA<ApiException>()),
+      );
+    });
   });
 }

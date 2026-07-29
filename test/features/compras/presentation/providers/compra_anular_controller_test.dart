@@ -5,7 +5,7 @@ import 'package:zungofee_mobile/core/api/api_client.dart';
 import 'package:zungofee_mobile/core/api/session_token_provider.dart';
 import 'package:zungofee_mobile/core/errors/api_exception.dart';
 import 'package:zungofee_mobile/features/compras/data/datasources/compras_remote_datasource.dart';
-import 'package:zungofee_mobile/features/compras/data/models/compra.dart';
+import 'package:zungofee_mobile/features/compras/data/models/compra_historial.dart';
 import 'package:zungofee_mobile/features/compras/data/repositories/compras_repository.dart';
 import 'package:zungofee_mobile/features/compras/presentation/providers/compra_anular_controller.dart';
 import 'package:zungofee_mobile/features/compras/presentation/providers/compras_providers.dart';
@@ -19,14 +19,12 @@ class _FakeSessionTokenProvider implements SessionTokenProvider {
   String? get accessToken => null;
 }
 
-final _compra = Compra(
+final _compra = CompraHistorial(
   id: 45,
-  tenantId: 5,
-  proveedorId: 12,
-  usuarioId: 3,
   fecha: DateTime.parse('2026-08-01T00:00:00.000Z'),
   total: 1200,
-  anulada: false,
+  proveedorNombre: 'Don Chepe Martinez',
+  usuarioNombre: 'Admin Bodega Uno',
 );
 
 class _FakeComprasRepository extends ComprasRepository {
@@ -44,7 +42,10 @@ class _FakeComprasRepository extends ComprasRepository {
   }
 
   @override
-  Future<List<Compra>> listar({int page = 1, int pageSize = 20}) async {
+  Future<List<CompraHistorial>> listar({
+    int page = 1,
+    int pageSize = 20,
+  }) async {
     listarCallCount++;
     return [_compra];
   }

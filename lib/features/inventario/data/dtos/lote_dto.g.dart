@@ -13,10 +13,14 @@ _$LoteDtoImpl _$$LoteDtoImplFromJson(Map<String, dynamic> json) =>
       cantidadInicial: json['cantidad_inicial'] as String,
       estadosCafe: LoteEstadoCafeDto.fromJson(
           json['estados_cafe'] as Map<String, dynamic>),
-      variedadesCafe: LoteVariedadDto.fromJson(
-          json['variedades_cafe'] as Map<String, dynamic>),
-      nivelesAltura: LoteNivelAlturaDto.fromJson(
-          json['niveles_altura'] as Map<String, dynamic>),
+      variedadesCafe: json['variedades_cafe'] == null
+          ? null
+          : LoteVariedadDto.fromJson(
+              json['variedades_cafe'] as Map<String, dynamic>),
+      nivelesAltura: json['niveles_altura'] == null
+          ? null
+          : LoteNivelAlturaDto.fromJson(
+              json['niveles_altura'] as Map<String, dynamic>),
     );
 
 Map<String, dynamic> _$$LoteDtoImplToJson(_$LoteDtoImpl instance) =>

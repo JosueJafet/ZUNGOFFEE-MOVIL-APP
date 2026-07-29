@@ -4,7 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../shared/extensions/async_value_view_extension.dart';
 import '../../../../shared/extensions/error_message_extension.dart';
+import '../../../../shared/widgets/chips/estado_cafe_chip.dart';
+import '../../../../shared/widgets/navigation/app_drawer.dart';
+import '../../../../shared/widgets/snackbars/success_snackbar.dart';
 import '../../../catalogos/data/models/catalogos.dart';
+import '../../../catalogos/data/models/unidad_medida.dart';
 import '../../../catalogos/presentation/providers/catalogos_providers.dart';
 import '../../../clientes/data/models/cliente.dart';
 import '../../../clientes/presentation/providers/cliente_providers.dart';
@@ -113,23 +117,39 @@ class _VentaFormScreenState extends ConsumerState<VentaFormScreen> {
       );
     }).toList();
 
-    await ref
-        .read(ventaFormControllerProvider.notifier)
-        .crear(clienteId: _clienteId!, metodoPagoId: _metodoPagoId, lineas: lineas);
+    await ref.read(ventaFormControllerProvider.notifier).crear(
+        clienteId: _clienteId!, metodoPagoId: _metodoPagoId, lineas: lineas);
   }
 
-  static const _errorFallback = 'No se pudo registrar la venta. Intenta de nuevo.';
+  static const _errorFallback =
+      'No se pudo registrar la venta. Intenta de nuevo.';
 
-  String _loteLabel(Lote lote) {
-    return '${lote.estadoCafeNombre} · ${lote.variedadNombre} · '
-        '${lote.nivelAlturaNombre} (saldo: ${lote.saldo.toStringAsFixed(2)})';
+  /// Detalle de [lote] sin el estado del café — el estado se muestra
+  /// aparte con [EstadoCafeChip], no como texto plano. Incluye la unidad
+  /// real del lote junto al saldo (`CONTEXTO-PLATAFORMA-WEB.md`, sección
+  /// 8.7: "#id · estado · variedad · Saldo X unidad").
+  String _loteDetalle(Lote lote, List<UnidadMedida> unidadesMedida) {
+    final unidad = unidadesMedida.nombreDe(lote.unidadMedidaId);
+    return '${lote.variedadNombre ?? "Sin variedad"} · '
+        '${lote.nivelAlturaNombre ?? "Sin nivel"} '
+        '(saldo: ${lote.saldo.toStringAsFixed(2)} $unidad)';
   }
 
   Widget _buildLinea(
     _LineaFormData linea,
     List<Lote> existencias,
+    List<UnidadMedida> unidadesMedida,
     bool isLoading,
   ) {
+    final loteSeleccionado = linea.loteId == null
+        ? null
+        : existencias.cast<Lote?>().firstWhere(
+              (lote) => lote?.id == linea.loteId,
+              orElse: () => null,
+            );
+    final unidadNombre = loteSeleccionado == null
+        ? null
+        : unidadesMedida.nombreDe(loteSeleccionado.unidadMedidaId);
     return Card(
       key: ValueKey('linea_${linea.id}'),
       margin: const EdgeInsets.only(bottom: AppSpacing.space4),
@@ -147,9 +167,19 @@ class _VentaFormScreenState extends ConsumerState<VentaFormScreen> {
                   .map(
                     (lote) => DropdownMenuItem(
                       value: lote.id,
-                      child: Text(
-                        _loteLabel(lote),
-                        overflow: TextOverflow.ellipsis,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          EstadoCafeChip(slug: lote.estadoCafeNombre),
+                          const SizedBox(width: AppSpacing.space2),
+                          Flexible(
+                            child: Text(
+                              _loteDetalle(lote, unidadesMedida),
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(context).textTheme.labelLarge,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   )
@@ -163,8 +193,13 @@ class _VentaFormScreenState extends ConsumerState<VentaFormScreen> {
             TextFormField(
               key: Key('linea_${linea.id}_cantidad'),
               controller: linea.cantidadController,
-              decoration: const InputDecoration(labelText: 'Cantidad'),
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              decoration: InputDecoration(
+                labelText: unidadNombre == null
+                    ? 'Cantidad'
+                    : 'Cantidad ($unidadNombre)',
+              ),
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
               validator: _validarNumeroPositivo,
               enabled: !isLoading,
             ),
@@ -173,7 +208,8 @@ class _VentaFormScreenState extends ConsumerState<VentaFormScreen> {
               key: Key('linea_${linea.id}_precioUnitario'),
               controller: linea.precioUnitarioController,
               decoration: const InputDecoration(labelText: 'Precio unitario'),
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
               validator: _validarNumeroPositivo,
               enabled: !isLoading,
             ),
@@ -250,7 +286,8 @@ class _VentaFormScreenState extends ConsumerState<VentaFormScreen> {
             ],
             const SizedBox(height: AppSpacing.space4),
             for (final linea in _lineas)
-              _buildLinea(linea, existencias, isLoading),
+              _buildLinea(
+                  linea, existencias, catalogos.unidadesMedida, isLoading),
             OutlinedButton.icon(
               key: const Key('boton_agregar_linea'),
               onPressed: isLoading ? null : _agregarLinea,
@@ -288,6 +325,7 @@ class _VentaFormScreenState extends ConsumerState<VentaFormScreen> {
       next,
     ) {
       if ((previous?.isLoading ?? false) && !next.hasError) {
+        context.showSuccessSnackBar('Venta registrada con éxito.');
         widget.onGuardado();
       }
     });
@@ -299,7 +337,19 @@ class _VentaFormScreenState extends ConsumerState<VentaFormScreen> {
     final isLoading = formState.isLoading;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Registrar venta')),
+      endDrawer: const AppDrawer(),
+      appBar: AppBar(
+        title: const Text('Registrar venta'),
+        actions: [
+          Builder(
+            builder: (context) => IconButton(
+              icon: const Icon(Icons.menu),
+              tooltip: 'Menú',
+              onPressed: () => Scaffold.of(context).openEndDrawer(),
+            ),
+          ),
+        ],
+      ),
       body: SafeArea(
         child: clientesAsync.buildOrRetry(
           errorFallback: _errorFallback,

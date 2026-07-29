@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <!-- VARIANTE 2: Espacio Negativo Puro -->
+  <g id="Zungoffee-V2">
+    <!-- Bloque Izquierdo Super-Sintetizado (Cereza) -->
+    <path fill="#A3311F" d="M226,64 C120,64 64,138 64,256 C64,374 120,448 226,448 L236,448 L236,300 L160,300 L236,200 L236,64 Z"/>
+
+    <!-- Bloque Derecho Super-Sintetizado (Oro Tostado) -->
+    <path fill="#C99A3E" d="M286,64 L276,64 L276,212 L352,212 L276,312 L276,448 L286,448 C392,448 448,374 448,256 C448,138 392,64 286,64 Z"/>
+  </g>
+</svg>

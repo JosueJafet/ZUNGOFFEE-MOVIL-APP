@@ -11,4 +11,21 @@ abstract final class AppRole {
 
   /// Trabajador de campo. Usuario principal de la app móvil.
   static const String empleado = 'empleado';
+
+  /// Etiqueta legible de [rol] para mostrar en la interfaz (ej. el chip
+  /// de rol en `AppDrawer`, mismo texto que usa la plataforma web junto
+  /// al avatar) — cae al valor crudo si algún día apareciera un rol
+  /// nuevo no contemplado aquí, en vez de mostrar un chip vacío.
+  static String etiquetaDe(String rol) {
+    switch (rol) {
+      case superAdmin:
+        return 'Super admin';
+      case adminBodega:
+        return 'Administrador';
+      case empleado:
+        return 'Empleado';
+      default:
+        return rol;
+    }
+  }
 }

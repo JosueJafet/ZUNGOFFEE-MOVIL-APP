@@ -18,7 +18,7 @@ import 'package:zungofee_mobile/features/auth/data/repositories/perfil_repositor
 import 'package:zungofee_mobile/features/auth/presentation/providers/auth_providers.dart';
 import 'package:zungofee_mobile/features/auth/presentation/providers/perfil_providers.dart';
 import 'package:zungofee_mobile/features/compras/data/datasources/compras_remote_datasource.dart';
-import 'package:zungofee_mobile/features/compras/data/models/compra.dart';
+import 'package:zungofee_mobile/features/compras/data/models/compra_historial.dart';
 import 'package:zungofee_mobile/features/compras/data/repositories/compras_repository.dart';
 import 'package:zungofee_mobile/features/compras/presentation/providers/compras_providers.dart';
 import 'package:zungofee_mobile/features/compras/presentation/screens/compras_historial_screen.dart';
@@ -28,7 +28,7 @@ import 'package:zungofee_mobile/features/procesamiento/data/repositories/procesa
 import 'package:zungofee_mobile/features/procesamiento/presentation/providers/procesamiento_providers.dart';
 import 'package:zungofee_mobile/features/procesamiento/presentation/screens/procesamiento_historial_screen.dart';
 import 'package:zungofee_mobile/features/ventas/data/datasources/ventas_remote_datasource.dart';
-import 'package:zungofee_mobile/features/ventas/data/models/venta.dart';
+import 'package:zungofee_mobile/features/ventas/data/models/venta_historial.dart';
 import 'package:zungofee_mobile/features/ventas/data/repositories/ventas_repository.dart';
 import 'package:zungofee_mobile/features/ventas/presentation/providers/ventas_providers.dart';
 import 'package:zungofee_mobile/features/ventas/presentation/screens/ventas_historial_screen.dart';
@@ -51,22 +51,26 @@ class _FakeComprasRepository extends ComprasRepository {
   _FakeComprasRepository(this._compras)
     : super(ComprasRemoteDataSource(ApiClient(FakeSessionTokenProvider())));
 
-  final List<Compra> _compras;
+  final List<CompraHistorial> _compras;
 
   @override
-  Future<List<Compra>> listar({int page = 1, int pageSize = 20}) async =>
-      _compras;
+  Future<List<CompraHistorial>> listar({
+    int page = 1,
+    int pageSize = 20,
+  }) async => _compras;
 }
 
 class _FakeVentasRepository extends VentasRepository {
   _FakeVentasRepository(this._ventas)
     : super(VentasRemoteDataSource(ApiClient(FakeSessionTokenProvider())));
 
-  final List<Venta> _ventas;
+  final List<VentaHistorial> _ventas;
 
   @override
-  Future<List<Venta>> listar({int page = 1, int pageSize = 20}) async =>
-      _ventas;
+  Future<List<VentaHistorial>> listar({
+    int page = 1,
+    int pageSize = 20,
+  }) async => _ventas;
 }
 
 class _FakeProcesamientoRepository extends ProcesamientoRepository {

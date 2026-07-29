@@ -22,4 +22,10 @@ abstract final class RouteNames {
   static const String historialProcesamiento = 'historialProcesamiento';
   static const String notificaciones = 'notificaciones';
   static const String perfilEditar = 'perfilEditar';
+  static const String bodegas = 'bodegas';
+  static const String bodegaFormulario = 'bodegaFormulario';
+  static const String solicitudes = 'solicitudes';
+  static const String pagos = 'pagos';
+  static const String pagoHistorial = 'pagoHistorial';
+  static const String pagoFormulario = 'pagoFormulario';
 }

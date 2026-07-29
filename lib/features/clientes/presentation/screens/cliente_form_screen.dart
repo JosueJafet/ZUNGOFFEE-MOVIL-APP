@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../shared/extensions/error_message_extension.dart';
 import '../../../../shared/widgets/empty_states/error_retry_view.dart';
+import '../../../../shared/widgets/navigation/app_drawer.dart';
+import '../../../../shared/widgets/snackbars/success_snackbar.dart';
 import '../../../catalogos/presentation/providers/catalogos_providers.dart';
 import '../../data/models/cliente.dart';
 import '../providers/cliente_form_controller.dart';
@@ -110,6 +112,11 @@ class _ClienteFormScreenState extends ConsumerState<ClienteFormScreen> {
       // distingue un envío exitoso es la ausencia de error (Sprint 5,
       // Decisión arquitectónica #19).
       if ((previous?.isLoading ?? false) && !next.hasError) {
+        context.showSuccessSnackBar(
+          _esEdicion
+              ? 'Cliente actualizado con éxito.'
+              : 'Cliente registrado con éxito.',
+        );
         widget.onGuardado();
       }
     });
@@ -119,8 +126,18 @@ class _ClienteFormScreenState extends ConsumerState<ClienteFormScreen> {
     final isLoading = formState.isLoading;
 
     return Scaffold(
+      endDrawer: const AppDrawer(),
       appBar: AppBar(
         title: Text(_esEdicion ? 'Editar cliente' : 'Agregar cliente'),
+        actions: [
+          Builder(
+            builder: (context) => IconButton(
+              icon: const Icon(Icons.menu),
+              tooltip: 'Menú',
+              onPressed: () => Scaffold.of(context).openEndDrawer(),
+            ),
+          ),
+        ],
       ),
       body: SafeArea(
         child: catalogosAsync.when(

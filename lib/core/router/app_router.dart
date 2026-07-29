@@ -18,7 +18,14 @@ import 'route_paths.dart';
 abstract final class AppRouter {
   const AppRouter._();
 
-  static GoRouter build(AuthSessionService authSessionService) {
+  /// [currentRol] lee el rol del perfil ya cargado (o `null` si `GET
+  /// /perfil` sigue en vuelo) de forma síncrona, para el guard de rol de
+  /// [AuthRedirect]. Opcional: si se omite, el guard de rol simplemente
+  /// no aplica (equivalente a que `currentRol` siempre devuelva `null`).
+  static GoRouter build(
+    AuthSessionService authSessionService, {
+    String? Function()? currentRol,
+  }) {
     return GoRouter(
       initialLocation: RoutePaths.splash,
       debugLogDiagnostics: true,
@@ -28,6 +35,7 @@ abstract final class AppRouter {
       redirect: (context, state) => AuthRedirect.resolve(
         isAuthenticated: authSessionService.isAuthenticated,
         location: state.matchedLocation,
+        rol: currentRol?.call(),
       ),
       routes: AppRoutes.routes,
     );

@@ -9,7 +9,7 @@ import 'package:zungofee_mobile/features/inventario/data/models/lote.dart';
 import 'package:zungofee_mobile/features/inventario/data/repositories/lotes_repository.dart';
 import 'package:zungofee_mobile/features/inventario/presentation/providers/lotes_providers.dart';
 import 'package:zungofee_mobile/features/ventas/data/datasources/ventas_remote_datasource.dart';
-import 'package:zungofee_mobile/features/ventas/data/models/venta.dart';
+import 'package:zungofee_mobile/features/ventas/data/models/venta_historial.dart';
 import 'package:zungofee_mobile/features/ventas/data/repositories/ventas_repository.dart';
 import 'package:zungofee_mobile/features/ventas/presentation/providers/venta_anular_controller.dart';
 import 'package:zungofee_mobile/features/ventas/presentation/providers/ventas_providers.dart';
@@ -19,13 +19,11 @@ class _FakeSessionTokenProvider implements SessionTokenProvider {
   String? get accessToken => null;
 }
 
-const _venta = Venta(
+final _venta = VentaHistorial(
   id: 30,
-  tenantId: 5,
-  clienteId: 7,
-  usuarioId: 3,
+  fecha: DateTime.parse('2026-08-01T00:00:00.000Z'),
   total: 750,
-  anulada: false,
+  clienteNombre: 'Cafeteria El Buen Cafe',
 );
 
 class _FakeVentasRepository extends VentasRepository {
@@ -43,7 +41,10 @@ class _FakeVentasRepository extends VentasRepository {
   }
 
   @override
-  Future<List<Venta>> listar({int page = 1, int pageSize = 20}) async {
+  Future<List<VentaHistorial>> listar({
+    int page = 1,
+    int pageSize = 20,
+  }) async {
     listarCallCount++;
     return [_venta];
   }

@@ -4,12 +4,14 @@ import 'package:zungofee_mobile/features/catalogos/data/dtos/catalogos_dto.dart'
 
 void main() {
   group('CatalogosDto', () {
-    // JSON confirmado por `CONTEXTO-MOVIL-FLUTTER.md` (secciones 6.1 y 8):
-    // el contrato real trae 7 grupos; este DTO modela los 5 con consumidor
+    // JSON confirmado por `CONTEXTO-MOVIL-FLUTTER.md` (secciones 6.1 y 8) y
+    // `CONTEXTO-PLATAFORMA-WEB.md` (sección 5, `unidadesMedida`): el
+    // contrato real trae 7 grupos; este DTO modela los 6 con consumidor
     // real hoy (metodosPago, variedadesCafe, nivelesAltura, estadosCafe,
-    // clientesTipo agregado en Sprint 7). Los campos internos
-    // (msnm_min/msnm_max, unidad_medida_id) se asumen snake_case, igual
-    // que el resto de las respuestas de la API.
+    // clientesTipo agregado en Sprint 7, unidadesMedida agregado al
+    // mostrar la unidad real en vez de asumir "libras"). Los campos
+    // internos (msnm_min/msnm_max, unidad_medida_id) se asumen
+    // snake_case, igual que el resto de las respuestas de la API.
     final json = {
       'metodosPago': [
         {'id': 1, 'nombre': 'Efectivo'},
@@ -29,9 +31,13 @@ void main() {
         {'id': 1, 'nombre': 'persona_natural'},
         {'id': 2, 'nombre': 'cafeteria_pequena'},
       ],
+      'unidadesMedida': [
+        {'id': 1, 'nombre': 'Galones'},
+        {'id': 2, 'nombre': 'Quintales'},
+      ],
     };
 
-    test('fromJson parsea los 5 catálogos', () {
+    test('fromJson parsea los 6 catálogos', () {
       final dto = CatalogosDto.fromJson(json);
 
       expect(dto.metodosPago, hasLength(2));
@@ -45,6 +51,8 @@ void main() {
       expect(dto.estadosCafe.first.unidadMedidaId, 1);
       expect(dto.clientesTipo, hasLength(2));
       expect(dto.clientesTipo.first.nombre, 'persona_natural');
+      expect(dto.unidadesMedida, hasLength(2));
+      expect(dto.unidadesMedida.first.nombre, 'Galones');
     });
 
     test('toDomain mapea al agregado de dominio Catalogos', () {
@@ -62,6 +70,10 @@ void main() {
       expect(catalogos.clientesTipo.map((c) => c.nombre), [
         'persona_natural',
         'cafeteria_pequena',
+      ]);
+      expect(catalogos.unidadesMedida.map((u) => u.nombre), [
+        'Galones',
+        'Quintales',
       ]);
     });
 

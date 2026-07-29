@@ -16,7 +16,8 @@ class _FakeSessionTokenProvider implements SessionTokenProvider {
 
 class _FakeCatalogosRepository extends CatalogosRepository {
   _FakeCatalogosRepository(this._catalogos)
-    : super(CatalogosRemoteDataSource(ApiClient(_FakeSessionTokenProvider())));
+      : super(
+            CatalogosRemoteDataSource(ApiClient(_FakeSessionTokenProvider())));
 
   final Catalogos _catalogos;
   int callCount = 0;
@@ -37,6 +38,7 @@ void main() {
         nivelesAltura: [],
         estadosCafe: [],
         clientesTipo: [],
+        unidadesMedida: [],
       );
       final repository = _FakeCatalogosRepository(expected);
 

@@ -50,6 +50,10 @@ class ApiClient {
     return _guard(() => _dio.patch(path, data: data));
   }
 
+  Future<Response<dynamic>> delete(String path, {Object? data}) {
+    return _guard(() => _dio.delete(path, data: data));
+  }
+
   Future<T> _guard<T>(Future<T> Function() request) async {
     try {
       return await request();

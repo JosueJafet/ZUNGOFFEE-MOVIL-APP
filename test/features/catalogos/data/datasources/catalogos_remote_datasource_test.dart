@@ -22,17 +22,22 @@ Map<String, dynamic> _catalogosJson() {
     'clientesTipo': [
       {'id': 1, 'nombre': 'persona_natural'},
     ],
+    'unidadesMedida': [
+      {'id': 1, 'nombre': 'Galones'},
+    ],
   };
 }
 
 void main() {
   group('CatalogosRemoteDataSource', () {
-    test('getCatalogos llama GET /catalogos y decodifica la respuesta', () async {
+    test('getCatalogos llama GET /catalogos y decodifica la respuesta',
+        () async {
       final adapter = FakeHttpClientAdapter(
         (options) => jsonResponse(_catalogosJson(), 200),
       );
       final dataSource = CatalogosRemoteDataSource(
-        ApiClient(FakeSessionTokenProvider('token-123'), dio: dioWithAdapter(adapter)),
+        ApiClient(FakeSessionTokenProvider('token-123'),
+            dio: dioWithAdapter(adapter)),
       );
 
       final dto = await dataSource.getCatalogos();

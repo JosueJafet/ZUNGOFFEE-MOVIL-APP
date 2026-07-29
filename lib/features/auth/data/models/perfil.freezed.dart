@@ -20,9 +20,12 @@ mixin _$Perfil {
   String get nombre => throw _privateConstructorUsedError;
   bool get activo => throw _privateConstructorUsedError;
   DateTime get fechaCreacion => throw _privateConstructorUsedError;
-  String get rol => throw _privateConstructorUsedError;
-  int get tenantId => throw _privateConstructorUsedError;
-  String get tenantNombre => throw _privateConstructorUsedError;
+  String get rol =>
+      throw _privateConstructorUsedError; // `null` para `super_admin` (no pertenece a ninguna bodega).
+  int? get tenantId => throw _privateConstructorUsedError;
+  String? get tenantNombre =>
+      throw _privateConstructorUsedError; // `null` hasta que el usuario sube su primera foto de perfil.
+  String? get fotoUrl => throw _privateConstructorUsedError;
 
   /// Create a copy of Perfil
   /// with the given fields replaced by the non-null parameter values.
@@ -41,8 +44,9 @@ abstract class $PerfilCopyWith<$Res> {
       bool activo,
       DateTime fechaCreacion,
       String rol,
-      int tenantId,
-      String tenantNombre});
+      int? tenantId,
+      String? tenantNombre,
+      String? fotoUrl});
 }
 
 /// @nodoc
@@ -65,8 +69,9 @@ class _$PerfilCopyWithImpl<$Res, $Val extends Perfil>
     Object? activo = null,
     Object? fechaCreacion = null,
     Object? rol = null,
-    Object? tenantId = null,
-    Object? tenantNombre = null,
+    Object? tenantId = freezed,
+    Object? tenantNombre = freezed,
+    Object? fotoUrl = freezed,
   }) {
     return _then(_value.copyWith(
       id: null == id
@@ -89,14 +94,18 @@ class _$PerfilCopyWithImpl<$Res, $Val extends Perfil>
           ? _value.rol
           : rol // ignore: cast_nullable_to_non_nullable
               as String,
-      tenantId: null == tenantId
+      tenantId: freezed == tenantId
           ? _value.tenantId
           : tenantId // ignore: cast_nullable_to_non_nullable
-              as int,
-      tenantNombre: null == tenantNombre
+              as int?,
+      tenantNombre: freezed == tenantNombre
           ? _value.tenantNombre
           : tenantNombre // ignore: cast_nullable_to_non_nullable
-              as String,
+              as String?,
+      fotoUrl: freezed == fotoUrl
+          ? _value.fotoUrl
+          : fotoUrl // ignore: cast_nullable_to_non_nullable
+              as String?,
     ) as $Val);
   }
 }
@@ -114,8 +123,9 @@ abstract class _$$PerfilImplCopyWith<$Res> implements $PerfilCopyWith<$Res> {
       bool activo,
       DateTime fechaCreacion,
       String rol,
-      int tenantId,
-      String tenantNombre});
+      int? tenantId,
+      String? tenantNombre,
+      String? fotoUrl});
 }
 
 /// @nodoc
@@ -136,8 +146,9 @@ class __$$PerfilImplCopyWithImpl<$Res>
     Object? activo = null,
     Object? fechaCreacion = null,
     Object? rol = null,
-    Object? tenantId = null,
-    Object? tenantNombre = null,
+    Object? tenantId = freezed,
+    Object? tenantNombre = freezed,
+    Object? fotoUrl = freezed,
   }) {
     return _then(_$PerfilImpl(
       id: null == id
@@ -160,14 +171,18 @@ class __$$PerfilImplCopyWithImpl<$Res>
           ? _value.rol
           : rol // ignore: cast_nullable_to_non_nullable
               as String,
-      tenantId: null == tenantId
+      tenantId: freezed == tenantId
           ? _value.tenantId
           : tenantId // ignore: cast_nullable_to_non_nullable
-              as int,
-      tenantNombre: null == tenantNombre
+              as int?,
+      tenantNombre: freezed == tenantNombre
           ? _value.tenantNombre
           : tenantNombre // ignore: cast_nullable_to_non_nullable
-              as String,
+              as String?,
+      fotoUrl: freezed == fotoUrl
+          ? _value.fotoUrl
+          : fotoUrl // ignore: cast_nullable_to_non_nullable
+              as String?,
     ));
   }
 }
@@ -181,8 +196,9 @@ class _$PerfilImpl implements _Perfil {
       required this.activo,
       required this.fechaCreacion,
       required this.rol,
-      required this.tenantId,
-      required this.tenantNombre});
+      this.tenantId,
+      this.tenantNombre,
+      this.fotoUrl});
 
   @override
   final int id;
@@ -194,14 +210,18 @@ class _$PerfilImpl implements _Perfil {
   final DateTime fechaCreacion;
   @override
   final String rol;
+// `null` para `super_admin` (no pertenece a ninguna bodega).
   @override
-  final int tenantId;
+  final int? tenantId;
   @override
-  final String tenantNombre;
+  final String? tenantNombre;
+// `null` hasta que el usuario sube su primera foto de perfil.
+  @override
+  final String? fotoUrl;
 
   @override
   String toString() {
-    return 'Perfil(id: $id, nombre: $nombre, activo: $activo, fechaCreacion: $fechaCreacion, rol: $rol, tenantId: $tenantId, tenantNombre: $tenantNombre)';
+    return 'Perfil(id: $id, nombre: $nombre, activo: $activo, fechaCreacion: $fechaCreacion, rol: $rol, tenantId: $tenantId, tenantNombre: $tenantNombre, fotoUrl: $fotoUrl)';
   }
 
   @override
@@ -218,12 +238,13 @@ class _$PerfilImpl implements _Perfil {
             (identical(other.tenantId, tenantId) ||
                 other.tenantId == tenantId) &&
             (identical(other.tenantNombre, tenantNombre) ||
-                other.tenantNombre == tenantNombre));
+                other.tenantNombre == tenantNombre) &&
+            (identical(other.fotoUrl, fotoUrl) || other.fotoUrl == fotoUrl));
   }
 
   @override
   int get hashCode => Object.hash(runtimeType, id, nombre, activo,
-      fechaCreacion, rol, tenantId, tenantNombre);
+      fechaCreacion, rol, tenantId, tenantNombre, fotoUrl);
 
   /// Create a copy of Perfil
   /// with the given fields replaced by the non-null parameter values.
@@ -241,8 +262,9 @@ abstract class _Perfil implements Perfil {
       required final bool activo,
       required final DateTime fechaCreacion,
       required final String rol,
-      required final int tenantId,
-      required final String tenantNombre}) = _$PerfilImpl;
+      final int? tenantId,
+      final String? tenantNombre,
+      final String? fotoUrl}) = _$PerfilImpl;
 
   @override
   int get id;
@@ -253,11 +275,14 @@ abstract class _Perfil implements Perfil {
   @override
   DateTime get fechaCreacion;
   @override
-  String get rol;
+  String get rol; // `null` para `super_admin` (no pertenece a ninguna bodega).
   @override
-  int get tenantId;
+  int? get tenantId;
   @override
-  String get tenantNombre;
+  String?
+      get tenantNombre; // `null` hasta que el usuario sube su primera foto de perfil.
+  @override
+  String? get fotoUrl;
 
   /// Create a copy of Perfil
   /// with the given fields replaced by the non-null parameter values.

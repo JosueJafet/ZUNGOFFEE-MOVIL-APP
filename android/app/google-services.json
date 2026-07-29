@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "388538426003",
+    "project_id": "zungoffee",
+    "storage_bucket": "zungoffee.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:388538426003:android:bd84c601b0ed5f7f882366",
+        "android_client_info": {
+          "package_name": "com.example.zungofee_mobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDNMT6vPNvJdpno-bvBSJXc7cBp2hNyVnc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import 'app_colors.dart';
 import 'app_radius.dart';
@@ -78,7 +79,7 @@ abstract final class AppTheme {
       brightness: brightness,
       colorScheme: colorScheme,
       scaffoldBackgroundColor: colors.background,
-      fontFamily: AppFontFamily.inter,
+      fontFamily: GoogleFonts.inter().fontFamily,
       textTheme: textTheme,
       extensions: [colorsExtension],
       cardTheme: CardThemeData(

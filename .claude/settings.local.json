@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(flutter analyze *)",
+      "Bash(flutter test *)",
+      "Bash(flutter pub *)",
+      "Bash(GOTRUE_PKG=\"/c/Users/jafet/AppData/Local/Pub/Cache/hosted/pub.dev/gotrue-2.26.0\" && grep -n \"Future<AuthResponse> signInWithPassword\" -A 15 \"$GOTRUE_PKG/lib/src/gotrue_client.dart\" | head -25 && echo \"---signOut---\" && grep -n \"Future<void> signOut\\\\|Future signOut\" -A 8 \"$GOTRUE_PKG/lib/src/gotrue_client.dart\" | head -15 && echo \"---onAuthStateChange---\" && grep -n \"onAuthStateChange\" \"$GOTRUE_PKG/lib/src/gotrue_client.dart\" | head -5 && echo \"---currentSession---\" && grep -n \"get currentSession\" -A 3 \"$GOTRUE_PKG/lib/src/gotrue_client.dart\")",
+      "Read(//c/Users/jafet/AppData/Local/Pub/Cache/hosted/pub.dev/gotrue-2.26.0/lib/src/**)",
+      "Bash(flutter devices *)",
+      "Bash(flutter emulators *)",
+      "Bash(flutter run *)"
+    ]
+  }
+}

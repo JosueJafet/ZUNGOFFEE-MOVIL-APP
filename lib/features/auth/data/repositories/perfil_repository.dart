@@ -15,4 +15,20 @@ class PerfilRepository {
   }
 
   Future<void> actualizar(String nombre) => _remoteDataSource.actualizar(nombre);
+
+  Future<Perfil> subirFoto({
+    required List<int> bytes,
+    required String nombreArchivo,
+  }) async {
+    final dto = await _remoteDataSource.subirFoto(
+      bytes: bytes,
+      nombreArchivo: nombreArchivo,
+    );
+    return dto.toDomain();
+  }
+
+  Future<Perfil> eliminarFoto() async {
+    final dto = await _remoteDataSource.eliminarFoto();
+    return dto.toDomain();
+  }
 }

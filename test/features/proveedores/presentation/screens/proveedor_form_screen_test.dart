@@ -153,6 +153,7 @@ void main() {
         expect(repository.ultimoCrear?['lugar'], 'Marcala');
         expect(repository.ultimoCrear?['finca'], isNull);
         expect(guardadoCallCount, 1);
+        expect(find.text('Proveedor registrado con éxito.'), findsOneWidget);
       },
     );
 
@@ -195,6 +196,7 @@ void main() {
         expect(repository.ultimoActualizar?['id'], 12);
         expect(repository.ultimoActualizar?['nombre'], 'Nombre Editado');
         expect(guardadoCallCount, 1);
+        expect(find.text('Proveedor actualizado con éxito.'), findsOneWidget);
       },
     );
 
